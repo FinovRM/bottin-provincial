@@ -29,7 +29,7 @@ class OrganizationController extends Controller
             'level' => $parent->level->childLevel(),
         ]);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard.properties');
     }
 
     public function update(Request $request, Organization $organization): RedirectResponse
@@ -41,11 +41,14 @@ class OrganizationController extends Controller
             'responsable_first_name' => ['required', 'string', 'max:255'],
             'responsable_last_name' => ['required', 'string', 'max:255'],
             'responsable_email' => ['required', 'email', 'max:255', 'unique:organizations,responsable_email,'.$organization->id],
+            'address' => ['nullable', 'string', 'max:255'],
+            'business_number' => ['nullable', 'string', 'max:255'],
+            'website' => ['nullable', 'url', 'max:255'],
         ]);
 
         $organization->update($validated);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard.properties');
     }
 
     public function destroy(Organization $organization): RedirectResponse
@@ -54,6 +57,6 @@ class OrganizationController extends Controller
 
         $organization->delete();
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard.properties');
     }
 }

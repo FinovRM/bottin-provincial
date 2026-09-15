@@ -8,24 +8,36 @@
     </head>
     <body class="min-h-screen bg-gray-50 text-gray-900 antialiased">
         <header class="border-b border-gray-200 bg-white">
-            <div class="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+            <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
                 <a href="{{ route('bottin') }}" class="font-semibold">Bottin de communication</a>
 
                 <nav class="flex items-center gap-4 text-sm">
-                    @auth
+                    @if (auth('web')->check())
                         <a href="{{ route('dashboard') }}" class="text-gray-700 hover:underline">Mon tableau de bord</a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="text-gray-700 hover:underline">Déconnexion</button>
                         </form>
+                    @elseif (auth('member')->check())
+                        <a href="{{ route('member.dashboard') }}" class="text-gray-700 hover:underline">Coordonnées des membres</a>
+                        <form method="POST" action="{{ route('member.logout') }}">
+                            @csrf
+                            <button type="submit" class="text-gray-700 hover:underline">Déconnexion</button>
+                        </form>
+                    @elseif (auth('admin')->check())
+                        <a href="{{ route('admin.dashboard') }}" class="text-gray-700 hover:underline">Administration</a>
+                        <form method="POST" action="{{ route('admin.logout') }}">
+                            @csrf
+                            <button type="submit" class="text-gray-700 hover:underline">Déconnexion</button>
+                        </form>
                     @else
                         <a href="{{ route('login') }}" class="text-gray-700 hover:underline">Connexion</a>
-                    @endauth
+                    @endif
                 </nav>
             </div>
         </header>
 
-        <main class="mx-auto max-w-4xl px-6 py-8">
+        <main class="mx-auto max-w-5xl px-6 py-8">
             @if (session('status'))
                 <div class="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">
                     {{ session('status') }}

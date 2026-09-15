@@ -22,7 +22,7 @@ class OrganizationHierarchyTest extends TestCase
             'responsable_email' => 'regional1@example.com',
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseHas('organizations', [
             'name' => 'Région 1',
             'parent_id' => $provincial->id,
@@ -60,7 +60,7 @@ class OrganizationHierarchyTest extends TestCase
             'responsable_email' => 'nouveau@example.com',
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseHas('organizations', [
             'id' => $organization->id,
             'responsable_email' => 'nouveau@example.com',

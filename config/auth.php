@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Admin;
+use App\Models\Member;
 use App\Models\Organization;
 
 return [
@@ -10,8 +12,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option defines the default authentication "guard" for your
-    | application. There is no password broker: responsables authenticate
-    | with a signed magic link sent to their email address instead.
+    | application. Responsables and members authenticate with a signed
+    | magic link sent to their email address; admins use a password.
     |
     */
 
@@ -24,13 +26,10 @@ return [
     | Authentication Guards
     |--------------------------------------------------------------------------
     |
-    | Next, you may define every authentication guard for your application.
-    | Of course, a great default configuration has been defined for you
-    | which utilizes session storage plus the Eloquent user provider.
-    |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
+    | Three independent guards, one per kind of account: organization
+    | responsables ("web"), organization members ("member"), and the
+    | administrator ("admin"). Each keeps its own session state, so a
+    | browser can only ever be signed in as one identity per guard.
     |
     | Supported: "session"
     |
@@ -40,6 +39,16 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'organizations',
+        ],
+
+        'member' => [
+            'driver' => 'session',
+            'provider' => 'members',
+        ],
+
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins',
         ],
     ],
 
@@ -52,9 +61,6 @@ return [
     | users are actually retrieved out of your database or other storage
     | system used by the application. Typically, Eloquent is utilized.
     |
-    | Each organization record is itself the authenticatable "responsable"
-    | for its own fiche, matched by email — see App\Models\Organization.
-    |
     | Supported: "database", "eloquent"
     |
     */
@@ -63,6 +69,16 @@ return [
         'organizations' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', Organization::class),
+        ],
+
+        'members' => [
+            'driver' => 'eloquent',
+            'model' => Member::class,
+        ],
+
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => Admin::class,
         ],
     ],
 
