@@ -4,7 +4,7 @@
 
 @section('content')
     <p class="mb-2">
-        <a href="{{ route('admin.dashboard') }}" class="text-sm text-gray-500 hover:underline">← Toutes les organisations</a>
+        <a href="{{ route('admin.organizations.index') }}" class="text-sm text-gray-500 hover:underline">← Toutes les organisations</a>
     </p>
     <h1 class="mb-6 text-2xl font-semibold">Créer une organisation</h1>
 

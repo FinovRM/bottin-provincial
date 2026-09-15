@@ -43,7 +43,7 @@ class AdminTest extends TestCase
         $region = Organization::factory()->regional($provincial)->create(['name' => 'Région X']);
         Organization::factory()->local($region)->create(['name' => 'Local X']);
 
-        $response = $this->actingAs($admin, 'admin')->get('/admin/tableau-de-bord');
+        $response = $this->actingAs($admin, 'admin')->get('/admin/organisations');
 
         $response->assertOk();
         $response->assertSee('Provincial X');
@@ -64,7 +64,7 @@ class AdminTest extends TestCase
             'responsable_email' => 'nouveau-provincial@example.com',
         ]);
 
-        $response->assertRedirect(route('admin.dashboard'));
+        $response->assertRedirect(route('admin.organizations.index'));
         $this->assertDatabaseHas('organizations', ['name' => 'Nouveau provincial', 'parent_id' => null]);
     }
 
@@ -105,6 +105,83 @@ class AdminTest extends TestCase
         $this->assertDatabaseHas('organizations', [
             'name' => 'Région Importée',
             'parent_id' => $provincial->id,
+        ]);
+    }
+
+    public function test_an_admin_can_delete_a_childless_organization(): void
+    {
+        $admin = Admin::factory()->create();
+        $organization = Organization::factory()->provincial()->create();
+
+        $response = $this->actingAs($admin, 'admin')->delete("/admin/organisations/{$organization->id}");
+
+        $response->assertRedirect(route('admin.organizations.index'));
+        $this->assertDatabaseMissing('organizations', ['id' => $organization->id]);
+    }
+
+    public function test_an_admin_cannot_delete_an_organization_that_still_has_children(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create();
+        Organization::factory()->regional($provincial)->create();
+
+        $response = $this->actingAs($admin, 'admin')->delete("/admin/organisations/{$provincial->id}");
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('organizations', ['id' => $provincial->id]);
+    }
+
+    public function test_an_admin_sees_every_member_and_can_add_one(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create();
+        $provincial->members()->create(['role' => 'Direction', 'name' => 'Membre existant', 'email' => 'existant@example.com']);
+
+        $response = $this->actingAs($admin, 'admin')->get('/admin/membres');
+        $response->assertOk();
+        $response->assertSee('Membre existant');
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/membres', [
+            'organization_id' => $provincial->id,
+            'role' => 'Trésorier',
+            'name' => 'Nouveau membre',
+            'email' => 'nouveau-membre@example.com',
+        ]);
+
+        $response->assertRedirect(route('admin.members.index'));
+        $this->assertDatabaseHas('members', ['email' => 'nouveau-membre@example.com', 'organization_id' => $provincial->id]);
+    }
+
+    public function test_an_admin_can_delete_a_member(): void
+    {
+        $admin = Admin::factory()->create();
+        $organization = Organization::factory()->provincial()->create();
+        $member = $organization->members()->create(['role' => 'Bénévole', 'name' => 'À retirer', 'email' => 'retirer@example.com']);
+
+        $response = $this->actingAs($admin, 'admin')->delete("/admin/membres/{$member->id}");
+
+        $response->assertRedirect(route('admin.members.index'));
+        $this->assertDatabaseMissing('members', ['id' => $member->id]);
+    }
+
+    public function test_an_admin_can_import_members_from_a_csv(): void
+    {
+        $admin = Admin::factory()->create();
+        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'org@example.com']);
+
+        $csv = "organization_responsable_email,role,name,email,cell_phone\n"
+            ."org@example.com,Bénévole,Membre Importé,membre-importe@example.com,514-555-9999\n";
+
+        $file = UploadedFile::fake()->createWithContent('membres.csv', $csv);
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/membres/importer', [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect(route('admin.members.import.create'));
+        $this->assertDatabaseHas('members', [
+            'email' => 'membre-importe@example.com',
+            'organization_id' => $organization->id,
         ]);
     }
 }

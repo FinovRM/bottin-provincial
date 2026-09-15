@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['role', 'name', 'email', 'cell_phone'])]
+#[Fillable(['organization_id', 'role', 'name', 'email', 'cell_phone'])]
 class Member extends Authenticatable
 {
     /** @use HasFactory<MemberFactory> */

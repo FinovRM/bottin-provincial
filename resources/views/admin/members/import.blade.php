@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Importer des organisations')
+@section('title', 'Importer des membres')
 
 @section('content')
     <p class="mb-2">
-        <a href="{{ route('admin.organizations.index') }}" class="text-sm text-gray-500 hover:underline">← Toutes les organisations</a>
+        <a href="{{ route('admin.members.index') }}" class="text-sm text-gray-500 hover:underline">← Tous les membres</a>
     </p>
-    <h1 class="mb-6 text-2xl font-semibold">Importer des organisations (CSV)</h1>
+    <h1 class="mb-6 text-2xl font-semibold">Importer des membres (CSV)</h1>
 
     <div class="mb-6 rounded-lg border border-gray-200 bg-white p-5 text-sm">
         <p class="mb-2 font-medium">Format attendu</p>
@@ -15,9 +15,8 @@
         </p>
         <code class="block overflow-x-auto rounded bg-gray-50 p-3 text-xs">{{ implode(',', $columns) }}</code>
         <ul class="mt-3 list-disc space-y-1 pl-5 text-gray-600">
-            <li><code>level</code> : <code>provincial</code>, <code>regional</code> ou <code>local</code>.</li>
-            <li><code>parent_responsable_email</code> : courriel du responsable de l'organisation parente (vide pour un provincial).</li>
-            <li>Les autres colonnes correspondent aux champs de la fiche d'une organisation.</li>
+            <li><code>organization_responsable_email</code> : courriel du responsable de l'organisation à laquelle rattacher le membre.</li>
+            <li>Les autres colonnes correspondent aux champs de la fiche d'un membre.</li>
         </ul>
     </div>
 
@@ -32,7 +31,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.organizations.import.store') }}" enctype="multipart/form-data" class="max-w-sm space-y-4">
+    <form method="POST" action="{{ route('admin.members.import.store') }}" enctype="multipart/form-data" class="max-w-sm space-y-4">
         @csrf
 
         <div>

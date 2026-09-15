@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\AuthenticatedSessionController as AdminAuthenticatedSessionController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\MemberController as AdminMemberController;
+use App\Http\Controllers\Admin\MemberImportController as AdminMemberImportController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Admin\OrganizationImportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -68,12 +70,21 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/tableau-de-bord', AdminDashboardController::class)->name('dashboard');
 
+        Route::get('/organisations', [AdminOrganizationController::class, 'index'])->name('organizations.index');
         Route::get('/organisations/creer', [AdminOrganizationController::class, 'create'])->name('organizations.create');
         Route::post('/organisations', [AdminOrganizationController::class, 'store'])->name('organizations.store');
         Route::get('/organisations/{organization}/modifier', [AdminOrganizationController::class, 'edit'])->name('organizations.edit');
         Route::put('/organisations/{organization}', [AdminOrganizationController::class, 'update'])->name('organizations.update');
+        Route::delete('/organisations/{organization}', [AdminOrganizationController::class, 'destroy'])->name('organizations.destroy');
 
         Route::get('/organisations/importer', [OrganizationImportController::class, 'create'])->name('organizations.import.create');
         Route::post('/organisations/importer', [OrganizationImportController::class, 'store'])->name('organizations.import.store');
+
+        Route::get('/membres', [AdminMemberController::class, 'index'])->name('members.index');
+        Route::post('/membres', [AdminMemberController::class, 'store'])->name('members.store');
+        Route::delete('/membres/{member}', [AdminMemberController::class, 'destroy'])->name('members.destroy');
+
+        Route::get('/membres/importer', [AdminMemberImportController::class, 'create'])->name('members.import.create');
+        Route::post('/membres/importer', [AdminMemberImportController::class, 'store'])->name('members.import.store');
     });
 });

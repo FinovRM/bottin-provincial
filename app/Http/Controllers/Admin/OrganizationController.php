@@ -12,6 +12,25 @@ use Illuminate\View\View;
 
 class OrganizationController extends Controller
 {
+    public function index(Request $request): View
+    {
+        $query = $request->string('q')->trim()->toString();
+
+        $organizations = Organization::with('parent')
+            ->when($query !== '', fn ($organizations) => $organizations->where(function ($organizations) use ($query) {
+                $organizations->where('name', 'like', "%{$query}%")
+                    ->orWhere('responsable_email', 'like', "%{$query}%");
+            }))
+            ->orderBy('level')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.organizations.index', [
+            'organizations' => $organizations,
+            'query' => $query,
+        ]);
+    }
+
     public function create(): View
     {
         return view('admin.organizations.create', [
@@ -26,7 +45,7 @@ class OrganizationController extends Controller
 
         Organization::create($validated);
 
-        return redirect()->route('admin.dashboard')->with('status', 'Organisation créée.');
+        return redirect()->route('admin.organizations.index')->with('status', 'Organisation créée.');
     }
 
     public function edit(Organization $organization): View
@@ -50,7 +69,18 @@ class OrganizationController extends Controller
 
         $organization->update($validated);
 
-        return redirect()->route('admin.dashboard')->with('status', 'Organisation mise à jour.');
+        return redirect()->route('admin.organizations.index')->with('status', 'Organisation mise à jour.');
+    }
+
+    public function destroy(Organization $organization): RedirectResponse
+    {
+        if ($organization->children()->exists()) {
+            return back()->with('status', 'Impossible de supprimer une organisation qui a des organisations sous elle. Supprimez-les d\'abord.');
+        }
+
+        $organization->delete();
+
+        return redirect()->route('admin.organizations.index')->with('status', 'Organisation supprimée.');
     }
 
     /**
