@@ -81,13 +81,40 @@ class Organization extends Authenticatable
     }
 
     /**
-     * This organization plus everything below it — what its responsable can query.
+     * This organization plus everything below it — what its responsable can query
+     * and manage (create/edit/delete children, view its own organization profile).
      *
      * @return Collection<int, Organization>
      */
     public function visibleOrganizations(): Collection
     {
         return Collection::make([$this])->merge($this->descendantOrganizations());
+    }
+
+    /**
+     * Every organization visible to a member of this organization: everything at
+     * this level or below, anywhere in the tree — no level above. Used to scope
+     * the "interroger les membres" query for a responsable, matching what a
+     * member holding a role here would themselves see by default. The organization
+     * immediately above ("ma direction") is available separately, on demand —
+     * see directionOrganizations().
+     *
+     * @return Collection<int, Organization>
+     */
+    public function visibleToMembers(): Collection
+    {
+        return Organization::whereIn('level', $this->level->andBelow())->get();
+    }
+
+    /**
+     * The organization immediately above this one — "ma direction" — or an empty
+     * collection if this is a provincial (top-level) organization.
+     *
+     * @return Collection<int, Organization>
+     */
+    public function directionOrganizations(): Collection
+    {
+        return $this->parent ? Collection::make([$this->parent]) : Collection::make();
     }
 
     public function routeNotificationForMail(): string

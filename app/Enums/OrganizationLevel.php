@@ -37,4 +37,18 @@ enum OrganizationLevel: string
             self::Local => null,
         };
     }
+
+    /**
+     * This level and every level below it, from most to least senior.
+     *
+     * @return array<int, self>
+     */
+    public function andBelow(): array
+    {
+        return match ($this) {
+            self::Provincial => [self::Provincial, self::Regional, self::Local],
+            self::Regional => [self::Regional, self::Local],
+            self::Local => [self::Local],
+        };
+    }
 }

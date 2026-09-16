@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\OrganizationLevel;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\MemberRole;
@@ -15,6 +16,11 @@ class MemberController extends Controller
     public function index(Request $request): View
     {
         $query = $request->string('q')->trim()->toString();
+        $regionId = $request->string('region_id')->trim()->toString();
+        $localId = $request->string('local_id')->trim()->toString();
+        $role = $request->string('role')->trim()->toString();
+
+        $organizations = Organization::orderBy('name')->get();
 
         $memberRoles = MemberRole::with(['member', 'organization'])
             ->when($query !== '', fn ($memberRoles) => $memberRoles->where(function ($memberRoles) use ($query) {
@@ -24,13 +30,35 @@ class MemberController extends Controller
                             ->orWhere('email', 'like', "%{$query}%");
                     });
             }))
+            ->when($localId !== '', fn ($memberRoles) => $memberRoles->where('organization_id', $localId))
+            ->when($localId === '' && $regionId !== '', function ($memberRoles) use ($regionId, $organizations) {
+                $regionOrganizationIds = $organizations->where('parent_id', (int) $regionId)->pluck('id')->push((int) $regionId);
+                $memberRoles->whereIn('organization_id', $regionOrganizationIds);
+            })
+            ->when($role !== '', fn ($memberRoles) => $memberRoles->where('role', $role))
             ->get()
             ->sortBy('member.name');
 
+        $regions = $organizations->where('level', OrganizationLevel::Regional)->sortBy('name');
+        $allLocals = $organizations->where('level', OrganizationLevel::Local);
+        $locals = $allLocals
+            ->when($regionId !== '', fn ($locals) => $locals->where('parent_id', (int) $regionId))
+            ->sortBy('name');
+
+        $roles = MemberRole::distinct()->orderBy('role')->pluck('role');
+
         return view('admin.members.index', [
             'memberRoles' => $memberRoles,
-            'organizations' => Organization::orderBy('name')->get(),
+            'organizations' => $organizations,
+            'regions' => $regions,
+            'locals' => $locals,
+            'roles' => $roles,
+            'showRegionFilter' => $regions->count() > 1,
+            'showLocalFilter' => $allLocals->count() > 1 || $regions->count() > 0,
             'query' => $query,
+            'regionId' => $regionId,
+            'localId' => $localId,
+            'role' => $role,
         ]);
     }
 

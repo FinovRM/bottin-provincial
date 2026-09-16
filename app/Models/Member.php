@@ -38,26 +38,41 @@ class Member extends Authenticatable
     }
 
     /**
-     * Every organization this member can query: for each role they hold, its
-     * siblings (same level, same parent) plus everything below it.
+     * Every organization this member can query: for each role they hold, everything
+     * at that role's level or below, anywhere in the tree, plus that role's own
+     * parent organization. A regional member sees every region and every local
+     * organization, plus their own provincial office; a local member sees every
+     * local organization, plus their own regional direction.
      *
      * @return Collection<int, Organization>
      */
     public function visibleOrganizations(): Collection
     {
-        $visible = Collection::make();
+        $organizations = $this->roles
+            ->flatMap(fn (MemberRole $role) => $role->organization->visibleToMembers())
+            ->unique('id')
+            ->values()
+            ->all();
 
-        foreach ($this->roles as $role) {
-            $organization = $role->organization;
+        return new Collection($organizations);
+    }
 
-            $siblings = Organization::where('parent_id', $organization->parent_id)
-                ->where('level', $organization->level)
-                ->get();
+    /**
+     * The organization(s) immediately above this member's roles — "ma direction".
+     * A member holding roles at different levels may have more than one.
+     *
+     * @return Collection<int, Organization>
+     */
+    public function directionOrganizations(): Collection
+    {
+        $organizations = $this->roles
+            ->map(fn (MemberRole $role) => $role->organization->parent)
+            ->filter()
+            ->unique('id')
+            ->values()
+            ->all();
 
-            $visible = $visible->merge($siblings)->merge($organization->descendantOrganizations());
-        }
-
-        return $visible->unique('id');
+        return new Collection($organizations);
     }
 
     public function routeNotificationForMail(): string
