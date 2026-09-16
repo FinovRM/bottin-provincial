@@ -6,39 +6,58 @@ use Database\Factories\MemberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['organization_id', 'role', 'name', 'email', 'cell_phone'])]
+#[Fillable(['name', 'email', 'cell_phone'])]
 class Member extends Authenticatable
 {
     /** @use HasFactory<MemberFactory> */
     use HasFactory, Notifiable;
 
     /**
-     * @return BelongsTo<Organization, $this>
+     * @return HasMany<MemberRole, $this>
      */
-    public function organization(): BelongsTo
+    public function roles(): HasMany
     {
-        return $this->belongsTo(Organization::class);
+        return $this->hasMany(MemberRole::class);
     }
 
     /**
-     * Organizations at the same level under the same parent as this member's own
-     * organization, plus everything below that organization — what this member can query.
+     * Find the person already registered under this email, or create a new one.
+     * Name and cell phone are only ever set on first entry — an existing person's
+     * data is never overwritten by a later role submission.
+     */
+    public static function findOrCreateByEmail(string $email, string $name, ?string $cellPhone): self
+    {
+        return static::firstOrCreate(
+            ['email' => $email],
+            ['name' => $name, 'cell_phone' => $cellPhone],
+        );
+    }
+
+    /**
+     * Every organization this member can query: for each role they hold, its
+     * siblings (same level, same parent) plus everything below it.
      *
      * @return Collection<int, Organization>
      */
     public function visibleOrganizations(): Collection
     {
-        $organization = $this->organization;
+        $visible = Collection::make();
 
-        $siblings = Organization::where('parent_id', $organization->parent_id)
-            ->where('level', $organization->level)
-            ->get();
+        foreach ($this->roles as $role) {
+            $organization = $role->organization;
 
-        return $siblings->merge($organization->descendantOrganizations())->unique('id');
+            $siblings = Organization::where('parent_id', $organization->parent_id)
+                ->where('level', $organization->level)
+                ->get();
+
+            $visible = $visible->merge($siblings)->merge($organization->descendantOrganizations());
+        }
+
+        return $visible->unique('id');
     }
 
     public function routeNotificationForMail(): string

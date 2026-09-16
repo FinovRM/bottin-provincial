@@ -3,12 +3,14 @@
 namespace Database\Factories;
 
 use App\Models\Member;
+use App\Models\MemberRole;
+use App\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Member>
+ * @extends Factory<MemberRole>
  */
-class MemberFactory extends Factory
+class MemberRoleFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -18,9 +20,9 @@ class MemberFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'cell_phone' => fake()->phoneNumber(),
+            'member_id' => Member::factory(),
+            'organization_id' => Organization::factory(),
+            'role' => fake()->jobTitle(),
         ];
     }
 }

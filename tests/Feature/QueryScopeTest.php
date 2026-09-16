@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Member;
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\URL;
@@ -35,6 +36,14 @@ class QueryScopeTest extends TestCase
         return compact('provincial', 'region1', 'region2', 'local1', 'local2', 'local3');
     }
 
+    private function addRole(Organization $organization, string $name, string $email): Member
+    {
+        $member = Member::create(['name' => $name, 'email' => $email]);
+        $organization->memberRoles()->create(['member_id' => $member->id, 'role' => 'Bénévole']);
+
+        return $member;
+    }
+
     public function test_a_regional_responsable_only_sees_its_own_subtree_in_the_organization_query(): void
     {
         $tree = $this->tree();
@@ -53,8 +62,8 @@ class QueryScopeTest extends TestCase
     public function test_a_regional_responsable_only_sees_members_of_its_own_subtree(): void
     {
         $tree = $this->tree();
-        $tree['local1']->members()->create(['role' => 'Bénévole', 'name' => 'Membre Local 1', 'email' => 'l1@example.com']);
-        $tree['local3']->members()->create(['role' => 'Bénévole', 'name' => 'Membre Local 3', 'email' => 'l3@example.com']);
+        $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
+        $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
         $response = $this->actingAs($tree['region1'])->get('/tableau-de-bord/membres');
 
@@ -66,9 +75,9 @@ class QueryScopeTest extends TestCase
     public function test_a_member_sees_siblings_of_its_own_organization_and_its_subtree(): void
     {
         $tree = $this->tree();
-        $tree['local1']->members()->create(['role' => 'Bénévole', 'name' => 'Membre Local 1', 'email' => 'l1@example.com']);
-        $memberOfLocal2 = $tree['local2']->members()->create(['role' => 'Bénévole', 'name' => 'Membre Local 2', 'email' => 'l2@example.com']);
-        $tree['local3']->members()->create(['role' => 'Bénévole', 'name' => 'Membre Local 3', 'email' => 'l3@example.com']);
+        $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
+        $memberOfLocal2 = $this->addRole($tree['local2'], 'Membre Local 2', 'l2@example.com');
+        $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
         $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $memberOfLocal2->id]);
         $this->get($url);
@@ -86,9 +95,9 @@ class QueryScopeTest extends TestCase
     public function test_a_member_of_a_regional_organization_also_sees_its_own_subtree(): void
     {
         $tree = $this->tree();
-        $memberOfRegion1 = $tree['region1']->members()->create(['role' => 'Coordination', 'name' => 'Membre Région 1', 'email' => 'r1@example.com']);
-        $tree['local1']->members()->create(['role' => 'Bénévole', 'name' => 'Membre Local 1', 'email' => 'l1@example.com']);
-        $tree['local3']->members()->create(['role' => 'Bénévole', 'name' => 'Membre Local 3', 'email' => 'l3@example.com']);
+        $memberOfRegion1 = $this->addRole($tree['region1'], 'Membre Région 1', 'r1@example.com');
+        $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
+        $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
         $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $memberOfRegion1->id]);
         $this->get($url);

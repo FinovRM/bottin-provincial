@@ -33,19 +33,19 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($members as $member)
+                @forelse ($memberRoles as $memberRole)
                     <tr class="border-b border-gray-100 last:border-0">
-                        <td class="px-4 py-2 font-medium">{{ $member->name }}</td>
-                        <td class="px-4 py-2">{{ $member->role }}</td>
-                        <td class="px-4 py-2 text-gray-500">{{ $member->organization->name }}</td>
-                        <td class="px-4 py-2">{{ $member->email }}</td>
-                        <td class="px-4 py-2">{{ $member->cell_phone ?: '—' }}</td>
+                        <td class="px-4 py-2 font-medium">{{ $memberRole->member->name }}</td>
+                        <td class="px-4 py-2">{{ $memberRole->role }}</td>
+                        <td class="px-4 py-2 text-gray-500">{{ $memberRole->organization->name }}</td>
+                        <td class="px-4 py-2">{{ $memberRole->member->email }}</td>
+                        <td class="px-4 py-2">{{ $memberRole->member->cell_phone ?: '—' }}</td>
                         <td class="px-4 py-2 text-right">
-                            <form method="POST" action="{{ route('admin.members.destroy', $member) }}"
-                                onsubmit="return confirm('Supprimer ce membre ?');">
+                            <form method="POST" action="{{ route('admin.members.destroy', $memberRole) }}"
+                                onsubmit="return confirm('Retirer ce rôle ?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-sm text-red-600 hover:underline">Supprimer</button>
+                                <button type="submit" class="text-sm text-red-600 hover:underline">Retirer</button>
                             </form>
                         </td>
                     </tr>
@@ -59,7 +59,11 @@
     </div>
 
     <section class="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 class="mb-4 text-lg font-semibold">Ajouter un membre</h2>
+        <h2 class="mb-4 text-lg font-semibold">Ajouter un rôle</h2>
+        <p class="mb-4 text-xs text-gray-500">
+            Une personne (un courriel) peut occuper plusieurs rôles. Si ce courriel est déjà enregistré, le nom et
+            le cellulaire déjà en fiche sont conservés — seul le rôle s'ajoute.
+        </p>
 
         <form method="POST" action="{{ route('admin.members.store') }}" class="max-w-sm space-y-4">
             @csrf
@@ -84,15 +88,15 @@
                     class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             </div>
             <div>
-                <label for="name" class="block text-sm font-medium">Nom</label>
-                <input id="name" type="text" name="name" value="{{ old('name') }}" required
-                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-            </div>
-            <div>
                 <label for="email" class="block text-sm font-medium">Courriel</label>
                 <input id="email" type="email" name="email" value="{{ old('email') }}" required
                     class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
                 @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label for="name" class="block text-sm font-medium">Nom</label>
+                <input id="name" type="text" name="name" value="{{ old('name') }}" required
+                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             </div>
             <div>
                 <label for="cell_phone" class="block text-sm font-medium">Cellulaire</label>

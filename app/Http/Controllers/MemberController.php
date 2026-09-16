@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Member;
+use App\Models\MemberRole;
 use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,41 +17,48 @@ class MemberController extends Controller
         /** @var Organization $organization */
         $organization = Auth::user();
 
-        Gate::authorize('create', [Member::class, $organization]);
+        Gate::authorize('create', [MemberRole::class, $organization]);
 
         $validated = $request->validate([
             'role' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:members,email'],
+            'email' => ['required', 'email', 'max:255'],
             'cell_phone' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $organization->members()->create($validated);
+        $member = Member::findOrCreateByEmail($validated['email'], $validated['name'], $validated['cell_phone'] ?? null);
+
+        $organization->memberRoles()->create([
+            'member_id' => $member->id,
+            'role' => $validated['role'],
+        ]);
 
         return redirect()->route('dashboard.properties');
     }
 
-    public function update(Request $request, Member $member): RedirectResponse
+    public function update(Request $request, MemberRole $memberRole): RedirectResponse
     {
-        Gate::authorize('update', $member);
+        Gate::authorize('update', $memberRole);
 
         $validated = $request->validate([
             'role' => ['required', 'string', 'max:255'],
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:members,email,'.$member->id],
-            'cell_phone' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $member->update($validated);
+        $memberRole->update($validated);
 
         return redirect()->route('dashboard.properties');
     }
 
-    public function destroy(Member $member): RedirectResponse
+    public function destroy(MemberRole $memberRole): RedirectResponse
     {
-        Gate::authorize('delete', $member);
+        Gate::authorize('delete', $memberRole);
 
-        $member->delete();
+        $member = $memberRole->member;
+        $memberRole->delete();
+
+        if ($member->roles()->doesntExist()) {
+            $member->delete();
+        }
 
         return redirect()->route('dashboard.properties');
     }

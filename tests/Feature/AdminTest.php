@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Admin;
+use App\Models\Member;
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -131,11 +132,12 @@ class AdminTest extends TestCase
         $this->assertDatabaseHas('organizations', ['id' => $provincial->id]);
     }
 
-    public function test_an_admin_sees_every_member_and_can_add_one(): void
+    public function test_an_admin_sees_every_member_and_can_add_a_role(): void
     {
         $admin = Admin::factory()->create();
         $provincial = Organization::factory()->provincial()->create();
-        $provincial->members()->create(['role' => 'Direction', 'name' => 'Membre existant', 'email' => 'existant@example.com']);
+        $existing = Member::create(['name' => 'Membre existant', 'email' => 'existant@example.com']);
+        $provincial->memberRoles()->create(['member_id' => $existing->id, 'role' => 'Direction']);
 
         $response = $this->actingAs($admin, 'admin')->get('/admin/membres');
         $response->assertOk();
@@ -149,18 +151,21 @@ class AdminTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.members.index'));
-        $this->assertDatabaseHas('members', ['email' => 'nouveau-membre@example.com', 'organization_id' => $provincial->id]);
+        $this->assertDatabaseHas('members', ['email' => 'nouveau-membre@example.com']);
+        $this->assertDatabaseHas('member_roles', ['organization_id' => $provincial->id, 'role' => 'Trésorier']);
     }
 
-    public function test_an_admin_can_delete_a_member(): void
+    public function test_an_admin_can_delete_a_role(): void
     {
         $admin = Admin::factory()->create();
         $organization = Organization::factory()->provincial()->create();
-        $member = $organization->members()->create(['role' => 'Bénévole', 'name' => 'À retirer', 'email' => 'retirer@example.com']);
+        $member = Member::create(['name' => 'À retirer', 'email' => 'retirer@example.com']);
+        $memberRole = $organization->memberRoles()->create(['member_id' => $member->id, 'role' => 'Bénévole']);
 
-        $response = $this->actingAs($admin, 'admin')->delete("/admin/membres/{$member->id}");
+        $response = $this->actingAs($admin, 'admin')->delete("/admin/membres/{$memberRole->id}");
 
         $response->assertRedirect(route('admin.members.index'));
+        $this->assertDatabaseMissing('member_roles', ['id' => $memberRole->id]);
         $this->assertDatabaseMissing('members', ['id' => $member->id]);
     }
 
@@ -179,9 +184,7 @@ class AdminTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.members.import.create'));
-        $this->assertDatabaseHas('members', [
-            'email' => 'membre-importe@example.com',
-            'organization_id' => $organization->id,
-        ]);
+        $this->assertDatabaseHas('members', ['email' => 'membre-importe@example.com']);
+        $this->assertDatabaseHas('member_roles', ['organization_id' => $organization->id, 'role' => 'Bénévole']);
     }
 }

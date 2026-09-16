@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Member;
+use App\Models\MemberRole;
 use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,17 +16,19 @@ class MemberController extends Controller
     {
         $query = $request->string('q')->trim()->toString();
 
-        $members = Member::with('organization')
-            ->when($query !== '', fn ($members) => $members->where(function ($members) use ($query) {
-                $members->where('name', 'like', "%{$query}%")
-                    ->orWhere('role', 'like', "%{$query}%")
-                    ->orWhere('email', 'like', "%{$query}%");
+        $memberRoles = MemberRole::with(['member', 'organization'])
+            ->when($query !== '', fn ($memberRoles) => $memberRoles->where(function ($memberRoles) use ($query) {
+                $memberRoles->where('role', 'like', "%{$query}%")
+                    ->orWhereHas('member', function ($members) use ($query) {
+                        $members->where('name', 'like', "%{$query}%")
+                            ->orWhere('email', 'like', "%{$query}%");
+                    });
             }))
-            ->orderBy('name')
-            ->get();
+            ->get()
+            ->sortBy('member.name');
 
         return view('admin.members.index', [
-            'members' => $members,
+            'memberRoles' => $memberRoles,
             'organizations' => Organization::orderBy('name')->get(),
             'query' => $query,
         ]);
@@ -37,19 +40,30 @@ class MemberController extends Controller
             'organization_id' => ['required', 'integer', 'exists:organizations,id'],
             'role' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:members,email'],
+            'email' => ['required', 'email', 'max:255'],
             'cell_phone' => ['nullable', 'string', 'max:255'],
         ]);
 
-        Member::create($validated);
+        $member = Member::findOrCreateByEmail($validated['email'], $validated['name'], $validated['cell_phone'] ?? null);
 
-        return redirect()->route('admin.members.index')->with('status', 'Membre créé.');
+        MemberRole::create([
+            'member_id' => $member->id,
+            'organization_id' => $validated['organization_id'],
+            'role' => $validated['role'],
+        ]);
+
+        return redirect()->route('admin.members.index')->with('status', 'Rôle créé.');
     }
 
-    public function destroy(Member $member): RedirectResponse
+    public function destroy(MemberRole $memberRole): RedirectResponse
     {
-        $member->delete();
+        $member = $memberRole->member;
+        $memberRole->delete();
 
-        return redirect()->route('admin.members.index')->with('status', 'Membre supprimé.');
+        if ($member->roles()->doesntExist()) {
+            $member->delete();
+        }
+
+        return redirect()->route('admin.members.index')->with('status', 'Rôle supprimé.');
     }
 }

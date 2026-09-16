@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Member;
+use App\Models\MemberRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -15,17 +15,17 @@ class MemberSearchController extends Controller
 
         $organizationIds = Auth::user()->visibleOrganizations()->pluck('id');
 
-        $members = Member::whereIn('organization_id', $organizationIds)
-            ->with('organization')
-            ->when($query !== '', fn ($members) => $members->where(function ($members) use ($query) {
-                $members->where('name', 'like', "%{$query}%")
-                    ->orWhere('role', 'like', "%{$query}%");
+        $memberRoles = MemberRole::whereIn('organization_id', $organizationIds)
+            ->with(['member', 'organization'])
+            ->when($query !== '', fn ($memberRoles) => $memberRoles->where(function ($memberRoles) use ($query) {
+                $memberRoles->where('role', 'like', "%{$query}%")
+                    ->orWhereHas('member', fn ($members) => $members->where('name', 'like', "%{$query}%"));
             }))
-            ->orderBy('name')
-            ->get();
+            ->get()
+            ->sortBy('member.name');
 
         return view('dashboard.members', [
-            'members' => $members,
+            'memberRoles' => $memberRoles,
             'query' => $query,
         ]);
     }

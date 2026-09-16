@@ -50,11 +50,11 @@ class Organization extends Authenticatable
     }
 
     /**
-     * @return HasMany<Member, $this>
+     * @return HasMany<MemberRole, $this>
      */
-    public function members(): HasMany
+    public function memberRoles(): HasMany
     {
-        return $this->hasMany(Member::class);
+        return $this->hasMany(MemberRole::class);
     }
 
     public function canCreateChildren(): bool

@@ -150,49 +150,46 @@
 
     <section class="rounded-lg border border-gray-200 bg-white p-5">
         <h2 class="mb-4 text-lg font-semibold">Membres de {{ $organization->name }}</h2>
+        <p class="mb-4 text-xs text-gray-500">
+            Une personne (un courriel) peut occuper plusieurs rôles ; son nom et son cellulaire ne se saisissent
+            qu'une fois et restent ensuite fixes. Chaque rôle s'ajoute, se modifie ou se retire séparément.
+        </p>
 
-        @forelse ($organization->members as $member)
-            <form method="POST" action="{{ route('members.update', $member) }}"
-                class="mb-3 flex flex-col gap-2 border-b border-gray-100 pb-3 last:border-0 sm:flex-row sm:items-end">
-                @csrf
-                @method('PUT')
+        @forelse ($organization->memberRoles as $memberRole)
+            <div class="mb-3 flex flex-col gap-2 border-b border-gray-100 pb-3 last:border-0 sm:flex-row sm:items-end">
+                <form method="POST" action="{{ route('members.update', $memberRole) }}" class="flex-1">
+                    @csrf
+                    @method('PUT')
 
-                <div class="flex-1">
                     <label class="block text-xs font-medium text-gray-500">Fonction</label>
-                    <input type="text" name="role" value="{{ old('role', $member->role) }}" required
+                    <input type="text" name="role" value="{{ old('role', $memberRole->role) }}" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm">
+                    <button type="submit" class="mt-1 text-xs text-gray-700 hover:underline">Enregistrer</button>
+                </form>
+                <div class="flex-1 text-sm">
+                    <p class="text-xs font-medium text-gray-500">Nom</p>
+                    <p>{{ $memberRole->member->name }}</p>
                 </div>
-                <div class="flex-1">
-                    <label class="block text-xs font-medium text-gray-500">Nom</label>
-                    <input type="text" name="name" value="{{ old('name', $member->name) }}" required
-                        class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm">
+                <div class="flex-1 text-sm">
+                    <p class="text-xs font-medium text-gray-500">Courriel</p>
+                    <p>{{ $memberRole->member->email }}</p>
                 </div>
-                <div class="flex-1">
-                    <label class="block text-xs font-medium text-gray-500">Courriel</label>
-                    <input type="email" name="email" value="{{ old('email', $member->email) }}" required
-                        class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm">
+                <div class="flex-1 text-sm">
+                    <p class="text-xs font-medium text-gray-500">Cellulaire</p>
+                    <p>{{ $memberRole->member->cell_phone ?: '—' }}</p>
                 </div>
-                <div class="flex-1">
-                    <label class="block text-xs font-medium text-gray-500">Cellulaire</label>
-                    <input type="text" name="cell_phone" value="{{ old('cell_phone', $member->cell_phone) }}"
-                        class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm">
-                </div>
-
-                <div class="flex gap-3 sm:pb-1.5">
-                    <button type="submit" class="text-sm text-gray-700 hover:underline">Enregistrer</button>
-                </div>
-            </form>
-            <form method="POST" action="{{ route('members.destroy', $member) }}"
-                onsubmit="return confirm('Retirer ce membre ?');" class="-mt-2 mb-3">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="text-sm text-red-600 hover:underline">Retirer {{ $member->name }}</button>
-            </form>
+                <form method="POST" action="{{ route('members.destroy', $memberRole) }}"
+                    onsubmit="return confirm('Retirer ce rôle ?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-sm text-red-600 hover:underline">Retirer</button>
+                </form>
+            </div>
         @empty
             <p class="text-sm text-gray-500">Aucun membre pour l'instant.</p>
         @endforelse
 
-        <h3 class="mt-6 mb-3 text-sm font-semibold">Ajouter un membre</h3>
+        <h3 class="mt-6 mb-3 text-sm font-semibold">Ajouter un rôle</h3>
 
         <form method="POST" action="{{ route('members.store') }}" class="max-w-sm space-y-4">
             @csrf
@@ -203,20 +200,22 @@
                     class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             </div>
             <div>
-                <label for="member_name" class="block text-sm font-medium">Nom</label>
-                <input id="member_name" type="text" name="name" value="{{ old('name') }}" required
-                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-            </div>
-            <div>
                 <label for="member_email" class="block text-sm font-medium">Courriel</label>
                 <input id="member_email" type="email" name="email" value="{{ old('email') }}" required
                     class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
                 @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
             <div>
+                <label for="member_name" class="block text-sm font-medium">Nom</label>
+                <input id="member_name" type="text" name="name" value="{{ old('name') }}" required
+                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                <p class="mt-1 text-xs text-gray-500">Ignoré si ce courriel est déjà enregistré.</p>
+            </div>
+            <div>
                 <label for="member_cell_phone" class="block text-sm font-medium">Cellulaire</label>
                 <input id="member_cell_phone" type="text" name="cell_phone" value="{{ old('cell_phone') }}"
                     class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                <p class="mt-1 text-xs text-gray-500">Ignoré si ce courriel est déjà enregistré.</p>
             </div>
 
             <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">

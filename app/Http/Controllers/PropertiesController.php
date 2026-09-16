@@ -9,7 +9,7 @@ class PropertiesController extends Controller
 {
     public function __invoke(): View
     {
-        $organization = Auth::user()->load('children', 'members');
+        $organization = Auth::user()->load('children', 'memberRoles.member');
 
         return view('dashboard.properties', [
             'organization' => $organization,

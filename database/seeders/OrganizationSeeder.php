@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Member;
 use App\Models\Organization;
 use Illuminate\Database\Seeder;
 
@@ -61,32 +62,19 @@ class OrganizationSeeder extends Seeder
             'responsable_email' => 'local-r2-1@example.com',
         ]);
 
-        $provincial->members()->create([
-            'role' => 'Direction générale',
-            'name' => 'Alice Provincial',
-            'email' => 'alice.provincial@example.com',
-            'cell_phone' => '514-555-0001',
-        ]);
+        $alice = Member::create(['name' => 'Alice Provincial', 'email' => 'alice.provincial@example.com', 'cell_phone' => '514-555-0001']);
+        $provincial->memberRoles()->create(['member_id' => $alice->id, 'role' => 'Direction générale']);
 
-        $region1->members()->create([
-            'role' => 'Coordination régionale',
-            'name' => 'Bruno Régional',
-            'email' => 'bruno.regional@example.com',
-            'cell_phone' => '514-555-0002',
-        ]);
+        $bruno = Member::create(['name' => 'Bruno Régional', 'email' => 'bruno.regional@example.com', 'cell_phone' => '514-555-0002']);
+        $region1->memberRoles()->create(['member_id' => $bruno->id, 'role' => 'Coordination régionale']);
 
-        $locals->first()->members()->create([
-            'role' => 'Bénévole',
-            'name' => 'Chantal Locale',
-            'email' => 'chantal.locale@example.com',
-            'cell_phone' => '514-555-0003',
-        ]);
+        // Bruno also volunteers locally — one person, two roles, shared name/cell.
+        $locals->first()->memberRoles()->create(['member_id' => $bruno->id, 'role' => 'Bénévole']);
 
-        $localInRegion2->members()->create([
-            'role' => 'Bénévole',
-            'name' => 'David Autre-Région',
-            'email' => 'david.autreregion@example.com',
-            'cell_phone' => '514-555-0004',
-        ]);
+        $chantal = Member::create(['name' => 'Chantal Locale', 'email' => 'chantal.locale@example.com', 'cell_phone' => '514-555-0003']);
+        $locals->first()->memberRoles()->create(['member_id' => $chantal->id, 'role' => 'Bénévole']);
+
+        $david = Member::create(['name' => 'David Autre-Région', 'email' => 'david.autreregion@example.com', 'cell_phone' => '514-555-0004']);
+        $localInRegion2->memberRoles()->create(['member_id' => $david->id, 'role' => 'Bénévole']);
     }
 }

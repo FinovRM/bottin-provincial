@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Member;
+use App\Models\MemberRole;
 use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -73,16 +74,16 @@ class MemberImportController extends Controller
             throw new \RuntimeException('organisation introuvable.');
         }
 
-        if (Member::where('email', $data['email'])->exists()) {
-            throw new \RuntimeException('cette adresse courriel est déjà utilisée.');
-        }
+        $member = Member::findOrCreateByEmail(
+            $data['email'],
+            $data['name'],
+            $data['cell_phone'] !== '' ? $data['cell_phone'] : null,
+        );
 
-        Member::create([
+        MemberRole::create([
+            'member_id' => $member->id,
             'organization_id' => $organization->id,
             'role' => $data['role'],
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'cell_phone' => $data['cell_phone'] !== '' ? $data['cell_phone'] : null,
         ]);
     }
 }

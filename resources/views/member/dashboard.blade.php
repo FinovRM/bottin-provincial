@@ -23,13 +23,13 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($members as $member)
+                @forelse ($memberRoles as $memberRole)
                     <tr class="border-b border-gray-100 last:border-0">
-                        <td class="px-4 py-2 font-medium">{{ $member->name }}</td>
-                        <td class="px-4 py-2">{{ $member->role }}</td>
-                        <td class="px-4 py-2 text-gray-500">{{ $member->organization->name }}</td>
-                        <td class="px-4 py-2">{{ $member->email }}</td>
-                        <td class="px-4 py-2">{{ $member->cell_phone ?: '—' }}</td>
+                        <td class="px-4 py-2 font-medium">{{ $memberRole->member->name }}</td>
+                        <td class="px-4 py-2">{{ $memberRole->role }}</td>
+                        <td class="px-4 py-2 text-gray-500">{{ $memberRole->organization->name }}</td>
+                        <td class="px-4 py-2">{{ $memberRole->member->email }}</td>
+                        <td class="px-4 py-2">{{ $memberRole->member->cell_phone ?: '—' }}</td>
                     </tr>
                 @empty
                     <tr>

@@ -48,8 +48,8 @@ Route::middleware('auth:web')->group(function () {
     Route::delete('/organisations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
 
     Route::post('/membres', [MemberController::class, 'store'])->name('members.store');
-    Route::put('/membres/{member}', [MemberController::class, 'update'])->name('members.update');
-    Route::delete('/membres/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
+    Route::put('/membres/{memberRole}', [MemberController::class, 'update'])->name('members.update');
+    Route::delete('/membres/{memberRole}', [MemberController::class, 'destroy'])->name('members.destroy');
 });
 
 // Member space.
@@ -82,7 +82,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/membres', [AdminMemberController::class, 'index'])->name('members.index');
         Route::post('/membres', [AdminMemberController::class, 'store'])->name('members.store');
-        Route::delete('/membres/{member}', [AdminMemberController::class, 'destroy'])->name('members.destroy');
+        Route::delete('/membres/{memberRole}', [AdminMemberController::class, 'destroy'])->name('members.destroy');
 
         Route::get('/membres/importer', [AdminMemberImportController::class, 'create'])->name('members.import.create');
         Route::post('/membres/importer', [AdminMemberImportController::class, 'store'])->name('members.import.store');
