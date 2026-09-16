@@ -117,6 +117,30 @@ class Organization extends Authenticatable
         return $this->parent ? Collection::make([$this->parent]) : Collection::make();
     }
 
+    /**
+     * Every organization this same person (by responsable email) is in charge of —
+     * "les bottins dont il a la charge". Usually just this one.
+     *
+     * @return Collection<int, Organization>
+     */
+    public function organizationsManagedBySameResponsable(): Collection
+    {
+        return Organization::where('responsable_email', $this->responsable_email)->get();
+    }
+
+    /**
+     * Among every organization this person is in charge of, the most senior one.
+     * Used when an éditeur uses the "Bottin" link: their access level there is
+     * that of their highest organization, not necessarily the one they're
+     * currently editing.
+     */
+    public function highestManagedOrganization(): self
+    {
+        return $this->organizationsManagedBySameResponsable()
+            ->sortBy(fn (self $organization) => $organization->level->rank())
+            ->first();
+    }
+
     public function routeNotificationForMail(): string
     {
         return $this->responsable_email;

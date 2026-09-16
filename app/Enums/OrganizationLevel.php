@@ -51,4 +51,16 @@ enum OrganizationLevel: string
             self::Local => [self::Local],
         };
     }
+
+    /**
+     * Seniority rank: lower is more senior. Provincial is the most senior level.
+     */
+    public function rank(): int
+    {
+        return match ($this) {
+            self::Provincial => 0,
+            self::Regional => 1,
+            self::Local => 2,
+        };
+    }
 }

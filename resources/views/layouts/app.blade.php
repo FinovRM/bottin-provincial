@@ -14,12 +14,16 @@
                 <nav class="flex items-center gap-4 text-sm">
                     @if (auth('web')->check())
                         <a href="{{ route('dashboard') }}" class="text-gray-700 hover:underline">Mon tableau de bord</a>
+                        <a href="{{ route('bottin.index') }}" class="text-gray-700 hover:underline">Bottin</a>
+                        @if (auth('web')->user()->organizationsManagedBySameResponsable()->count() > 1)
+                            <a href="{{ route('dashboard.switch') }}" class="text-gray-700 hover:underline">Changer d'organisation</a>
+                        @endif
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="text-gray-700 hover:underline">Déconnexion</button>
                         </form>
                     @elseif (auth('member')->check())
-                        <a href="{{ route('member.dashboard') }}" class="text-gray-700 hover:underline">Coordonnées des membres</a>
+                        <a href="{{ route('bottin.index') }}" class="text-gray-700 hover:underline">Bottin</a>
                         <form method="POST" action="{{ route('member.logout') }}">
                             @csrf
                             <button type="submit" class="text-gray-700 hover:underline">Déconnexion</button>

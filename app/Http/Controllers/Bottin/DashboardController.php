@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Member;
+namespace App\Http\Controllers\Bottin;
 
 use App\Enums\OrganizationLevel;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\MemberRole;
 use App\Models\Organization;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -21,12 +22,8 @@ class DashboardController extends Controller
         $role = $request->string('role')->trim()->toString();
         $myDirection = $request->boolean('my_direction');
 
-        /** @var Member $authMember */
-        $authMember = Auth::guard('member')->user();
-
-        $scopedOrganizations = $authMember->visibleOrganizations();
+        [$scopedOrganizations, $directionOrganizations] = $this->scope();
         $organizationIds = $scopedOrganizations->pluck('id');
-        $directionOrganizations = $authMember->directionOrganizations();
 
         $memberRoles = MemberRole::query()
             ->with(['member', 'organization'])
@@ -61,7 +58,7 @@ class DashboardController extends Controller
             ->sortBy('name');
 
         // Every region with at least one visible local, plus any region directly
-        // visible on its own — not just regions the member sees as an organization.
+        // visible on its own — not just regions the viewer sees as an organization.
         $regionIdsWithLocals = $allLocals->pluck('parent_id')->filter()->unique();
         $regions = $scopedOrganizations->where('level', OrganizationLevel::Regional)
             ->merge(Organization::whereIn('id', $regionIdsWithLocals)->get())
@@ -73,7 +70,7 @@ class DashboardController extends Controller
             ->orderBy('role')
             ->pluck('role');
 
-        return view('member.dashboard', [
+        return view('bottin.dashboard', [
             'memberRoles' => $memberRoles,
             'regions' => $regions,
             'locals' => $locals,
@@ -87,5 +84,24 @@ class DashboardController extends Controller
             'role' => $role,
             'myDirection' => $myDirection,
         ]);
+    }
+
+    /**
+     * @return array{0: Collection<int, Organization>, 1: Collection<int, Organization>}
+     */
+    private function scope(): array
+    {
+        if (Auth::guard('member')->check()) {
+            /** @var Member $authMember */
+            $authMember = Auth::guard('member')->user();
+
+            return [$authMember->visibleOrganizations(), $authMember->directionOrganizations()];
+        }
+
+        /** @var Organization $authOrganization */
+        $authOrganization = Auth::guard('web')->user();
+        $highest = $authOrganization->highestManagedOrganization();
+
+        return [$highest->visibleToMembers(), $highest->directionOrganizations()];
     }
 }

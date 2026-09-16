@@ -7,22 +7,30 @@ use App\Http\Controllers\Admin\MemberImportController as AdminMemberImportContro
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Admin\OrganizationImportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\LoginChoiceController;
 use App\Http\Controllers\Auth\LoginLinkController;
+use App\Http\Controllers\Bottin\DashboardController as BottinDashboardController;
 use App\Http\Controllers\BottinController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Member\DashboardController as MemberDashboardController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\MemberSearchController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\OrganizationSearchController;
+use App\Http\Controllers\OrganizationSwitchController;
 use App\Http\Controllers\PropertiesController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', BottinController::class)->name('bottin');
 
 Route::middleware('guest:web,member')->group(function () {
-    Route::get('/connexion', [LoginLinkController::class, 'create'])->name('login');
-    Route::post('/connexion', [LoginLinkController::class, 'store'])->name('login.store');
+    Route::get('/connexion', LoginChoiceController::class)->name('login');
+
+    Route::get('/connexion/bottin', [LoginLinkController::class, 'createBottin'])->name('login.bottin');
+    Route::post('/connexion/bottin', [LoginLinkController::class, 'storeBottin'])->name('login.bottin.store');
+
+    Route::get('/connexion/editeur', [LoginLinkController::class, 'createEditeur'])->name('login.editeur');
+    Route::post('/connexion/editeur', [LoginLinkController::class, 'storeEditeur'])->name('login.editeur.store');
+
     Route::view('/connexion/envoye', 'auth.link-sent')->name('login.sent');
 });
 
@@ -34,9 +42,21 @@ Route::get('/membre/connexion/{member}/verifier', [AuthenticatedSessionControlle
     ->middleware('signed')
     ->name('member-login.consume');
 
-// Responsable (organization) space.
+// Bottin — consultation, shared by members and by responsables using the Bottin door.
+Route::middleware('auth:member,web')->group(function () {
+    Route::get('/bottin', BottinDashboardController::class)->name('bottin.index');
+});
+
+Route::post('/membre/deconnexion', [AuthenticatedSessionController::class, 'destroyMember'])
+    ->middleware('auth:member')
+    ->name('member.logout');
+
+// Éditeur (organization) space.
 Route::middleware('auth:web')->group(function () {
     Route::post('/deconnexion', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+    Route::get('/tableau-de-bord/organisations-gerees', [OrganizationSwitchController::class, 'index'])->name('dashboard.switch');
+    Route::post('/tableau-de-bord/organisations-gerees/{organization}', [OrganizationSwitchController::class, 'store'])->name('dashboard.switch.store');
 
     Route::get('/tableau-de-bord', DashboardController::class)->name('dashboard');
     Route::get('/tableau-de-bord/proprietes', PropertiesController::class)->name('dashboard.properties');
@@ -50,12 +70,6 @@ Route::middleware('auth:web')->group(function () {
     Route::post('/membres', [MemberController::class, 'store'])->name('members.store');
     Route::put('/membres/{memberRole}', [MemberController::class, 'update'])->name('members.update');
     Route::delete('/membres/{memberRole}', [MemberController::class, 'destroy'])->name('members.destroy');
-});
-
-// Member space.
-Route::middleware('auth:member')->group(function () {
-    Route::post('/membre/deconnexion', [AuthenticatedSessionController::class, 'destroyMember'])->name('member.logout');
-    Route::get('/membre/tableau-de-bord', MemberDashboardController::class)->name('member.dashboard');
 });
 
 // Admin space.

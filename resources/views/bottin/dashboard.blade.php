@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Coordonnées des membres')
+@section('title', 'Bottin')
 
 @section('content')
-    <h1 class="mb-6 text-2xl font-semibold">Coordonnées des membres</h1>
+    <h1 class="mb-6 text-2xl font-semibold">Bottin — coordonnées des membres</h1>
 
     <div class="flex flex-col gap-6 lg:flex-row">
         <aside class="w-full lg:w-48 lg:shrink-0">
-            @include('partials.member-filters', ['action' => route('member.dashboard')])
+            @include('partials.member-filters', ['action' => route('bottin.index')])
         </aside>
 
         <div class="flex-1">
-            <form method="GET" action="{{ route('member.dashboard') }}" class="mb-6 max-w-sm">
+            <form method="GET" action="{{ route('bottin.index') }}" class="mb-6 max-w-sm">
                 @if ($myDirection)
                     <input type="hidden" name="my_direction" value="1">
                 @endif

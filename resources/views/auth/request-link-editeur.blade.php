@@ -1,16 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Connexion')
+@section('title', 'Connexion — Éditeur')
 
 @section('content')
-    <h1 class="mb-6 text-2xl font-semibold">Connexion</h1>
+    <p class="mb-2">
+        <a href="{{ route('login') }}" class="text-sm text-gray-500 hover:underline">← Connexion</a>
+    </p>
+    <h1 class="mb-6 text-2xl font-semibold">Éditeur</h1>
 
     <p class="mb-6 text-sm text-gray-600">
         Entrez l'adresse courriel inscrite comme responsable de votre organisation. Vous recevrez un lien de
         connexion valide 15 minutes.
     </p>
 
-    <form method="POST" action="{{ route('login.store') }}" class="max-w-sm space-y-4">
+    <form method="POST" action="{{ route('login.editeur.store') }}" class="max-w-sm space-y-4">
         @csrf
 
         <div>
