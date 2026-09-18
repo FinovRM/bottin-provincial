@@ -2,12 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organization;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     public function __invoke(): View
     {
-        return view('dashboard.hub');
+        /** @var Organization $authOrganization */
+        $authOrganization = Auth::user();
+
+        return view('dashboard.hub', [
+            'identity' => $authOrganization->identity(),
+        ]);
     }
 }

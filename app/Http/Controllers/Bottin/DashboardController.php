@@ -83,6 +83,7 @@ class DashboardController extends Controller
             'localId' => $localId,
             'role' => $role,
             'myDirection' => $myDirection,
+            'identity' => $this->identity(),
         ]);
     }
 
@@ -103,5 +104,38 @@ class DashboardController extends Controller
         $highest = $authOrganization->highestManagedOrganization();
 
         return [$highest->visibleToMembers(), $highest->directionOrganizations()];
+    }
+
+    /**
+     * Who is looking at the bottin right now — for the black banner under the menu.
+     *
+     * @return array{name: string, role: string, organization: string, responsable: string}
+     */
+    private function identity(): array
+    {
+        if (Auth::guard('member')->check()) {
+            /** @var Member $authMember */
+            $authMember = Auth::guard('member')->user();
+            $primaryRole = $authMember->primaryRole();
+
+            return [
+                'name' => $authMember->name,
+                'role' => $primaryRole?->role ?? '—',
+                'organization' => $primaryRole?->organization->name ?? '—',
+                'responsable' => $primaryRole
+                    ? trim("{$primaryRole->organization->responsable_first_name} {$primaryRole->organization->responsable_last_name}")
+                    : '—',
+            ];
+        }
+
+        /** @var Organization $authOrganization */
+        $authOrganization = Auth::guard('web')->user();
+        $highest = $authOrganization->highestManagedOrganization();
+
+        return [
+            ...$authOrganization->identity(),
+            'organization' => $highest->name,
+            'responsable' => $highest->identity()['responsable'],
+        ];
     }
 }

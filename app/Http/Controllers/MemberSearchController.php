@@ -84,6 +84,7 @@ class MemberSearchController extends Controller
             'localId' => $localId,
             'role' => $role,
             'myDirection' => $myDirection,
+            'identity' => $authOrganization->identity(),
         ]);
     }
 }

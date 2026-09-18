@@ -41,6 +41,17 @@
             </div>
         </header>
 
+        @isset($identity)
+            <div class="bg-black">
+                <div class="mx-auto flex max-w-5xl flex-wrap items-baseline gap-x-6 gap-y-1 px-6 py-3 text-sm">
+                    <span><span class="text-gray-400">Visiteur :</span> <span class="text-white">{{ $identity['name'] }}</span></span>
+                    <span><span class="text-gray-400">Rôle :</span> <span class="text-white">{{ $identity['role'] }}</span></span>
+                    <span><span class="text-gray-400">Organisation :</span> <span class="text-white">{{ $identity['organization'] }}</span></span>
+                    <span><span class="text-gray-400">Responsable :</span> <span class="text-white">{{ $identity['responsable'] }}</span></span>
+                </div>
+            </div>
+        @endisset
+
         <main class="mx-auto max-w-5xl px-6 py-8">
             @if (session('status'))
                 <div class="mb-6 rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">

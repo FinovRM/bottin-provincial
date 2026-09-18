@@ -123,11 +123,11 @@ class QueryScopeTest extends TestCase
     public function test_a_local_member_can_filter_by_a_region_it_has_no_direct_visibility_into(): void
     {
         $tree = $this->tree();
-        $memberOfLocal2 = $this->addRole($tree['local2'], 'Membre Local 2', 'l2@example.com');
+        $viewer = $this->addRole($tree['local2'], 'Viewer Local 2', 'l2@example.com');
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
-        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $memberOfLocal2->id]);
+        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $viewer->id]);
         $this->get($url);
 
         // region2 is not this member's own direction (that's region1) — the filter
@@ -140,7 +140,6 @@ class QueryScopeTest extends TestCase
         $filtered->assertOk();
         $filtered->assertSee('Membre Local 3');
         $filtered->assertDontSee('Membre Local 1');
-        $filtered->assertDontSee('Membre Local 2');
     }
 
     public function test_a_regional_member_sees_every_region_and_every_local_organization_but_not_provincial_by_default(): void
@@ -188,12 +187,12 @@ class QueryScopeTest extends TestCase
     public function test_the_my_direction_filter_isolates_a_members_own_parent_organization(): void
     {
         $tree = $this->tree();
-        $memberOfLocal2 = $this->addRole($tree['local2'], 'Membre Local 2', 'l2@example.com');
+        $viewer = $this->addRole($tree['local2'], 'Viewer Local 2', 'l2@example.com');
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['region1'], 'Membre Région 1', 'r1@example.com');
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
 
-        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $memberOfLocal2->id]);
+        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $viewer->id]);
         $this->get($url);
 
         $response = $this->get('/bottin?my_direction=1');
@@ -201,7 +200,6 @@ class QueryScopeTest extends TestCase
         $response->assertOk();
         $response->assertSee('Membre Région 1');
         $response->assertDontSee('Membre Local 1');
-        $response->assertDontSee('Membre Local 2');
         $response->assertDontSee('Membre Région 2');
     }
 

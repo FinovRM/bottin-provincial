@@ -1,17 +1,26 @@
 @extends('layouts.app')
 
-@section('title', 'Interroger les organisations')
+@section('title', 'Bottin des organisations')
 
 @section('content')
-    <p class="mb-2">
+    @include('partials.hero-banner', [
+        'title' => 'Bottin des organisations',
+        'description' => 'Recherchez les organisations sous votre responsabilité.',
+    ])
+
+    <p class="mb-6">
         <a href="{{ route('dashboard') }}" class="text-sm text-gray-500 hover:underline">← Mon tableau de bord</a>
     </p>
-    <h1 class="mb-6 text-2xl font-semibold">Organisations</h1>
 
     <form method="GET" action="{{ route('dashboard.organizations') }}" class="mb-6 max-w-sm">
-        <label for="q" class="block text-sm font-medium">Rechercher par nom</label>
-        <input id="q" type="text" name="q" value="{{ $query }}"
-            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+        <label for="q" class="block text-sm font-medium text-gray-500">Recherche par nom</label>
+        <div class="relative mt-1">
+            <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
+            </svg>
+            <input id="q" type="text" name="q" value="{{ $query }}" placeholder="Nom de l'organisation…"
+                class="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm">
+        </div>
     </form>
 
     <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">

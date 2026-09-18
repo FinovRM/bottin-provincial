@@ -75,6 +75,15 @@ class Member extends Authenticatable
         return new Collection($organizations);
     }
 
+    /**
+     * Among every role this member holds, the one at their most senior organization.
+     * Used to show a single "role / organization" identity for this member.
+     */
+    public function primaryRole(): ?MemberRole
+    {
+        return $this->roles->sortBy(fn (MemberRole $role) => $role->organization->level->rank())->first();
+    }
+
     public function routeNotificationForMail(): string
     {
         return $this->email;

@@ -141,6 +141,24 @@ class Organization extends Authenticatable
             ->first();
     }
 
+    /**
+     * Who's connected, for the black identity banner under the menu, on pages
+     * scoped to this organization itself (not the highest one it manages).
+     *
+     * @return array{name: string, role: string, organization: string, responsable: string}
+     */
+    public function identity(): array
+    {
+        $name = trim("{$this->responsable_first_name} {$this->responsable_last_name}");
+
+        return [
+            'name' => $name,
+            'role' => 'Responsable de bottin',
+            'organization' => $this->name,
+            'responsable' => $name,
+        ];
+    }
+
     public function routeNotificationForMail(): string
     {
         return $this->responsable_email;
