@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Member;
 use App\Models\Organization;
 use App\Notifications\BottinLoginLinkNotification;
-use App\Notifications\OrganizationLoginLinkNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -39,78 +38,14 @@ class LoginLinkTest extends TestCase
         Notification::assertSentOnDemand(BottinLoginLinkNotification::class);
     }
 
-    public function test_the_editeur_door_notifies_a_matching_organization(): void
-    {
-        Notification::fake();
-
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'resp@example.com']);
-
-        $response = $this->post('/connexion/editeur', ['email' => 'resp@example.com']);
-
-        $response->assertRedirect(route('login.sent'));
-        Notification::assertSentTo($organization, OrganizationLoginLinkNotification::class);
-    }
-
-    public function test_the_editeur_door_ignores_members(): void
-    {
-        Notification::fake();
-
-        Member::create(['name' => 'Test', 'email' => 'membre@example.com']);
-
-        $response = $this->post('/connexion/editeur', ['email' => 'membre@example.com']);
-
-        $response->assertRedirect(route('login.sent'));
-        Notification::assertNothingSent();
-    }
-
-    public function test_an_unknown_email_does_not_error_on_either_door(): void
+    public function test_an_unknown_email_does_not_error(): void
     {
         Notification::fake();
 
         $this->post('/connexion/bottin', ['email' => 'inconnu@example.com'])
             ->assertRedirect(route('login.sent'));
-        $this->post('/connexion/editeur', ['email' => 'inconnu@example.com'])
-            ->assertRedirect(route('login.sent'));
 
         Notification::assertNothingSent();
-    }
-
-    public function test_a_signed_editeur_link_goes_to_the_dashboard(): void
-    {
-        $organization = Organization::factory()->provincial()->create();
-
-        $url = URL::temporarySignedRoute('login.consume', now()->addMinutes(15), [
-            'organization' => $organization->id,
-        ]);
-
-        $response = $this->get($url);
-
-        $response->assertRedirect(route('dashboard'));
-        $this->assertAuthenticatedAs($organization);
-    }
-
-    public function test_an_editeur_in_charge_of_several_organizations_is_sent_to_the_switch_page(): void
-    {
-        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'multi@example.com']);
-        Organization::factory()->regional($provincial)->create(['responsable_email' => 'multi@example.com']);
-
-        $url = URL::temporarySignedRoute('login.consume', now()->addMinutes(15), [
-            'organization' => $provincial->id,
-        ]);
-
-        $response = $this->get($url);
-
-        $response->assertRedirect(route('dashboard.switch'));
-    }
-
-    public function test_an_unsigned_editeur_link_is_rejected(): void
-    {
-        $organization = Organization::factory()->provincial()->create();
-
-        $response = $this->get(route('login.consume', ['organization' => $organization->id]));
-
-        $response->assertForbidden();
-        $this->assertGuest();
     }
 
     public function test_the_bottin_declaration_must_be_confirmed(): void
@@ -139,7 +74,7 @@ class LoginLinkTest extends TestCase
         $this->assertAuthenticatedAs($member, 'member');
     }
 
-    public function test_confirming_the_declaration_with_a_single_matching_organization_logs_in_and_reaches_the_bottin(): void
+    public function test_confirming_the_declaration_with_a_single_matching_organization_logs_in_and_reaches_properties(): void
     {
         $organization = Organization::factory()->provincial()->create(['responsable_email' => 'resp@example.com']);
 
@@ -147,7 +82,7 @@ class LoginLinkTest extends TestCase
 
         $response = $this->post($url, ['confirmed' => '1']);
 
-        $response->assertRedirect(route('bottin.index'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertAuthenticatedAs($organization);
     }
 
@@ -186,9 +121,9 @@ class LoginLinkTest extends TestCase
         $this->assertSame($roleAtProvincial->id, session('active_member_role_id'));
     }
 
-    public function test_a_responsable_of_several_organizations_gets_a_choice_on_the_bottin_door(): void
+    public function test_a_responsable_of_several_organizations_gets_a_choice_and_reaches_properties(): void
     {
-        Organization::factory()->provincial()->create(['name' => 'Org A', 'responsable_email' => 'multi@example.com']);
+        $orgA = Organization::factory()->provincial()->create(['name' => 'Org A', 'responsable_email' => 'multi@example.com']);
         Organization::factory()->provincial()->create(['name' => 'Org B', 'responsable_email' => 'multi@example.com']);
 
         $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => 'multi@example.com']);
@@ -199,5 +134,11 @@ class LoginLinkTest extends TestCase
         $response->assertSee('Org A');
         $response->assertSee('Org B');
         $response->assertSee('Responsable de bottin');
+        $this->assertGuest();
+
+        $choiceResponse = $this->post($url, ['role_choice' => "organization:{$orgA->id}"]);
+
+        $choiceResponse->assertRedirect(route('dashboard.properties'));
+        $this->assertAuthenticatedAs($orgA);
     }
 }

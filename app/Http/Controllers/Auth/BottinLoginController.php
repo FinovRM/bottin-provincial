@@ -101,10 +101,12 @@ class BottinLoginController extends Controller
     {
         if ($identity['guard'] === 'web') {
             Auth::guard('web')->login($identity['model']);
-        } else {
-            Auth::guard('member')->login($identity['model']);
-            session(['active_member_role_id' => $identity['roleId']]);
+
+            return redirect()->route('dashboard.properties');
         }
+
+        Auth::guard('member')->login($identity['model']);
+        session(['active_member_role_id' => $identity['roleId']]);
 
         return redirect()->route('bottin.index');
     }

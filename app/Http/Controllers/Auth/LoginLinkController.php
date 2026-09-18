@@ -6,11 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\Organization;
 use App\Notifications\BottinLoginLinkNotification;
-use App\Notifications\OrganizationLoginLinkNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\View\View;
 
 class LoginLinkController extends Controller
 {
@@ -30,26 +28,6 @@ class LoginLinkController extends Controller
         if (Organization::where('responsable_email', $email)->exists() || Member::where('email', $email)->exists()) {
             Notification::route('mail', $email)->notify(new BottinLoginLinkNotification($email));
         }
-
-        return redirect()->route('login.sent');
-    }
-
-    public function createEditeur(): View
-    {
-        return view('auth.request-link-editeur');
-    }
-
-    /**
-     * Only a responsable courriel sends a link here.
-     */
-    public function storeEditeur(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'email' => ['required', 'email'],
-        ]);
-
-        Organization::where('responsable_email', $validated['email'])->first()
-            ?->notify(new OrganizationLoginLinkNotification);
 
         return redirect()->route('login.sent');
     }

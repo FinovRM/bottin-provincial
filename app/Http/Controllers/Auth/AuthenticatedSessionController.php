@@ -3,24 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthenticatedSessionController extends Controller
 {
-    public function store(Organization $organization): RedirectResponse
-    {
-        Auth::guard('web')->login($organization);
-
-        if ($organization->organizationsManagedBySameResponsable()->count() > 1) {
-            return redirect()->route('dashboard.switch');
-        }
-
-        return redirect()->route('dashboard');
-    }
-
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();

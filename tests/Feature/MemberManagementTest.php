@@ -124,6 +124,17 @@ class MemberManagementTest extends TestCase
         $this->assertDatabaseMissing('member_roles', ['id' => $roleAtProvincial->id]);
     }
 
+    public function test_properties_page_requires_the_responsable_declaration_on_every_visit(): void
+    {
+        $organization = Organization::factory()->provincial()->create();
+
+        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+
+        $response->assertOk();
+        $response->assertSee('Déclaration du responsable');
+        $response->assertDontSee('Membres de');
+    }
+
     public function test_properties_page_notifies_missing_roles_for_the_organizations_level(): void
     {
         $organization = Organization::factory()->provincial()->create();
@@ -132,7 +143,7 @@ class MemberManagementTest extends TestCase
         $member = Member::create(['name' => 'Filled', 'email' => 'filled@example.com']);
         $organization->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes', ['responsable_confirmed' => '1']);
 
         $response->assertOk();
         $response->assertSee('Trésorier');
@@ -145,7 +156,7 @@ class MemberManagementTest extends TestCase
         $member = Member::create(['name' => 'Filled', 'email' => 'filled@example.com']);
         $organization->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes', ['responsable_confirmed' => '1']);
 
         $response->assertOk();
         $response->assertDontSee('Rôle(s) minimum manquant(s)');
@@ -186,7 +197,7 @@ class MemberManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create(['updated_at' => now()]);
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes', ['responsable_confirmed' => '1']);
 
         $response->assertOk();
         $response->assertSee('Mise à jour : '.$organization->updated_at->format('Y-m-d à H:i'));

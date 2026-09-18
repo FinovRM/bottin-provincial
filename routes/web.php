@@ -29,15 +29,8 @@ Route::middleware('guest:web,member')->group(function () {
 
     Route::post('/connexion/bottin', [LoginLinkController::class, 'storeBottin'])->name('login.bottin.store');
 
-    Route::get('/connexion/editeur', [LoginLinkController::class, 'createEditeur'])->name('login.editeur');
-    Route::post('/connexion/editeur', [LoginLinkController::class, 'storeEditeur'])->name('login.editeur.store');
-
     Route::view('/connexion/envoye', 'auth.link-sent')->name('login.sent');
 });
-
-Route::get('/connexion/{organization}/verifier', [AuthenticatedSessionController::class, 'store'])
-    ->middleware('signed')
-    ->name('login.consume');
 
 Route::get('/connexion/verifier', [BottinLoginController::class, 'show'])
     ->middleware(['signed', 'guest:web,member'])
@@ -63,7 +56,10 @@ Route::middleware('auth:web')->group(function () {
     Route::post('/tableau-de-bord/organisations-gerees/{organization}', [OrganizationSwitchController::class, 'store'])->name('dashboard.switch.store');
 
     Route::get('/tableau-de-bord', DashboardController::class)->name('dashboard');
-    Route::get('/tableau-de-bord/proprietes', PropertiesController::class)->name('dashboard.properties');
+
+    Route::get('/tableau-de-bord/proprietes', [PropertiesController::class, 'show'])->name('dashboard.properties');
+    Route::post('/tableau-de-bord/proprietes', [PropertiesController::class, 'confirm']);
+
     Route::get('/tableau-de-bord/organisations', OrganizationSearchController::class)->name('dashboard.organizations');
     Route::get('/tableau-de-bord/membres', MemberSearchController::class)->name('dashboard.members');
 

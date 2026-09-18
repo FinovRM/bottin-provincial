@@ -32,9 +32,4 @@
             Envoyer le lien de connexion
         </button>
     </form>
-
-    <p class="mt-8 text-sm text-gray-500">
-        Vous êtes responsable d'une organisation et voulez gérer sa fiche ?
-        <a href="{{ route('login.editeur') }}" class="text-gray-700 hover:underline">Accédez à l'espace Éditeur</a>.
-    </p>
 @endsection
