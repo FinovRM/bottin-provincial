@@ -16,14 +16,6 @@ class MemberRolePolicy
     }
 
     /**
-     * Determine whether the organization can update the given role.
-     */
-    public function update(Organization $authOrganization, MemberRole $memberRole): bool
-    {
-        return $authOrganization->is($memberRole->organization);
-    }
-
-    /**
      * Determine whether the organization can delete the given role.
      */
     public function delete(Organization $authOrganization, MemberRole $memberRole): bool

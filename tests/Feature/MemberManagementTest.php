@@ -72,34 +72,18 @@ class MemberManagementTest extends TestCase
         $this->assertDatabaseHas('member_roles', ['member_id' => $member->id, 'organization_id' => $provincial->id, 'role' => 'Trésorière']);
     }
 
-    public function test_an_organization_can_update_the_role_of_its_own_member(): void
+    public function test_a_role_cannot_be_updated_once_saved(): void
     {
         $organization = Organization::factory()->provincial()->create();
-        $member = Member::create(['name' => 'Ancien nom', 'email' => 'membre@example.com']);
+        $member = Member::create(['name' => 'Nom fixe', 'email' => 'membre@example.com']);
         $memberRole = $organization->memberRoles()->create(['member_id' => $member->id, 'role' => 'Bénévole']);
 
         $response = $this->actingAs($organization)->put("/membres/{$memberRole->id}", [
             'role' => 'Trésorier',
         ]);
 
-        $response->assertRedirect(route('dashboard.properties'));
-        $this->assertDatabaseHas('member_roles', ['id' => $memberRole->id, 'role' => 'Trésorier']);
-        $this->assertDatabaseHas('members', ['id' => $member->id, 'name' => 'Ancien nom']);
-    }
-
-    public function test_an_organization_cannot_update_another_organizations_role(): void
-    {
-        $provincial = Organization::factory()->provincial()->create();
-        $regional = Organization::factory()->regional($provincial)->create();
-        $member = Member::create(['name' => 'Membre régional', 'email' => 'membre-regional@example.com']);
-        $memberRole = $regional->memberRoles()->create(['member_id' => $member->id, 'role' => 'Bénévole']);
-
-        $response = $this->actingAs($provincial)->put("/membres/{$memberRole->id}", [
-            'role' => 'Piraté',
-        ]);
-
-        $response->assertForbidden();
-        $this->assertDatabaseMissing('member_roles', ['id' => $memberRole->id, 'role' => 'Piraté']);
+        $response->assertStatus(405);
+        $this->assertDatabaseHas('member_roles', ['id' => $memberRole->id, 'role' => 'Bénévole']);
     }
 
     public function test_an_organization_can_delete_a_role_of_its_own_member(): void

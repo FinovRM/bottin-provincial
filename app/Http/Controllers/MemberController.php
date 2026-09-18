@@ -38,19 +38,6 @@ class MemberController extends Controller
         return redirect()->route('dashboard.properties');
     }
 
-    public function update(Request $request, MemberRole $memberRole): RedirectResponse
-    {
-        Gate::authorize('update', $memberRole);
-
-        $validated = $request->validate([
-            'role' => ['required', 'string', 'max:255'],
-        ]);
-
-        $memberRole->update($validated);
-
-        return redirect()->route('dashboard.properties');
-    }
-
     public function destroy(MemberRole $memberRole): RedirectResponse
     {
         Gate::authorize('delete', $memberRole);

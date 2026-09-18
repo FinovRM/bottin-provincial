@@ -93,7 +93,8 @@
         <h2 class="mb-4 text-lg font-semibold">Membres de {{ $organization->name }}</h2>
         <p class="mb-4 text-xs text-gray-500">
             Une personne (un courriel) peut occuper plusieurs rôles ; son nom et son cellulaire ne se saisissent
-            qu'une fois et restent ensuite fixes. Chaque rôle s'ajoute, se modifie ou se retire séparément.
+            qu'une fois et restent ensuite fixes. Une fiche ne se modifie pas une fois enregistrée — au besoin,
+            retirez-la et ajoutez-en une nouvelle.
         </p>
 
         @if ($missingRoles->isNotEmpty())
@@ -102,39 +103,41 @@
             </div>
         @endif
 
-        @forelse ($organization->memberRoles as $memberRole)
-            <div class="mb-3 flex flex-col gap-2 border-b border-gray-100 pb-3 last:border-0 sm:flex-row sm:items-end">
-                <form method="POST" action="{{ route('members.update', $memberRole) }}" class="flex-1">
-                    @csrf
-                    @method('PUT')
-
-                    <label class="block text-xs font-medium text-gray-500">Fonction</label>
-                    <input type="text" name="role" value="{{ old('role', $memberRole->role) }}" required
-                        class="mt-1 w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm">
-                    <button type="submit" class="mt-1 text-xs text-gray-700 hover:underline">Enregistrer</button>
-                </form>
-                <div class="flex-1 text-sm">
-                    <p class="text-xs font-medium text-gray-500">Nom</p>
-                    <p>{{ $memberRole->member->name }}</p>
-                </div>
-                <div class="flex-1 text-sm">
-                    <p class="text-xs font-medium text-gray-500">Courriel</p>
-                    <p>{{ $memberRole->member->email }}</p>
-                </div>
-                <div class="flex-1 text-sm">
-                    <p class="text-xs font-medium text-gray-500">Cellulaire</p>
-                    <p>{{ $memberRole->member->cell_phone ?: '—' }}</p>
-                </div>
-                <form method="POST" action="{{ route('members.destroy', $memberRole) }}"
-                    onsubmit="return confirm('Retirer ce rôle ?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="text-sm text-red-600 hover:underline">Retirer</button>
-                </form>
-            </div>
-        @empty
-            <p class="text-sm text-gray-500">Aucun membre pour l'instant.</p>
-        @endforelse
+        <div class="mb-6 overflow-x-auto rounded-lg border border-gray-200">
+            <table class="w-full text-left text-sm">
+                <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                    <tr>
+                        <th class="px-4 py-2">Fonction</th>
+                        <th class="px-4 py-2">Nom</th>
+                        <th class="px-4 py-2">Courriel</th>
+                        <th class="px-4 py-2">Cellulaire</th>
+                        <th class="px-4 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($organization->memberRoles as $memberRole)
+                        <tr class="border-b border-gray-100 last:border-0">
+                            <td class="px-4 py-2">{{ $memberRole->role }}</td>
+                            <td class="px-4 py-2 font-medium">{{ $memberRole->member->name }}</td>
+                            <td class="px-4 py-2">{{ $memberRole->member->email }}</td>
+                            <td class="px-4 py-2">{{ $memberRole->member->cell_phone ?: '—' }}</td>
+                            <td class="px-4 py-2 text-right">
+                                <form method="POST" action="{{ route('members.destroy', $memberRole) }}"
+                                    onsubmit="return confirm('Retirer ce rôle ?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-sm text-red-600 hover:underline">Retirer</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-6 text-center text-gray-500">Aucun membre pour l'instant.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
         <h3 class="mt-6 mb-3 text-sm font-semibold">Ajouter un rôle</h3>
 
