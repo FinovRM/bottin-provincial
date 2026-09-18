@@ -6,8 +6,10 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
 
-class MemberLoginLinkNotification extends Notification
+class BottinLoginLinkNotification extends Notification
 {
+    public function __construct(private readonly string $email) {}
+
     /**
      * Get the notification's delivery channels.
      *
@@ -24,14 +26,14 @@ class MemberLoginLinkNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $url = URL::temporarySignedRoute(
-            'member-login.consume',
+            'bottin-login.verify',
             now()->addMinutes(15),
-            ['member' => $notifiable->getKey()],
+            ['email' => $this->email],
         );
 
         return (new MailMessage)
             ->subject('Votre lien de connexion — Bottin de communication')
-            ->line("Voici votre lien de connexion pour {$notifiable->name}.")
+            ->line('Voici votre lien de connexion au Bottin de communication.')
             ->action('Se connecter', $url)
             ->line('Ce lien est valide 15 minutes. Si vous n\'avez pas demandé ce lien, vous pouvez ignorer ce courriel.');
     }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationContro
 use App\Http\Controllers\Admin\OrganizationImportController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\BottinLoginController;
 use App\Http\Controllers\Auth\LoginChoiceController;
 use App\Http\Controllers\Auth\LoginLinkController;
 use App\Http\Controllers\Bottin\DashboardController as BottinDashboardController;
@@ -39,9 +40,12 @@ Route::get('/connexion/{organization}/verifier', [AuthenticatedSessionController
     ->middleware('signed')
     ->name('login.consume');
 
-Route::get('/membre/connexion/{member}/verifier', [AuthenticatedSessionController::class, 'storeMember'])
-    ->middleware('signed')
-    ->name('member-login.consume');
+Route::get('/connexion/verifier', [BottinLoginController::class, 'show'])
+    ->middleware(['signed', 'guest:web,member'])
+    ->name('bottin-login.verify');
+
+Route::post('/connexion/verifier', [BottinLoginController::class, 'store'])
+    ->middleware(['signed', 'guest:web,member']);
 
 // Bottin — consultation, shared by members and by responsables using the Bottin door.
 Route::middleware('auth:member,web')->group(function () {

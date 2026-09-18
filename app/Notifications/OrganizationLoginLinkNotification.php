@@ -9,11 +9,6 @@ use Illuminate\Support\Facades\URL;
 class OrganizationLoginLinkNotification extends Notification
 {
     /**
-     * @param  'bottin'|'editeur'  $intent  Where the link should land once consumed.
-     */
-    public function __construct(private readonly string $intent) {}
-
-    /**
      * Get the notification's delivery channels.
      *
      * @return array<int, string>
@@ -31,7 +26,7 @@ class OrganizationLoginLinkNotification extends Notification
         $url = URL::temporarySignedRoute(
             'login.consume',
             now()->addMinutes(15),
-            ['organization' => $notifiable->getKey(), 'intent' => $this->intent],
+            ['organization' => $notifiable->getKey()],
         );
 
         return (new MailMessage)

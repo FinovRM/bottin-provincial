@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection as SupportCollection;
 
 #[Fillable(['name', 'email', 'cell_phone'])]
 class Member extends Authenticatable
@@ -38,7 +39,7 @@ class Member extends Authenticatable
     }
 
     /**
-     * Every organization this member can query: for each role they hold, everything
+     * Every organization this member can query: for each considered role, everything
      * at that role's level or below, anywhere in the tree, plus that role's own
      * parent organization. A regional member sees every region and every local
      * organization, plus their own provincial office; a local member sees every
@@ -48,7 +49,7 @@ class Member extends Authenticatable
      */
     public function visibleOrganizations(): Collection
     {
-        $organizations = $this->roles
+        $organizations = $this->consideredRoles()
             ->flatMap(fn (MemberRole $role) => $role->organization->visibleToMembers())
             ->unique('id')
             ->values()
@@ -58,14 +59,15 @@ class Member extends Authenticatable
     }
 
     /**
-     * The organization(s) immediately above this member's roles — "ma direction".
-     * A member holding roles at different levels may have more than one.
+     * The organization(s) immediately above the considered role(s) — "ma direction".
+     * A member holding roles at different levels may have more than one, unless a
+     * single role is being considered.
      *
      * @return Collection<int, Organization>
      */
     public function directionOrganizations(): Collection
     {
-        $organizations = $this->roles
+        $organizations = $this->consideredRoles()
             ->map(fn (MemberRole $role) => $role->organization->parent)
             ->filter()
             ->unique('id')
@@ -76,12 +78,37 @@ class Member extends Authenticatable
     }
 
     /**
-     * Among every role this member holds, the one at their most senior organization.
+     * The role chosen at login when this member held several — everything this
+     * member sees is then scoped to this role alone. Null if only one role was
+     * held, in which case there was nothing to choose.
+     */
+    public function activeRole(): ?MemberRole
+    {
+        $roleId = session('active_member_role_id');
+
+        return $roleId ? $this->roles->firstWhere('id', $roleId) : null;
+    }
+
+    /**
+     * The role(s) that should scope this member's access: just the active role
+     * when one was chosen among several, otherwise every role they hold.
+     *
+     * @return SupportCollection<int, MemberRole>
+     */
+    private function consideredRoles(): SupportCollection
+    {
+        $active = $this->activeRole();
+
+        return $active ? collect([$active]) : $this->roles;
+    }
+
+    /**
+     * Among the considered role(s), the one at the most senior organization.
      * Used to show a single "role / organization" identity for this member.
      */
     public function primaryRole(): ?MemberRole
     {
-        return $this->roles->sortBy(fn (MemberRole $role) => $role->organization->level->rank())->first();
+        return $this->consideredRoles()->sortBy(fn (MemberRole $role) => $role->organization->level->rank())->first();
     }
 
     public function routeNotificationForMail(): string

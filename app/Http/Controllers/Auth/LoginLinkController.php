@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\Organization;
-use App\Notifications\MemberLoginLinkNotification;
+use App\Notifications\BottinLoginLinkNotification;
 use App\Notifications\OrganizationLoginLinkNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class LoginLinkController extends Controller
@@ -19,8 +20,9 @@ class LoginLinkController extends Controller
     }
 
     /**
-     * A courriel matching either a responsable or a member sends a link. A
-     * responsable using this door lands on the Bottin, not their editing space.
+     * A courriel matching either a responsable or a member sends a link. The
+     * link itself only carries the courriel — which identity(ies) it grants
+     * access to is resolved once the link is consumed.
      */
     public function storeBottin(Request $request): RedirectResponse
     {
@@ -28,12 +30,10 @@ class LoginLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $organization = Organization::where('responsable_email', $validated['email'])->first();
+        $email = $validated['email'];
 
-        if ($organization) {
-            $organization->notify(new OrganizationLoginLinkNotification('bottin'));
-        } else {
-            Member::where('email', $validated['email'])->first()?->notify(new MemberLoginLinkNotification);
+        if (Organization::where('responsable_email', $email)->exists() || Member::where('email', $email)->exists()) {
+            Notification::route('mail', $email)->notify(new BottinLoginLinkNotification($email));
         }
 
         return redirect()->route('login.sent');
@@ -54,7 +54,7 @@ class LoginLinkController extends Controller
         ]);
 
         Organization::where('responsable_email', $validated['email'])->first()
-            ?->notify(new OrganizationLoginLinkNotification('editeur'));
+            ?->notify(new OrganizationLoginLinkNotification);
 
         return redirect()->route('login.sent');
     }

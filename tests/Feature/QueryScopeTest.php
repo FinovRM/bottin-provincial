@@ -44,6 +44,12 @@ class QueryScopeTest extends TestCase
         return $member;
     }
 
+    private function loginAsMember(string $email): void
+    {
+        $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => $email]);
+        $this->post($url, ['confirmed' => '1']);
+    }
+
     public function test_a_regional_responsable_only_sees_its_own_subtree_in_the_organization_query(): void
     {
         $tree = $this->tree();
@@ -103,8 +109,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
         $this->addRole($tree['provincial'], 'Membre Provincial', 'p1@example.com');
 
-        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $memberOfLocal2->id]);
-        $this->get($url);
+        $this->loginAsMember($memberOfLocal2->email);
 
         $response = $this->get('/bottin');
 
@@ -127,8 +132,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
-        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $viewer->id]);
-        $this->get($url);
+        $this->loginAsMember($viewer->email);
 
         // region2 is not this member's own direction (that's region1) — the filter
         // should still list it, since it has locals the member can already see.
@@ -151,8 +155,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
         $this->addRole($tree['provincial'], 'Membre Provincial', 'p1@example.com');
 
-        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $memberOfRegion1->id]);
-        $this->get($url);
+        $this->loginAsMember($memberOfRegion1->email);
 
         $response = $this->get('/bottin');
 
@@ -174,8 +177,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
-        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $memberOfRegion1->id]);
-        $this->get($url);
+        $this->loginAsMember($memberOfRegion1->email);
 
         $response = $this->get('/bottin?region_id='.$tree['region1']->id);
 
@@ -192,8 +194,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['region1'], 'Membre Région 1', 'r1@example.com');
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
 
-        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $viewer->id]);
-        $this->get($url);
+        $this->loginAsMember($viewer->email);
 
         $response = $this->get('/bottin?my_direction=1');
 
@@ -208,8 +209,7 @@ class QueryScopeTest extends TestCase
         $tree = $this->tree();
         $memberOfProvincial = $this->addRole($tree['provincial'], 'Membre Provincial', 'p1@example.com');
 
-        $url = URL::temporarySignedRoute('member-login.consume', now()->addMinutes(15), ['member' => $memberOfProvincial->id]);
-        $this->get($url);
+        $this->loginAsMember($memberOfProvincial->email);
 
         $response = $this->get('/bottin');
 
