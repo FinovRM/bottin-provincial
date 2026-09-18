@@ -20,6 +20,7 @@ use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\OrganizationSearchController;
 use App\Http\Controllers\OrganizationSwitchController;
 use App\Http\Controllers\PropertiesController;
+use App\Http\Controllers\ResponsableController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', BottinController::class)->name('bottin');
@@ -59,6 +60,9 @@ Route::middleware('auth:web')->group(function () {
 
     Route::get('/tableau-de-bord/proprietes', [PropertiesController::class, 'show'])->name('dashboard.properties');
     Route::post('/tableau-de-bord/proprietes', [PropertiesController::class, 'confirm']);
+
+    Route::get('/tableau-de-bord/proprietes/responsable/modifier', [ResponsableController::class, 'edit'])->name('responsable.edit');
+    Route::post('/tableau-de-bord/proprietes/responsable/modifier', [ResponsableController::class, 'update'])->name('responsable.update');
 
     Route::get('/tableau-de-bord/organisations', OrganizationSearchController::class)->name('dashboard.organizations');
     Route::get('/tableau-de-bord/membres', MemberSearchController::class)->name('dashboard.members');

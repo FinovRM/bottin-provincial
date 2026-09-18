@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
-    'name', 'responsable_first_name', 'responsable_last_name', 'responsable_email',
+    'name', 'responsable_first_name', 'responsable_last_name', 'responsable_email', 'responsable_cell_phone',
     'address', 'business_number', 'website', 'level', 'parent_id',
 ])]
 class Organization extends Authenticatable

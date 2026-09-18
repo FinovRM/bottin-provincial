@@ -13,41 +13,40 @@
         <a href="{{ route('dashboard') }}" class="text-sm text-gray-500 hover:underline">← Mon tableau de bord</a>
     </p>
 
+    <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
+        <h2 class="mb-4 text-lg font-semibold">Responsable du bottin</h2>
+
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="w-full text-left text-sm">
+                <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                    <tr>
+                        <th class="px-4 py-2">Fonction</th>
+                        <th class="px-4 py-2">Nom</th>
+                        <th class="px-4 py-2">Courriel</th>
+                        <th class="px-4 py-2">Cellulaire</th>
+                        <th class="px-4 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="px-4 py-2">Responsable du bottin</td>
+                        <td class="px-4 py-2 font-medium">
+                            {{ $organization->responsable_first_name }} {{ $organization->responsable_last_name }}
+                        </td>
+                        <td class="px-4 py-2">{{ $organization->responsable_email }}</td>
+                        <td class="px-4 py-2">{{ $organization->responsable_cell_phone ?: '—' }}</td>
+                        <td class="px-4 py-2 text-right">
+                            <a href="{{ route('responsable.edit') }}" class="text-sm text-gray-700 hover:underline">Modifier</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
     <form method="POST" action="{{ route('organizations.update', $organization) }}">
         @csrf
         @method('PUT')
-
-        <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
-            <h2 class="mb-4 text-lg font-semibold">Responsable du bottin</h2>
-
-            <div class="max-w-sm space-y-4">
-                <div class="flex gap-3">
-                    <div class="flex-1">
-                        <label for="responsable_first_name" class="block text-sm font-medium">Prénom</label>
-                        <input id="responsable_first_name" type="text" name="responsable_first_name"
-                            value="{{ old('responsable_first_name', $organization->responsable_first_name) }}" required
-                            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                    </div>
-                    <div class="flex-1">
-                        <label for="responsable_last_name" class="block text-sm font-medium">Nom</label>
-                        <input id="responsable_last_name" type="text" name="responsable_last_name"
-                            value="{{ old('responsable_last_name', $organization->responsable_last_name) }}" required
-                            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="responsable_email" class="block text-sm font-medium">Adresse courriel du responsable</label>
-                    <input id="responsable_email" type="email" name="responsable_email"
-                        value="{{ old('responsable_email', $organization->responsable_email) }}" required
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                    <p class="mt-1 text-xs text-gray-500">
-                        Modifier ce courriel transfère l'accès à cette fiche à la nouvelle adresse.
-                    </p>
-                    @error('responsable_email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
-            </div>
-        </section>
 
         <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
             <h2 class="mb-4 text-lg font-semibold">Coordonnées de l'organisation ({{ $organization->level->label() }})</h2>

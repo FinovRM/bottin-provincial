@@ -47,23 +47,18 @@ class OrganizationHierarchyTest extends TestCase
         $this->assertDatabaseMissing('organizations', ['name' => 'Sous-organisation']);
     }
 
-    public function test_an_organization_can_update_its_own_fiche_and_transfer_access_by_email(): void
+    public function test_an_organization_can_update_its_own_coordinates(): void
     {
-        $organization = Organization::factory()->provincial()->create([
-            'responsable_email' => 'ancien@example.com',
-        ]);
+        $organization = Organization::factory()->provincial()->create();
 
         $response = $this->actingAs($organization)->put("/organisations/{$organization->id}", [
-            'name' => $organization->name,
-            'responsable_first_name' => 'Nouveau',
-            'responsable_last_name' => 'Responsable',
-            'responsable_email' => 'nouveau@example.com',
+            'name' => 'Nouveau nom',
         ]);
 
         $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseHas('organizations', [
             'id' => $organization->id,
-            'responsable_email' => 'nouveau@example.com',
+            'name' => 'Nouveau nom',
         ]);
     }
 
@@ -74,9 +69,6 @@ class OrganizationHierarchyTest extends TestCase
 
         $response = $this->actingAs($regional)->put("/organisations/{$provincial->id}", [
             'name' => 'Hacked',
-            'responsable_first_name' => $provincial->responsable_first_name,
-            'responsable_last_name' => $provincial->responsable_last_name,
-            'responsable_email' => $provincial->responsable_email,
         ]);
 
         $response->assertForbidden();
