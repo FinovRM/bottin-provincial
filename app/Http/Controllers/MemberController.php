@@ -33,6 +33,8 @@ class MemberController extends Controller
             'role' => $validated['role'],
         ]);
 
+        $organization->touch();
+
         return redirect()->route('dashboard.properties');
     }
 
@@ -53,12 +55,15 @@ class MemberController extends Controller
     {
         Gate::authorize('delete', $memberRole);
 
+        $organization = $memberRole->organization;
         $member = $memberRole->member;
         $memberRole->delete();
 
         if ($member->roles()->doesntExist()) {
             $member->delete();
         }
+
+        $organization->touch();
 
         return redirect()->route('dashboard.properties');
     }

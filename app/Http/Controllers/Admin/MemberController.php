@@ -80,17 +80,22 @@ class MemberController extends Controller
             'role' => $validated['role'],
         ]);
 
+        Organization::find($validated['organization_id'])->touch();
+
         return redirect()->route('admin.members.index')->with('status', 'Rôle créé.');
     }
 
     public function destroy(MemberRole $memberRole): RedirectResponse
     {
+        $organization = $memberRole->organization;
         $member = $memberRole->member;
         $memberRole->delete();
 
         if ($member->roles()->doesntExist()) {
             $member->delete();
         }
+
+        $organization->touch();
 
         return redirect()->route('admin.members.index')->with('status', 'Rôle supprimé.');
     }

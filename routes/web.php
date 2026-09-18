@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\MemberImportController as AdminMemberImportController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Admin\OrganizationImportController;
+use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\LoginChoiceController;
 use App\Http\Controllers\Auth\LoginLinkController;
@@ -100,5 +101,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/membres/importer', [AdminMemberImportController::class, 'create'])->name('members.import.create');
         Route::post('/membres/importer', [AdminMemberImportController::class, 'store'])->name('members.import.store');
+
+        Route::get('/roles', [AdminRoleController::class, 'index'])->name('roles.index');
+        Route::post('/roles', [AdminRoleController::class, 'store'])->name('roles.store');
+        Route::get('/roles/{role}/modifier', [AdminRoleController::class, 'edit'])->name('roles.edit');
+        Route::put('/roles/{role}', [AdminRoleController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}', [AdminRoleController::class, 'destroy'])->name('roles.destroy');
     });
 });
