@@ -9,7 +9,7 @@ use App\Http\Controllers\Admin\OrganizationImportController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\BottinLoginController;
-use App\Http\Controllers\Auth\LoginChoiceController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginLinkController;
 use App\Http\Controllers\Bottin\DashboardController as BottinDashboardController;
 use App\Http\Controllers\BottinController;
@@ -25,9 +25,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', BottinController::class)->name('bottin');
 
 Route::middleware('guest:web,member')->group(function () {
-    Route::get('/connexion', LoginChoiceController::class)->name('login');
+    Route::get('/connexion', LoginController::class)->name('login');
 
-    Route::get('/connexion/bottin', [LoginLinkController::class, 'createBottin'])->name('login.bottin');
     Route::post('/connexion/bottin', [LoginLinkController::class, 'storeBottin'])->name('login.bottin.store');
 
     Route::get('/connexion/editeur', [LoginLinkController::class, 'createEditeur'])->name('login.editeur');

@@ -14,11 +14,6 @@ use Illuminate\View\View;
 
 class LoginLinkController extends Controller
 {
-    public function createBottin(): View
-    {
-        return view('auth.request-link-bottin');
-    }
-
     /**
      * A courriel matching either a responsable or a member sends a link. The
      * link itself only carries the courriel — which identity(ies) it grants

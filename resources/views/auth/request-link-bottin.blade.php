@@ -1,12 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Connexion — Bottin')
+@section('title', 'Connexion')
 
 @section('content')
-    <p class="mb-2">
-        <a href="{{ route('login') }}" class="text-sm text-gray-500 hover:underline">← Connexion</a>
-    </p>
-    <h1 class="mb-6 text-2xl font-semibold">Bottin</h1>
+    <h1 class="mb-6 text-2xl font-semibold">Connexion</h1>
 
     <p class="mb-6 text-sm text-gray-600">
         Entrez votre adresse courriel (membre ou responsable). Vous recevrez un lien de connexion valide 15 minutes.
@@ -35,4 +32,9 @@
             Envoyer le lien de connexion
         </button>
     </form>
+
+    <p class="mt-8 text-sm text-gray-500">
+        Vous êtes responsable d'une organisation et voulez gérer sa fiche ?
+        <a href="{{ route('login.editeur') }}" class="text-gray-700 hover:underline">Accédez à l'espace Éditeur</a>.
+    </p>
 @endsection
