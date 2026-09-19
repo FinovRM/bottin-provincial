@@ -164,8 +164,8 @@ class DashboardController extends Controller
      */
     private function personalFilterOrganizationIds(PersonalFilter $personalFilter, Collection $scopedOrganizations): array
     {
-        $regionIds = $personalFilter->region_ids ?? [];
-        $localIds = $personalFilter->local_ids ?? [];
+        $regionIds = array_map('intval', $personalFilter->region_ids ?? []);
+        $localIds = array_map('intval', $personalFilter->local_ids ?? []);
 
         if (empty($regionIds) && empty($localIds)) {
             return $scopedOrganizations->pluck('id')->all();
