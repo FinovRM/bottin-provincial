@@ -105,15 +105,15 @@
                     class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             </div>
             <div>
+                <label for="name" class="block text-sm font-medium">Nom</label>
+                <input id="name" type="text" name="name" value="{{ old('name') }}" required
+                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+            </div>
+            <div>
                 <label for="email" class="block text-sm font-medium">Courriel</label>
                 <input id="email" type="email" name="email" value="{{ old('email') }}" required
                     class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
                 @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="name" class="block text-sm font-medium">Nom</label>
-                <input id="name" type="text" name="name" value="{{ old('name') }}" required
-                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             </div>
             <div>
                 <label for="cell_phone" class="block text-sm font-medium">Cellulaire</label>
