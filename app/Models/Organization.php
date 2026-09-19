@@ -153,7 +153,7 @@ class Organization extends Authenticatable
             'name' => $this->responsable_name,
             'role' => 'Responsable de bottin',
             'organization' => $this->name,
-            'responsable' => $this->responsable_name,
+            'responsable' => "{$this->responsable_name} ({$this->responsable_email})",
         ];
     }
 

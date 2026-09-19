@@ -122,7 +122,9 @@ class DashboardController extends Controller
                 'name' => $authMember->name,
                 'role' => $primaryRole?->role ?? '—',
                 'organization' => $primaryRole?->organization->name ?? '—',
-                'responsable' => $primaryRole?->organization->responsable_name ?? '—',
+                'responsable' => $primaryRole
+                    ? "{$primaryRole->organization->responsable_name} ({$primaryRole->organization->responsable_email})"
+                    : '—',
             ];
         }
 
