@@ -37,7 +37,11 @@ class MemberController extends Controller
             })
             ->when($role !== '', fn ($memberRoles) => $memberRoles->where('role', $role))
             ->get()
-            ->sortBy('member.name');
+            ->sortBy([
+                ['organization.name', 'asc'],
+                ['role', 'asc'],
+                ['member.name', 'asc'],
+            ]);
 
         $regions = $organizations->where('level', OrganizationLevel::Regional)->sortBy('name');
         $allLocals = $organizations->where('level', OrganizationLevel::Local);
