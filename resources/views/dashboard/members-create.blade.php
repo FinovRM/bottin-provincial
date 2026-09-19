@@ -40,8 +40,14 @@
                 class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
         </div>
 
-        <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
-            Ajouter
-        </button>
+        <div class="flex gap-3">
+            <a href="{{ route('dashboard.properties') }}"
+                class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Annuler
+            </a>
+            <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
+                Ajouter
+            </button>
+        </div>
     </form>
 @endsection

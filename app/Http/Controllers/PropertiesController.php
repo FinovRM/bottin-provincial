@@ -10,11 +10,15 @@ use Illuminate\View\View;
 class PropertiesController extends Controller
 {
     /**
-     * Every visit starts with the responsable declaration — never skipped,
-     * even within an already-authenticated session.
+     * Every visit starts with the responsable declaration — unless it was
+     * just confirmed on another page (e.g. membres/ajouter) moments ago.
      */
     public function show(): View
     {
+        if (session()->pull('responsable_declared')) {
+            return $this->properties();
+        }
+
         return view('auth.responsable-declaration');
     }
 
@@ -22,6 +26,11 @@ class PropertiesController extends Controller
     {
         $request->validate(['responsable_confirmed' => ['accepted']]);
 
+        return $this->properties();
+    }
+
+    private function properties(): View
+    {
         $organization = Auth::user()->load('children', 'memberRoles.member');
 
         $missingRoles = Role::where('level', $organization->level)

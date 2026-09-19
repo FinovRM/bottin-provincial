@@ -33,6 +33,32 @@ class MemberManagementTest extends TestCase
         $response->assertSee('Ajouter un membre');
     }
 
+    public function test_properties_does_not_redeclare_right_after_confirming_on_members_create(): void
+    {
+        $organization = Organization::factory()->provincial()->create();
+
+        $this->actingAs($organization)->post('/membres/ajouter', ['responsable_confirmed' => '1']);
+
+        $response = $this->get('/tableau-de-bord/proprietes');
+
+        $response->assertOk();
+        $response->assertSee('Membres de');
+        $response->assertDontSee('Déclaration du responsable');
+    }
+
+    public function test_properties_redeclares_on_a_later_visit(): void
+    {
+        $organization = Organization::factory()->provincial()->create();
+
+        $this->actingAs($organization)->post('/membres/ajouter', ['responsable_confirmed' => '1']);
+        $this->get('/tableau-de-bord/proprietes');
+
+        $response = $this->get('/tableau-de-bord/proprietes');
+
+        $response->assertOk();
+        $response->assertSee('Déclaration du responsable');
+    }
+
     public function test_an_organization_can_add_a_role_to_itself(): void
     {
         $organization = Organization::factory()->provincial()->create();
