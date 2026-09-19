@@ -20,3 +20,7 @@ bootstrap/cache/
 .git/
 .docker/
 docker-compose.yml
+
+# Lockfiles volumineux
+composer.lock
+package-lock.json
