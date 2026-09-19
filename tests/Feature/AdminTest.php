@@ -139,6 +139,7 @@ class AdminTest extends TestCase
         $regional = Organization::factory()->regional($provincial)->create();
 
         $response = $this->actingAs($admin, 'admin')->put("/admin/organisations/{$regional->id}", [
+            'level' => 'regional',
             'parent_id' => $otherProvincial->id,
             'name' => $regional->name,
             'responsable_name' => $regional->responsable_name,
@@ -158,6 +159,7 @@ class AdminTest extends TestCase
         $otherRegional = Organization::factory()->regional($provincial)->create();
 
         $response = $this->actingAs($admin, 'admin')->put("/admin/organisations/{$regional->id}", [
+            'level' => 'regional',
             'parent_id' => $otherRegional->id,
             'name' => $regional->name,
             'responsable_name' => $regional->responsable_name,
@@ -174,12 +176,32 @@ class AdminTest extends TestCase
         $organization = Organization::factory()->provincial()->create();
 
         $response = $this->actingAs($admin, 'admin')->put("/admin/organisations/{$organization->id}", [
+            'level' => 'provincial',
             'name' => $organization->name,
             'responsable_name' => $organization->responsable_name,
             'responsable_email' => $organization->responsable_email,
         ]);
 
         $response->assertSessionHasErrors('responsable_cell_phone');
+    }
+
+    public function test_an_admin_cannot_change_the_level_of_an_organization_with_children(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create();
+        Organization::factory()->regional($provincial)->create();
+
+        $response = $this->actingAs($admin, 'admin')->put("/admin/organisations/{$provincial->id}", [
+            'level' => 'regional',
+            'parent_id' => Organization::factory()->provincial()->create()->id,
+            'name' => $provincial->name,
+            'responsable_name' => $provincial->responsable_name,
+            'responsable_email' => $provincial->responsable_email,
+            'responsable_cell_phone' => '514-555-1234',
+        ]);
+
+        $response->assertSessionHasErrors('level');
+        $this->assertDatabaseHas('organizations', ['id' => $provincial->id, 'level' => 'provincial']);
     }
 
     public function test_an_admin_can_import_organizations_from_a_csv(): void

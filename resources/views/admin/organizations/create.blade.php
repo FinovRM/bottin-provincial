@@ -12,7 +12,7 @@
         @csrf
 
         <div>
-            <label for="level" class="block text-sm font-medium">Niveau</label>
+            <label for="level" class="block text-sm font-medium">Niveau de l'organisation</label>
             <select id="level" name="level" required class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
                 <option value="">— Choisir —</option>
                 @foreach ($levels as $level)
