@@ -66,6 +66,7 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/tableau-de-bord/organisations', OrganizationSearchController::class)->name('dashboard.organizations');
     Route::get('/tableau-de-bord/membres', MemberSearchController::class)->name('dashboard.members');
 
+    Route::get('/tableau-de-bord/proprietes/organisation/modifier', [OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::post('/organisations', [OrganizationController::class, 'store'])->name('organizations.store');
     Route::put('/organisations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
     Route::delete('/organisations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');

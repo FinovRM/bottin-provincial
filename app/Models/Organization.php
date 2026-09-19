@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
     'name', 'responsable_name', 'responsable_email', 'responsable_cell_phone',
-    'address', 'business_number', 'website', 'level', 'parent_id',
+    'address', 'city', 'province', 'postal_code', 'business_number', 'website', 'level', 'parent_id',
 ])]
 class Organization extends Authenticatable
 {

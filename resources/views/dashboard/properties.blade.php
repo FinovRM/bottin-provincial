@@ -42,49 +42,43 @@
         </div>
     </section>
 
-    <form method="POST" action="{{ route('organizations.update', $organization) }}">
-        @csrf
-        @method('PUT')
+    <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-lg font-semibold">Coordonnées de l'organisation ({{ $organization->level->label() }})</h2>
+            <a href="{{ route('organizations.edit') }}" class="text-sm text-gray-700 hover:underline">Modifier</a>
+        </div>
 
-        <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
-            <h2 class="mb-4 text-lg font-semibold">Coordonnées de l'organisation ({{ $organization->level->label() }})</h2>
-
-            <div class="max-w-sm space-y-4">
-                <div>
-                    <label for="name" class="block text-sm font-medium">Nom de l'organisation</label>
-                    <input id="name" type="text" name="name" value="{{ old('name', $organization->name) }}" required
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                    @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="address" class="block text-sm font-medium">Adresse</label>
-                    <input id="address" type="text" name="address" value="{{ old('address', $organization->address) }}"
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                    @error('address')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="business_number" class="block text-sm font-medium">Numéro d'entreprise</label>
-                    <input id="business_number" type="text" name="business_number"
-                        value="{{ old('business_number', $organization->business_number) }}"
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                    @error('business_number')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="website" class="block text-sm font-medium">Site web</label>
-                    <input id="website" type="url" name="website" placeholder="https://…"
-                        value="{{ old('website', $organization->website) }}"
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                    @error('website')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
+        <dl class="space-y-1 text-sm text-gray-700">
+            <div>
+                <dt class="inline font-medium">Nom :</dt>
+                <dd class="inline">{{ $organization->name }}</dd>
             </div>
-        </section>
-
-        <p class="mb-8">
-            <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
-                Enregistrer
-            </button>
-        </p>
-    </form>
+            <div>
+                <dt class="inline font-medium">Adresse :</dt>
+                <dd class="inline">{{ $organization->address ?: '—' }}</dd>
+            </div>
+            <div>
+                <dt class="inline font-medium">Ville :</dt>
+                <dd class="inline">{{ $organization->city ?: '—' }}</dd>
+            </div>
+            <div>
+                <dt class="inline font-medium">Province :</dt>
+                <dd class="inline">{{ $organization->province ?: '—' }}</dd>
+            </div>
+            <div>
+                <dt class="inline font-medium">CP :</dt>
+                <dd class="inline">{{ $organization->postal_code ?: '—' }}</dd>
+            </div>
+            <div>
+                <dt class="inline font-medium">No d'entreprise :</dt>
+                <dd class="inline">{{ $organization->business_number ?: '—' }}</dd>
+            </div>
+            <div>
+                <dt class="inline font-medium">Site web :</dt>
+                <dd class="inline">{{ $organization->website ?: '—' }}</dd>
+            </div>
+        </dl>
+    </section>
 
     <section class="rounded-lg border border-gray-200 bg-white p-5">
         <h2 class="mb-4 text-lg font-semibold">Membres de {{ $organization->name }}</h2>
