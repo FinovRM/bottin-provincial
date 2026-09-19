@@ -21,7 +21,6 @@
             <label for="member_name" class="block text-sm font-medium">Nom</label>
             <input id="member_name" type="text" name="name" value="{{ old('name') }}" required
                 class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-            <p class="mt-1 text-xs text-gray-500">Ignoré si ce courriel est déjà enregistré.</p>
         </div>
         <div>
             <label for="member_email" class="block text-sm font-medium">Courriel</label>
@@ -39,7 +38,6 @@
             <label for="member_cell_phone" class="block text-sm font-medium">Cellulaire</label>
             <input id="member_cell_phone" type="text" name="cell_phone" value="{{ old('cell_phone') }}"
                 class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-            <p class="mt-1 text-xs text-gray-500">Ignoré si ce courriel est déjà enregistré.</p>
         </div>
 
         <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
