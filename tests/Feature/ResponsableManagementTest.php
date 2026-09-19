@@ -24,7 +24,7 @@ class ResponsableManagementTest extends TestCase
         $response->assertSee('Responsable du bottin');
         $response->assertSee('Jeanne Tremblay');
         $response->assertSee('jeanne@example.com');
-        $response->assertSee('514-555-1234');
+        $response->assertSee('(514) 555-1234');
         $response->assertSee('Modifier');
     }
 
@@ -107,7 +107,7 @@ class ResponsableManagementTest extends TestCase
             'id' => $organization->id,
             'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'nouveau@example.com',
-            'responsable_cell_phone' => '514-555-1234',
+            'responsable_cell_phone' => '5145551234',
         ]);
     }
 

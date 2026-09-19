@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Enums\OrganizationLevel;
+use App\Support\CellPhone;
 use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -34,6 +37,17 @@ class Organization extends Authenticatable
     }
 
     /**
+     * Stored as digits only, presented as "(xxx) xxx-xxxx".
+     */
+    protected function responsableCellPhone(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => CellPhone::format($value),
+            set: fn (?string $value) => CellPhone::normalize($value),
+        );
+    }
+
+    /**
      * @return BelongsTo<Organization, $this>
      */
     public function parent(): BelongsTo
@@ -47,6 +61,14 @@ class Organization extends Authenticatable
     public function children(): HasMany
     {
         return $this->hasMany(Organization::class, 'parent_id')->orderBy('name');
+    }
+
+    /**
+     * @return MorphMany<PersonalFilter, $this>
+     */
+    public function personalFilters(): MorphMany
+    {
+        return $this->morphMany(PersonalFilter::class, 'filterable');
     }
 
     /**

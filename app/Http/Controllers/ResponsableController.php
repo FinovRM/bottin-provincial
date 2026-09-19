@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Organization;
+use App\Support\CellPhone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,6 +45,8 @@ class ResponsableController extends Controller
             'responsable_email' => ['required', 'email', 'max:255', 'confirmed', 'unique:organizations,responsable_email,'.$organization->id],
             'responsable_cell_phone' => ['required', 'string', 'max:255'],
         ]);
+
+        $validated['responsable_cell_phone'] = CellPhone::normalize($validated['responsable_cell_phone']);
 
         return view('dashboard.responsable-confirm', [
             'pending' => $validated,

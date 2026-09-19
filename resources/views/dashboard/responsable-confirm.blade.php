@@ -21,7 +21,7 @@
             </div>
             <div>
                 <dt class="inline font-medium">Cellulaire :</dt>
-                <dd class="inline">{{ $pending['responsable_cell_phone'] }}</dd>
+                <dd class="inline">{{ \App\Support\CellPhone::format($pending['responsable_cell_phone']) }}</dd>
             </div>
         </dl>
 

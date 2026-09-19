@@ -72,7 +72,7 @@ class AdminTest extends TestCase
         $this->assertDatabaseHas('organizations', [
             'name' => 'Nouveau provincial',
             'parent_id' => null,
-            'responsable_cell_phone' => '514-555-1234',
+            'responsable_cell_phone' => '5145551234',
         ]);
     }
 

@@ -58,7 +58,7 @@
 
         <div>
             <label for="responsable_cell_phone" class="block text-sm font-medium">Cellulaire du responsable</label>
-            <input id="responsable_cell_phone" type="text" name="responsable_cell_phone"
+            <input id="responsable_cell_phone" type="tel" inputmode="numeric" maxlength="14" name="responsable_cell_phone"
                 value="{{ old('responsable_cell_phone', $organization->responsable_cell_phone) }}" required
                 class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             @error('responsable_cell_phone')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror

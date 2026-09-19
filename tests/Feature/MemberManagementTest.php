@@ -90,7 +90,7 @@ class MemberManagementTest extends TestCase
         $this->assertDatabaseHas('members', [
             'email' => 'jeanne@example.com',
             'name' => 'Jeanne Tremblay',
-            'cell_phone' => '514-555-1234',
+            'cell_phone' => '5145551234',
         ]);
         $this->assertDatabaseHas('member_roles', ['member_id' => $member->id, 'organization_id' => $regional->id, 'role' => 'Bénévole']);
         $this->assertDatabaseHas('member_roles', ['member_id' => $member->id, 'organization_id' => $provincial->id, 'role' => 'Trésorière']);
