@@ -58,6 +58,21 @@
             @error('responsable_email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
         </div>
 
+        <div>
+            <label for="responsable_email_confirmation" class="block text-sm font-medium">Confirmer le courriel</label>
+            <input id="responsable_email_confirmation" type="email" name="responsable_email_confirmation"
+                value="{{ old('responsable_email_confirmation') }}" required
+                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+        </div>
+
+        <div>
+            <label for="responsable_cell_phone" class="block text-sm font-medium">Cellulaire du responsable</label>
+            <input id="responsable_cell_phone" type="text" name="responsable_cell_phone"
+                value="{{ old('responsable_cell_phone') }}" required
+                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+            @error('responsable_cell_phone')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        </div>
+
         <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
             Créer
         </button>

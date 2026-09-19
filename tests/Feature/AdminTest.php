@@ -64,10 +64,51 @@ class AdminTest extends TestCase
             'name' => 'Nouveau provincial',
             'responsable_name' => 'A B',
             'responsable_email' => 'nouveau-provincial@example.com',
+            'responsable_email_confirmation' => 'nouveau-provincial@example.com',
+            'responsable_cell_phone' => '514-555-1234',
         ]);
 
         $response->assertRedirect(route('admin.organizations.index'));
-        $this->assertDatabaseHas('organizations', ['name' => 'Nouveau provincial', 'parent_id' => null]);
+        $this->assertDatabaseHas('organizations', [
+            'name' => 'Nouveau provincial',
+            'parent_id' => null,
+            'responsable_cell_phone' => '514-555-1234',
+        ]);
+    }
+
+    public function test_creating_an_organization_requires_matching_email_confirmation(): void
+    {
+        $admin = Admin::factory()->create();
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/organisations', [
+            'level' => 'provincial',
+            'parent_id' => '',
+            'name' => 'Nouveau provincial',
+            'responsable_name' => 'A B',
+            'responsable_email' => 'nouveau-provincial@example.com',
+            'responsable_email_confirmation' => 'different@example.com',
+            'responsable_cell_phone' => '514-555-1234',
+        ]);
+
+        $response->assertSessionHasErrors('responsable_email');
+        $this->assertDatabaseMissing('organizations', ['name' => 'Nouveau provincial']);
+    }
+
+    public function test_creating_an_organization_requires_the_cell_phone(): void
+    {
+        $admin = Admin::factory()->create();
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/organisations', [
+            'level' => 'provincial',
+            'parent_id' => '',
+            'name' => 'Nouveau provincial',
+            'responsable_name' => 'A B',
+            'responsable_email' => 'nouveau-provincial@example.com',
+            'responsable_email_confirmation' => 'nouveau-provincial@example.com',
+        ]);
+
+        $response->assertSessionHasErrors('responsable_cell_phone');
+        $this->assertDatabaseMissing('organizations', ['name' => 'Nouveau provincial']);
     }
 
     public function test_an_admin_cannot_create_a_regional_organization_without_a_matching_parent(): void
@@ -82,6 +123,8 @@ class AdminTest extends TestCase
             'name' => 'Local invalide',
             'responsable_name' => 'A B',
             'responsable_email' => 'invalide@example.com',
+            'responsable_email_confirmation' => 'invalide@example.com',
+            'responsable_cell_phone' => '514-555-1234',
         ]);
 
         $response->assertSessionHasErrors('parent_id');
@@ -93,8 +136,8 @@ class AdminTest extends TestCase
         $admin = Admin::factory()->create();
         $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
 
-        $csv = "level,parent_responsable_email,name,responsable_name,responsable_email\n"
-            ."regional,prov@example.com,Région Importée,Jean Tremblay,region-importee@example.com\n";
+        $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
+            ."regional,prov@example.com,Région Importée,Jean Tremblay,region-importee@example.com,514-555-1234\n";
 
         $file = UploadedFile::fake()->createWithContent('organisations.csv', $csv);
 
