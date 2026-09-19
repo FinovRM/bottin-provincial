@@ -8,7 +8,7 @@
             <label class="flex items-center gap-2 text-sm font-medium">
                 <input type="checkbox" name="my_direction" value="1" onchange="this.form.submit()"
                     @checked($myDirection ?? false)>
-                Ma direction
+                {{ $myDirectionLabel ?? 'Ma direction' }}
             </label>
         </div>
     @endif

@@ -214,7 +214,7 @@ class QueryScopeTest extends TestCase
         $response = $this->get('/bottin');
 
         $response->assertOk();
-        $response->assertDontSee('Ma direction');
+        $response->assertDontSee('Mon parent');
     }
 
     public function test_the_my_direction_filter_isolates_a_responsables_own_parent_organization(): void

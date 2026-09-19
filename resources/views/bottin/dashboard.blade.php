@@ -12,7 +12,7 @@
         <aside class="w-full lg:w-56 lg:shrink-0">
             <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Filtres</p>
 
-            @include('partials.member-filters', ['action' => route('bottin.index')])
+            @include('partials.member-filters', ['action' => route('bottin.index'), 'myDirectionLabel' => 'Mon parent'])
 
             @if ($query !== '' || $regionId !== '' || $localId !== '' || $role !== '' || $myDirection)
                 <a href="{{ route('bottin.index') }}"
