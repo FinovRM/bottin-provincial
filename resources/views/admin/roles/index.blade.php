@@ -10,7 +10,7 @@
     <h1 class="mb-6 text-2xl font-semibold">Rôles</h1>
 
     <p class="mb-6 text-sm text-gray-500">
-        Définition des rôles minimum à compléter des niveaux provinciaux, régionaux et locaux.
+        Rôles minimum à compléter des différents niveaux.
     </p>
 
     <div class="space-y-6">
