@@ -50,7 +50,11 @@ class DashboardController extends Controller
         $memberRoles = $memberRoles
             ->when($role !== '', fn ($memberRoles) => $memberRoles->where('role', $role))
             ->get()
-            ->sortBy('member.name');
+            ->sortBy([
+                ['organization.name', 'asc'],
+                ['role', 'asc'],
+                ['member.name', 'asc'],
+            ]);
 
         $allLocals = $scopedOrganizations->where('level', OrganizationLevel::Local);
         $locals = $allLocals
