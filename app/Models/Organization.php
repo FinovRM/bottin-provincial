@@ -46,7 +46,7 @@ class Organization extends Authenticatable
      */
     public function children(): HasMany
     {
-        return $this->hasMany(Organization::class, 'parent_id');
+        return $this->hasMany(Organization::class, 'parent_id')->orderBy('name');
     }
 
     /**
