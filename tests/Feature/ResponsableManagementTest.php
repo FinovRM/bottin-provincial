@@ -18,7 +18,7 @@ class ResponsableManagementTest extends TestCase
             'responsable_cell_phone' => '514-555-1234',
         ]);
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes', ['responsable_confirmed' => '1']);
+        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertSee('Responsable du bottin');

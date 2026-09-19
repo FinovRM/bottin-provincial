@@ -33,32 +33,6 @@ class MemberManagementTest extends TestCase
         $response->assertSee('Ajouter un membre');
     }
 
-    public function test_properties_does_not_redeclare_right_after_confirming_on_members_create(): void
-    {
-        $organization = Organization::factory()->provincial()->create();
-
-        $this->actingAs($organization)->post('/membres/ajouter', ['responsable_confirmed' => '1']);
-
-        $response = $this->get('/tableau-de-bord/proprietes');
-
-        $response->assertOk();
-        $response->assertSee('Membres de');
-        $response->assertDontSee('Déclaration du responsable');
-    }
-
-    public function test_properties_redeclares_on_a_later_visit(): void
-    {
-        $organization = Organization::factory()->provincial()->create();
-
-        $this->actingAs($organization)->post('/membres/ajouter', ['responsable_confirmed' => '1']);
-        $this->get('/tableau-de-bord/proprietes');
-
-        $response = $this->get('/tableau-de-bord/proprietes');
-
-        $response->assertOk();
-        $response->assertSee('Déclaration du responsable');
-    }
-
     public function test_an_organization_can_add_a_role_to_itself(): void
     {
         $organization = Organization::factory()->provincial()->create();
@@ -174,15 +148,15 @@ class MemberManagementTest extends TestCase
         $this->assertDatabaseMissing('member_roles', ['id' => $roleAtProvincial->id]);
     }
 
-    public function test_properties_page_requires_the_responsable_declaration_on_every_visit(): void
+    public function test_properties_page_shows_directly_without_the_responsable_declaration(): void
     {
         $organization = Organization::factory()->provincial()->create();
 
         $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
-        $response->assertSee('Déclaration du responsable');
-        $response->assertDontSee('Membres de');
+        $response->assertSee('Membres de');
+        $response->assertDontSee('Déclaration du responsable');
     }
 
     public function test_properties_page_notifies_missing_roles_for_the_organizations_level(): void
@@ -193,7 +167,7 @@ class MemberManagementTest extends TestCase
         $member = Member::create(['name' => 'Filled', 'email' => 'filled@example.com']);
         $organization->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes', ['responsable_confirmed' => '1']);
+        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertSee('Trésorier');
@@ -206,7 +180,7 @@ class MemberManagementTest extends TestCase
         $member = Member::create(['name' => 'Filled', 'email' => 'filled@example.com']);
         $organization->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes', ['responsable_confirmed' => '1']);
+        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertDontSee('Rôle(s) minimum manquant(s)');
@@ -248,7 +222,7 @@ class MemberManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create(['updated_at' => now()]);
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes', ['responsable_confirmed' => '1']);
+        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertSee('Mise à jour : '.$organization->updated_at->format('Y-m-d à H:i'));

@@ -32,8 +32,6 @@ class MemberController extends Controller
 
         $request->validate(['responsable_confirmed' => ['accepted']]);
 
-        session(['responsable_declared' => true]);
-
         return view('dashboard.members-create');
     }
 

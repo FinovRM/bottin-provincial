@@ -59,7 +59,6 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/tableau-de-bord', DashboardController::class)->name('dashboard');
 
     Route::get('/tableau-de-bord/proprietes', [PropertiesController::class, 'show'])->name('dashboard.properties');
-    Route::post('/tableau-de-bord/proprietes', [PropertiesController::class, 'confirm']);
 
     Route::get('/tableau-de-bord/proprietes/responsable/modifier', [ResponsableController::class, 'edit'])->name('responsable.edit');
     Route::post('/tableau-de-bord/proprietes/responsable/modifier', [ResponsableController::class, 'update'])->name('responsable.update');
