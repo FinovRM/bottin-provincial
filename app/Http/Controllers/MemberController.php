@@ -20,6 +20,18 @@ class MemberController extends Controller
 
         Gate::authorize('create', [MemberRole::class, $organization]);
 
+        return view('auth.responsable-declaration');
+    }
+
+    public function createConfirmed(Request $request): View
+    {
+        /** @var Organization $organization */
+        $organization = Auth::user();
+
+        Gate::authorize('create', [MemberRole::class, $organization]);
+
+        $request->validate(['responsable_confirmed' => ['accepted']]);
+
         return view('dashboard.members-create');
     }
 

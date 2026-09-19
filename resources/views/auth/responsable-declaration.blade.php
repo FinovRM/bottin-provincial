@@ -11,7 +11,7 @@
             téléphone/cellulaire confidentiel, dans les informations de l'organisation dont j'ai la responsabilité.
         </p>
 
-        <form method="POST" action="{{ route('dashboard.properties') }}">
+        <form method="POST" action="{{ url()->full() }}">
             @csrf
 
             <div class="mb-2">

@@ -12,6 +12,27 @@ class MemberManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_visiting_members_create_shows_the_responsable_declaration_first(): void
+    {
+        $organization = Organization::factory()->provincial()->create();
+
+        $response = $this->actingAs($organization)->get('/membres/ajouter');
+
+        $response->assertOk();
+        $response->assertSee('Déclaration du responsable');
+        $response->assertDontSee('Validation du courriel');
+    }
+
+    public function test_confirming_the_declaration_on_members_create_shows_the_form(): void
+    {
+        $organization = Organization::factory()->provincial()->create();
+
+        $response = $this->actingAs($organization)->post('/membres/ajouter', ['responsable_confirmed' => '1']);
+
+        $response->assertOk();
+        $response->assertSee('Ajouter un membre');
+    }
+
     public function test_an_organization_can_add_a_role_to_itself(): void
     {
         $organization = Organization::factory()->provincial()->create();
