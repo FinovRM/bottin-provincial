@@ -71,10 +71,27 @@
         <form id="personal-filter-form" method="POST" action="{{ route('profile.filters.store') }}">
             @csrf
 
+            <div class="mb-6 flex gap-3">
+                <button type="button" onclick="document.getElementById('add-filter-dialog').showModal()"
+                    class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
+                    Ajouter un filtre
+                </button>
+                <button type="button" data-reset-filters
+                    class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Réinitialiser
+                </button>
+            </div>
+
             <div class="grid gap-6 sm:grid-cols-3">
                 <div>
                     <p class="mb-2 text-sm font-medium">Régional</p>
-                    <div class="flex flex-col gap-1">
+                    <div class="flex flex-col gap-1" data-column="region">
+                        @if ($regions->isNotEmpty())
+                            <button type="button" data-select-all
+                                class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-left text-sm hover:bg-gray-50">
+                                Tous
+                            </button>
+                        @endif
                         @forelse ($regions as $region)
                             <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
                                 <input type="checkbox" name="region_ids[]" value="{{ $region->id }}" class="hidden">
@@ -88,7 +105,13 @@
 
                 <div>
                     <p class="mb-2 text-sm font-medium">Local</p>
-                    <div class="flex flex-col gap-1">
+                    <div class="flex flex-col gap-1" data-column="local">
+                        @if ($locals->isNotEmpty())
+                            <button type="button" data-select-all
+                                class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-left text-sm hover:bg-gray-50">
+                                Tous
+                            </button>
+                        @endif
                         @forelse ($locals as $local)
                             <label data-region-id="{{ $local->parent_id }}"
                                 class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
@@ -103,7 +126,13 @@
 
                 <div>
                     <p class="mb-2 text-sm font-medium">Rôle</p>
-                    <div class="flex flex-col gap-1">
+                    <div class="flex flex-col gap-1" data-column="role">
+                        @if ($roles->isNotEmpty())
+                            <button type="button" data-select-all
+                                class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-left text-sm hover:bg-gray-50">
+                                Tous
+                            </button>
+                        @endif
                         @forelse ($roles as $roleOption)
                             <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
                                 <input type="checkbox" name="roles[]" value="{{ $roleOption }}" class="hidden">
@@ -116,16 +145,6 @@
                 </div>
             </div>
 
-            <div class="mt-6 flex gap-3">
-                <button type="button" onclick="document.getElementById('add-filter-dialog').showModal()"
-                    class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
-                    Ajouter un filtre
-                </button>
-                <button type="reset"
-                    class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    Réinitialiser
-                </button>
-            </div>
         </form>
 
         <dialog id="add-filter-dialog" class="w-full max-w-sm rounded-lg border border-gray-200 p-6 backdrop:bg-black/30">
@@ -157,8 +176,9 @@
 
         <script>
             (function () {
-                const regionCheckboxes = document.querySelectorAll('#personal-filter-form input[name="region_ids[]"]');
-                const localLabels = document.querySelectorAll('#personal-filter-form [data-region-id]');
+                const form = document.getElementById('personal-filter-form');
+                const regionCheckboxes = form.querySelectorAll('input[name="region_ids[]"]');
+                const localLabels = form.querySelectorAll('[data-region-id]');
 
                 function applyRegionFilter() {
                     const checkedRegionIds = Array.from(regionCheckboxes)
@@ -171,6 +191,23 @@
                 }
 
                 regionCheckboxes.forEach((checkbox) => checkbox.addEventListener('change', applyRegionFilter));
+
+                form.querySelectorAll('[data-select-all]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const column = button.closest('[data-column]');
+                        column.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+                            if (! checkbox.closest('label').hidden) {
+                                checkbox.checked = true;
+                            }
+                        });
+                        applyRegionFilter();
+                    });
+                });
+
+                form.querySelector('[data-reset-filters]').addEventListener('click', () => {
+                    form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => checkbox.checked = false);
+                    localLabels.forEach((label) => label.hidden = false);
+                });
             })();
         </script>
     </section>
