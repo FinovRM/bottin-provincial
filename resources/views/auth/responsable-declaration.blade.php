@@ -23,7 +23,7 @@
             </div>
 
             <div class="mt-4 flex gap-3">
-                <a href="{{ route('dashboard') }}"
+                <a href="{{ route('dashboard.properties') }}"
                     class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                     Annuler
                 </a>
