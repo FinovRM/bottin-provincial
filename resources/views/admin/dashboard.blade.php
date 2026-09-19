@@ -26,7 +26,7 @@
             class="rounded-lg border border-gray-200 bg-white p-5 hover:border-gray-400">
             <h2 class="font-semibold">Rôles</h2>
             <p class="mt-1 text-sm text-gray-500">
-                Définition des rôles minimum à compléter des niveaux provinciaux, régionaux et locaux.
+                Rôles minimum à compléter des différents niveaux.
             </p>
         </a>
     </div>
