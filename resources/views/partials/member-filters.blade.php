@@ -3,6 +3,21 @@
         <input type="hidden" name="q" value="{{ $query }}">
     @endif
 
+    @if (($personalFilters ?? collect())->isNotEmpty())
+        <div class="mb-4">
+            <label for="filter_personal_filter_id" class="block text-sm font-medium">Filtres personnels</label>
+            <select id="filter_personal_filter_id" name="personal_filter_id" onchange="this.form.submit()"
+                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                <option value="">Aucun</option>
+                @foreach ($personalFilters as $personalFilter)
+                    <option value="{{ $personalFilter->id }}" @selected(($personalFilterId ?? '') === (string) $personalFilter->id)>
+                        {{ $personalFilter->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    @endif
+
     @if ($showMyDirectionFilter ?? false)
         <div class="mb-4">
             <label class="flex items-center gap-2 text-sm font-medium">

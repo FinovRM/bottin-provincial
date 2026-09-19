@@ -263,4 +263,19 @@ class QueryScopeTest extends TestCase
         $response->assertSee('Membre Local 3');
         $response->assertDontSee('Membre Provincial');
     }
+
+    public function test_the_bottin_csv_export_respects_the_current_filters(): void
+    {
+        $tree = $this->tree();
+        $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
+        $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
+
+        $response = $this->actingAs($tree['provincial'])->get('/bottin/exporter?local_id='.$tree['local1']->id);
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('Membre Local 1', $content);
+        $this->assertStringNotContainsString('Membre Local 3', $content);
+    }
 }

@@ -12,9 +12,14 @@
         <aside class="w-full lg:w-56 lg:shrink-0">
             <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Filtres</p>
 
-            @include('partials.member-filters', ['action' => route('bottin.index'), 'myDirectionLabel' => 'Mon parent'])
+            @include('partials.member-filters', [
+                'action' => route('bottin.index'),
+                'myDirectionLabel' => 'Mon parent',
+                'personalFilters' => $personalFilters,
+                'personalFilterId' => $personalFilterId,
+            ])
 
-            @if ($query !== '' || $regionId !== '' || $localId !== '' || $role !== '' || $myDirection)
+            @if ($query !== '' || $regionId !== '' || $localId !== '' || $role !== '' || $myDirection || $personalFilterId !== '')
                 <a href="{{ route('bottin.index') }}"
                     class="mt-4 block rounded-md bg-gray-800 px-3 py-2 text-center text-sm font-medium text-white hover:bg-gray-900">
                     ✕ Réinitialiser
@@ -36,6 +41,9 @@
                 @if ($role !== '')
                     <input type="hidden" name="role" value="{{ $role }}">
                 @endif
+                @if ($personalFilterId !== '')
+                    <input type="hidden" name="personal_filter_id" value="{{ $personalFilterId }}">
+                @endif
                 <label for="q" class="block text-sm font-medium text-gray-500">Recherche par mots clés</label>
                 <div class="relative mt-1">
                     <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -45,6 +53,24 @@
                         class="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm">
                 </div>
             </form>
+
+            @php
+                $emails = $memberRoles->pluck('member.email')->unique()->values();
+            @endphp
+
+            <div class="mb-4 flex flex-wrap gap-3">
+                @if ($emails->isNotEmpty())
+                    <button type="button" id="copy-emails" data-emails="{{ $emails->implode(', ') }}"
+                        class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Copier les courriels dans le presse-papier
+                    </button>
+
+                    <a href="{{ route('bottin.export', request()->query()) }}"
+                        class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Exporter la sélection en csv
+                    </a>
+                @endif
+            </div>
 
             <div class="space-y-3">
                 @forelse ($memberRoles as $memberRole)
@@ -83,4 +109,14 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('copy-emails')?.addEventListener('click', function () {
+            navigator.clipboard.writeText(this.dataset.emails).then(() => {
+                const original = this.textContent;
+                this.textContent = 'Courriels copiés !';
+                setTimeout(() => { this.textContent = original; }, 2000);
+            });
+        });
+    </script>
 @endsection

@@ -19,6 +19,7 @@ use App\Http\Controllers\MemberSearchController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\OrganizationSearchController;
 use App\Http\Controllers\OrganizationSwitchController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertiesController;
 use App\Http\Controllers\ResponsableController;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,10 @@ Route::post('/connexion/verifier', [BottinLoginController::class, 'store'])
 // Bottin — consultation, shared by members and by responsables using the Bottin door.
 Route::middleware('auth:member,web')->group(function () {
     Route::get('/bottin', BottinDashboardController::class)->name('bottin.index');
+    Route::get('/bottin/exporter', [BottinDashboardController::class, 'export'])->name('bottin.export');
+    Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
+    Route::post('/profil/filtres', [ProfileController::class, 'storeFilter'])->name('profile.filters.store');
+    Route::delete('/profil/filtres/{personalFilter}', [ProfileController::class, 'destroyFilter'])->name('profile.filters.destroy');
 });
 
 Route::post('/membre/deconnexion', [AuthenticatedSessionController::class, 'destroyMember'])
