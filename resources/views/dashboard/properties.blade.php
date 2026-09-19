@@ -162,36 +162,10 @@
                 <p class="text-sm text-gray-500">Aucune organisation de niveau {{ $organization->level->childLevel()->label() }} pour l'instant.</p>
             @endforelse
 
-            <h3 class="mt-6 mb-3 text-sm font-semibold">Ajouter une organisation de niveau {{ $organization->level->childLevel()->label() }}</h3>
-
-            <form method="POST" action="{{ route('organizations.store') }}" class="max-w-sm space-y-4">
-                @csrf
-
-                <div>
-                    <label for="child_name" class="block text-sm font-medium">Nom de l'organisation</label>
-                    <input id="child_name" type="text" name="name" value="{{ old('name') }}" required
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                </div>
-
-                <div>
-                    <label for="child_name_responsable" class="block text-sm font-medium">Nom du responsable</label>
-                    <input id="child_name_responsable" type="text" name="responsable_name"
-                        value="{{ old('responsable_name') }}" required
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                </div>
-
-                <div>
-                    <label for="child_email" class="block text-sm font-medium">Courriel du responsable</label>
-                    <input id="child_email" type="email" name="responsable_email"
-                        value="{{ old('responsable_email') }}" required
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                    @error('responsable_email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
-
-                <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
-                    Ajouter
-                </button>
-            </form>
+            <a href="{{ route('organizations.create') }}"
+                class="inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
+                Ajouter une organisation locale
+            </a>
         </section>
     @endif
 @endsection

@@ -11,6 +11,16 @@ use Illuminate\View\View;
 
 class OrganizationController extends Controller
 {
+    public function create(): View
+    {
+        /** @var Organization $parent */
+        $parent = Auth::user();
+
+        Gate::authorize('create', [Organization::class, $parent]);
+
+        return view('dashboard.organization-create');
+    }
+
     public function store(Request $request): RedirectResponse
     {
         /** @var Organization $parent */
@@ -21,7 +31,7 @@ class OrganizationController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'responsable_name' => ['required', 'string', 'max:255'],
-            'responsable_email' => ['required', 'email', 'max:255', 'unique:organizations,responsable_email'],
+            'responsable_email' => ['required', 'email', 'max:255', 'confirmed', 'unique:organizations,responsable_email'],
         ]);
 
         $parent->children()->create([

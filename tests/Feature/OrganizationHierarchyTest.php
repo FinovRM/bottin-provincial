@@ -19,6 +19,7 @@ class OrganizationHierarchyTest extends TestCase
             'name' => 'Région 1',
             'responsable_name' => 'Reg. 1',
             'responsable_email' => 'regional1@example.com',
+            'responsable_email_confirmation' => 'regional1@example.com',
         ]);
 
         $response->assertRedirect(route('dashboard.properties'));
