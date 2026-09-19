@@ -85,6 +85,33 @@ class ProfileController extends Controller
         return redirect()->route('profile')->with('status', 'Filtre ajouté.');
     }
 
+    public function updateFilter(Request $request, PersonalFilter $personalFilter): RedirectResponse
+    {
+        $principal = ViewerScope::principal();
+
+        abort_unless(
+            $personalFilter->filterable_type === $principal::class && $personalFilter->filterable_id === $principal->id,
+            403
+        );
+
+        $validated = $request->validate([
+            'region_ids' => ['array'],
+            'region_ids.*' => ['integer'],
+            'local_ids' => ['array'],
+            'local_ids.*' => ['integer'],
+            'roles' => ['array'],
+            'roles.*' => ['string'],
+        ]);
+
+        $personalFilter->update([
+            'region_ids' => $validated['region_ids'] ?? [],
+            'local_ids' => $validated['local_ids'] ?? [],
+            'roles' => $validated['roles'] ?? [],
+        ]);
+
+        return redirect()->route('profile')->with('status', 'Filtre mis à jour.');
+    }
+
     public function destroyFilter(PersonalFilter $personalFilter): RedirectResponse
     {
         $principal = ViewerScope::principal();

@@ -64,6 +64,62 @@ class PersonalFilterTest extends TestCase
         $this->assertDatabaseMissing('personal_filters', ['id' => $filter->id]);
     }
 
+    public function test_a_responsable_can_update_their_own_personal_filters_selections(): void
+    {
+        $tree = $this->tree();
+        $filter = $tree['provincial']->personalFilters()->create([
+            'name' => 'Mon filtre',
+            'region_ids' => [$tree['region1']->id],
+        ]);
+
+        $response = $this->actingAs($tree['provincial'])->put("/profil/filtres/{$filter->id}", [
+            'region_ids' => [$tree['region2']->id],
+            'local_ids' => [$tree['local3']->id],
+            'roles' => ['Trésorier'],
+        ]);
+
+        $response->assertRedirect(route('profile'));
+        $filter->refresh();
+        $this->assertSame('Mon filtre', $filter->name);
+        $this->assertEquals([$tree['region2']->id], array_map('intval', $filter->region_ids));
+        $this->assertEquals([$tree['local3']->id], array_map('intval', $filter->local_ids));
+        $this->assertSame(['Trésorier'], $filter->roles);
+    }
+
+    public function test_updating_a_personal_filter_with_no_selections_clears_previous_ones(): void
+    {
+        $tree = $this->tree();
+        $filter = $tree['provincial']->personalFilters()->create([
+            'name' => 'Mon filtre',
+            'region_ids' => [$tree['region1']->id],
+            'roles' => ['Bénévole'],
+        ]);
+
+        $response = $this->actingAs($tree['provincial'])->put("/profil/filtres/{$filter->id}", []);
+
+        $response->assertRedirect(route('profile'));
+        $filter->refresh();
+        $this->assertSame([], $filter->region_ids);
+        $this->assertSame([], $filter->roles);
+    }
+
+    public function test_a_responsable_cannot_update_someone_elses_personal_filter(): void
+    {
+        $tree = $this->tree();
+        $otherOrganization = Organization::factory()->provincial()->create();
+        $filter = $otherOrganization->personalFilters()->create([
+            'name' => 'Pas le mien',
+            'region_ids' => [$tree['region1']->id],
+        ]);
+
+        $response = $this->actingAs($tree['provincial'])->put("/profil/filtres/{$filter->id}", [
+            'region_ids' => [$tree['region2']->id],
+        ]);
+
+        $response->assertForbidden();
+        $this->assertEquals([$tree['region1']->id], array_map('intval', $filter->fresh()->region_ids));
+    }
+
     public function test_a_responsable_cannot_delete_someone_elses_personal_filter(): void
     {
         $tree = $this->tree();

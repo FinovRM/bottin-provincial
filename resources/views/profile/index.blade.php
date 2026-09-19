@@ -50,7 +50,19 @@
                             <td class="px-4 py-2 font-medium">{{ $personalFilter->name }}</td>
                             <td class="px-4 py-2 text-gray-500">{{ $personalFilter->description ?: '—' }}</td>
                             <td class="px-4 py-2 text-right whitespace-nowrap">
-                                <span class="text-sm text-gray-400">Modifier</span>
+                                <button type="button" data-show-filter
+                                    data-region-ids="{{ json_encode($personalFilter->region_ids ?? []) }}"
+                                    data-local-ids="{{ json_encode($personalFilter->local_ids ?? []) }}"
+                                    data-roles="{{ json_encode($personalFilter->roles ?? []) }}"
+                                    class="text-sm text-gray-700 hover:underline">
+                                    Show
+                                </button>
+                                <button type="submit" form="personal-filter-form"
+                                    formaction="{{ route('profile.filters.update', $personalFilter) }}?_method=PUT"
+                                    formmethod="post" formnovalidate
+                                    class="ml-3 text-sm text-gray-700 hover:underline">
+                                    Modifier
+                                </button>
                                 <form method="POST" action="{{ route('profile.filters.destroy', $personalFilter) }}"
                                     onsubmit="return confirm('Supprimer ce filtre ?');" class="ml-3 inline">
                                     @csrf
@@ -207,6 +219,32 @@
                 form.querySelector('[data-reset-filters]').addEventListener('click', () => {
                     form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => checkbox.checked = false);
                     localLabels.forEach((label) => label.hidden = false);
+                });
+
+                document.querySelectorAll('[data-show-filter]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const regionIds = JSON.parse(button.dataset.regionIds || '[]').map(String);
+                        const localIds = JSON.parse(button.dataset.localIds || '[]').map(String);
+                        const roles = JSON.parse(button.dataset.roles || '[]');
+
+                        form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => checkbox.checked = false);
+                        localLabels.forEach((label) => label.hidden = false);
+
+                        regionCheckboxes.forEach((checkbox) => {
+                            checkbox.checked = regionIds.includes(checkbox.value);
+                        });
+                        applyRegionFilter();
+
+                        form.querySelectorAll('input[name="local_ids[]"]').forEach((checkbox) => {
+                            checkbox.checked = localIds.includes(checkbox.value);
+                        });
+
+                        form.querySelectorAll('input[name="roles[]"]').forEach((checkbox) => {
+                            checkbox.checked = roles.includes(checkbox.value);
+                        });
+
+                        form.scrollIntoView({behavior: 'smooth', block: 'start'});
+                    });
                 });
             })();
         </script>

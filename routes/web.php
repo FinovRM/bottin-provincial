@@ -47,6 +47,7 @@ Route::middleware('auth:member,web')->group(function () {
     Route::get('/bottin/exporter', [BottinDashboardController::class, 'export'])->name('bottin.export');
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profil/filtres', [ProfileController::class, 'storeFilter'])->name('profile.filters.store');
+    Route::put('/profil/filtres/{personalFilter}', [ProfileController::class, 'updateFilter'])->name('profile.filters.update');
     Route::delete('/profil/filtres/{personalFilter}', [ProfileController::class, 'destroyFilter'])->name('profile.filters.destroy');
 });
 
