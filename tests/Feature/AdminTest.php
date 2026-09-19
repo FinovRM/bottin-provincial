@@ -131,6 +131,57 @@ class AdminTest extends TestCase
         $this->assertDatabaseMissing('organizations', ['name' => 'Local invalide']);
     }
 
+    public function test_an_admin_can_update_an_organizations_parent(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create();
+        $otherProvincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create();
+
+        $response = $this->actingAs($admin, 'admin')->put("/admin/organisations/{$regional->id}", [
+            'parent_id' => $otherProvincial->id,
+            'name' => $regional->name,
+            'responsable_name' => $regional->responsable_name,
+            'responsable_email' => $regional->responsable_email,
+            'responsable_cell_phone' => '514-555-1234',
+        ]);
+
+        $response->assertRedirect(route('admin.organizations.index'));
+        $this->assertDatabaseHas('organizations', ['id' => $regional->id, 'parent_id' => $otherProvincial->id]);
+    }
+
+    public function test_an_admin_cannot_assign_a_mismatched_parent(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create();
+        $otherRegional = Organization::factory()->regional($provincial)->create();
+
+        $response = $this->actingAs($admin, 'admin')->put("/admin/organisations/{$regional->id}", [
+            'parent_id' => $otherRegional->id,
+            'name' => $regional->name,
+            'responsable_name' => $regional->responsable_name,
+            'responsable_email' => $regional->responsable_email,
+            'responsable_cell_phone' => '514-555-1234',
+        ]);
+
+        $response->assertSessionHasErrors('parent_id');
+    }
+
+    public function test_updating_an_organization_requires_the_cell_phone(): void
+    {
+        $admin = Admin::factory()->create();
+        $organization = Organization::factory()->provincial()->create();
+
+        $response = $this->actingAs($admin, 'admin')->put("/admin/organisations/{$organization->id}", [
+            'name' => $organization->name,
+            'responsable_name' => $organization->responsable_name,
+            'responsable_email' => $organization->responsable_email,
+        ]);
+
+        $response->assertSessionHasErrors('responsable_cell_phone');
+    }
+
     public function test_an_admin_can_import_organizations_from_a_csv(): void
     {
         $admin = Admin::factory()->create();

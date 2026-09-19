@@ -13,6 +13,21 @@
         @csrf
         @method('PUT')
 
+        @if ($organization->level->value !== 'provincial')
+            <div>
+                <label for="parent_id" class="block text-sm font-medium">Organisation parente</label>
+                <select id="parent_id" name="parent_id" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                    <option value="">— Choisir —</option>
+                    @foreach ($organizations as $parent)
+                        <option value="{{ $parent->id }}" @selected((int) old('parent_id', $organization->parent_id) === $parent->id)>
+                            {{ $parent->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('parent_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+        @endif
+
         <div>
             <label for="name" class="block text-sm font-medium">Nom de l'organisation</label>
             <input id="name" type="text" name="name" value="{{ old('name', $organization->name) }}" required
@@ -35,21 +50,11 @@
         </div>
 
         <div>
-            <label for="address" class="block text-sm font-medium">Adresse</label>
-            <input id="address" type="text" name="address" value="{{ old('address', $organization->address) }}"
+            <label for="responsable_cell_phone" class="block text-sm font-medium">Cellulaire du responsable</label>
+            <input id="responsable_cell_phone" type="text" name="responsable_cell_phone"
+                value="{{ old('responsable_cell_phone', $organization->responsable_cell_phone) }}" required
                 class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-        </div>
-        <div>
-            <label for="business_number" class="block text-sm font-medium">Numéro d'entreprise</label>
-            <input id="business_number" type="text" name="business_number"
-                value="{{ old('business_number', $organization->business_number) }}"
-                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-        </div>
-        <div>
-            <label for="website" class="block text-sm font-medium">Site web</label>
-            <input id="website" type="url" name="website" value="{{ old('website', $organization->website) }}"
-                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-            @error('website')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            @error('responsable_cell_phone')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
         </div>
 
         <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">

@@ -50,21 +50,37 @@ class OrganizationController extends Controller
 
     public function edit(Organization $organization): View
     {
+        $eligibleParents = Organization::where('id', '!=', $organization->id)
+            ->get()
+            ->filter(fn (Organization $candidate) => $candidate->level->childLevel() === $organization->level)
+            ->sortBy('name')
+            ->values();
+
         return view('admin.organizations.edit', [
             'organization' => $organization,
+            'organizations' => $eligibleParents,
         ]);
     }
 
     public function update(Request $request, Organization $organization): RedirectResponse
     {
         $validated = $request->validate([
+            'parent_id' => ['nullable', 'integer', 'exists:organizations,id'],
             'name' => ['required', 'string', 'max:255'],
             'responsable_name' => ['required', 'string', 'max:255'],
             'responsable_email' => ['required', 'email', 'max:255', 'unique:organizations,responsable_email,'.$organization->id],
-            'address' => ['nullable', 'string', 'max:255'],
-            'business_number' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
+            'responsable_cell_phone' => ['required', 'string', 'max:255'],
         ]);
+
+        $parent = $validated['parent_id'] ? Organization::find($validated['parent_id']) : null;
+
+        if ($organization->level === OrganizationLevel::Provincial && $parent !== null) {
+            throw ValidationException::withMessages(['parent_id' => 'Une organisation provinciale ne peut pas avoir de parent.']);
+        }
+
+        if ($organization->level !== OrganizationLevel::Provincial && ($parent === null || $parent->level->childLevel() !== $organization->level)) {
+            throw ValidationException::withMessages(['parent_id' => 'Le parent choisi ne correspond pas au niveau de cette organisation.']);
+        }
 
         $organization->update($validated);
 
