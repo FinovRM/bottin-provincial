@@ -1,0 +1,22 @@
+# Dépendances et builds
+node_modules/
+vendor/
+public/build/
+public/storage/
+
+# Environnement et clés (Sécurité + Économie)
+.env
+.env.*
+!.env.example
+
+# Cache et Logs Laravel
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+storage/logs/*.log
+bootstrap/cache/
+
+# Docker & Coolify
+.git/
+.docker/
+docker-compose.yml
