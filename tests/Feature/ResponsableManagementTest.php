@@ -28,6 +28,29 @@ class ResponsableManagementTest extends TestCase
         $response->assertSee('Modifier');
     }
 
+    public function test_visiting_modifier_shows_the_responsable_declaration_first(): void
+    {
+        $organization = Organization::factory()->provincial()->create();
+
+        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes/responsable/modifier');
+
+        $response->assertOk();
+        $response->assertSee('Déclaration du responsable');
+        $response->assertDontSee('Adresse courriel');
+    }
+
+    public function test_confirming_the_declaration_shows_the_edit_form(): void
+    {
+        $organization = Organization::factory()->provincial()->create();
+
+        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
+            'responsable_confirmed' => '1',
+        ]);
+
+        $response->assertOk();
+        $response->assertSee('Modifier le responsable du bottin');
+    }
+
     public function test_all_fields_are_required_to_proceed(): void
     {
         $organization = Organization::factory()->provincial()->create();

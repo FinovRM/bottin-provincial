@@ -12,15 +12,13 @@ class ResponsableController extends Controller
 {
     public function edit(): View
     {
-        return view('dashboard.responsable-edit', [
-            'organization' => Auth::user(),
-        ]);
+        return view('auth.responsable-declaration');
     }
 
     /**
-     * The edit form's fields are confirmed, or the pending change is finally
-     * authorized — both submit here, distinguished by the `confirmed_change`
-     * marker only present on the second step.
+     * Three steps submit to this same URI: the responsable declaration is
+     * confirmed, the edit form's fields are confirmed, or the pending change
+     * is finally authorized — distinguished by which marker is present.
      */
     public function update(Request $request): View|RedirectResponse
     {
@@ -33,6 +31,12 @@ class ResponsableController extends Controller
             ]));
 
             return redirect()->route('dashboard.properties');
+        }
+
+        if ($request->has('responsable_confirmed')) {
+            $request->validate(['responsable_confirmed' => ['accepted']]);
+
+            return view('dashboard.responsable-edit', ['organization' => $organization]);
         }
 
         $validated = $request->validate([
