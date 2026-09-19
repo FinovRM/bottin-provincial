@@ -13,7 +13,7 @@
         <dl class="mb-6 space-y-1 text-sm text-gray-700">
             <div>
                 <dt class="inline font-medium">Nom :</dt>
-                <dd class="inline">{{ $pending['responsable_first_name'] }} {{ $pending['responsable_last_name'] }}</dd>
+                <dd class="inline">{{ $pending['responsable_name'] }}</dd>
             </div>
             <div>
                 <dt class="inline font-medium">Courriel :</dt>
@@ -28,8 +28,7 @@
         <form method="POST" action="{{ route('responsable.update') }}">
             @csrf
             <input type="hidden" name="confirmed_change" value="1">
-            <input type="hidden" name="responsable_first_name" value="{{ $pending['responsable_first_name'] }}">
-            <input type="hidden" name="responsable_last_name" value="{{ $pending['responsable_last_name'] }}">
+            <input type="hidden" name="responsable_name" value="{{ $pending['responsable_name'] }}">
             <input type="hidden" name="responsable_email" value="{{ $pending['responsable_email'] }}">
             <input type="hidden" name="responsable_cell_phone" value="{{ $pending['responsable_cell_phone'] }}">
 

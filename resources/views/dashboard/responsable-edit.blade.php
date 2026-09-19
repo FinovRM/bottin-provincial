@@ -11,21 +11,12 @@
     <form method="POST" action="{{ route('responsable.update') }}" class="max-w-sm space-y-4">
         @csrf
 
-        <div class="flex gap-3">
-            <div class="flex-1">
-                <label for="responsable_first_name" class="block text-sm font-medium">Prénom</label>
-                <input id="responsable_first_name" type="text" name="responsable_first_name"
-                    value="{{ old('responsable_first_name', $organization->responsable_first_name) }}" required
-                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                @error('responsable_first_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-            </div>
-            <div class="flex-1">
-                <label for="responsable_last_name" class="block text-sm font-medium">Nom</label>
-                <input id="responsable_last_name" type="text" name="responsable_last_name"
-                    value="{{ old('responsable_last_name', $organization->responsable_last_name) }}" required
-                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                @error('responsable_last_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-            </div>
+        <div>
+            <label for="responsable_name" class="block text-sm font-medium">Nom</label>
+            <input id="responsable_name" type="text" name="responsable_name"
+                value="{{ old('responsable_name', $organization->responsable_name) }}" required
+                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+            @error('responsable_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
         </div>
 
         <div>

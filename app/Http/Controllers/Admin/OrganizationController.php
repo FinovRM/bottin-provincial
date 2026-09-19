@@ -59,8 +59,7 @@ class OrganizationController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'responsable_first_name' => ['required', 'string', 'max:255'],
-            'responsable_last_name' => ['required', 'string', 'max:255'],
+            'responsable_name' => ['required', 'string', 'max:255'],
             'responsable_email' => ['required', 'email', 'max:255', 'unique:organizations,responsable_email,'.$organization->id],
             'address' => ['nullable', 'string', 'max:255'],
             'business_number' => ['nullable', 'string', 'max:255'],
@@ -92,8 +91,7 @@ class OrganizationController extends Controller
             'level' => ['required', 'string', 'in:'.implode(',', array_column(OrganizationLevel::cases(), 'value'))],
             'parent_id' => ['nullable', 'integer', 'exists:organizations,id'],
             'name' => ['required', 'string', 'max:255'],
-            'responsable_first_name' => ['required', 'string', 'max:255'],
-            'responsable_last_name' => ['required', 'string', 'max:255'],
+            'responsable_name' => ['required', 'string', 'max:255'],
             'responsable_email' => ['required', 'email', 'max:255', 'unique:organizations,responsable_email'],
         ]);
 

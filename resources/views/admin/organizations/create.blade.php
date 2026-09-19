@@ -44,19 +44,11 @@
                 class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
         </div>
 
-        <div class="flex gap-3">
-            <div class="flex-1">
-                <label for="responsable_first_name" class="block text-sm font-medium">Prénom du responsable</label>
-                <input id="responsable_first_name" type="text" name="responsable_first_name"
-                    value="{{ old('responsable_first_name') }}" required
-                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-            </div>
-            <div class="flex-1">
-                <label for="responsable_last_name" class="block text-sm font-medium">Nom du responsable</label>
-                <input id="responsable_last_name" type="text" name="responsable_last_name"
-                    value="{{ old('responsable_last_name') }}" required
-                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-            </div>
+        <div>
+            <label for="responsable_name" class="block text-sm font-medium">Nom du responsable</label>
+            <input id="responsable_name" type="text" name="responsable_name"
+                value="{{ old('responsable_name') }}" required
+                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
         </div>
 
         <div>

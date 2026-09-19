@@ -13,8 +13,7 @@ class ResponsableManagementTest extends TestCase
     public function test_properties_page_lists_the_responsable_in_a_table_with_a_modifier_link(): void
     {
         $organization = Organization::factory()->provincial()->create([
-            'responsable_first_name' => 'Jeanne',
-            'responsable_last_name' => 'Tremblay',
+            'responsable_name' => 'Jeanne Tremblay',
             'responsable_email' => 'jeanne@example.com',
             'responsable_cell_phone' => '514-555-1234',
         ]);
@@ -35,9 +34,7 @@ class ResponsableManagementTest extends TestCase
 
         $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', []);
 
-        $response->assertSessionHasErrors([
-            'responsable_first_name', 'responsable_last_name', 'responsable_email', 'responsable_cell_phone',
-        ]);
+        $response->assertSessionHasErrors(['responsable_name', 'responsable_email', 'responsable_cell_phone']);
     }
 
     public function test_the_email_confirmation_must_match(): void
@@ -45,8 +42,7 @@ class ResponsableManagementTest extends TestCase
         $organization = Organization::factory()->provincial()->create();
 
         $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
-            'responsable_first_name' => 'Nouveau',
-            'responsable_last_name' => 'Responsable',
+            'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'nouveau@example.com',
             'responsable_email_confirmation' => 'different@example.com',
             'responsable_cell_phone' => '514-555-1234',
@@ -60,8 +56,7 @@ class ResponsableManagementTest extends TestCase
         $organization = Organization::factory()->provincial()->create(['responsable_email' => 'ancien@example.com']);
 
         $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
-            'responsable_first_name' => 'Nouveau',
-            'responsable_last_name' => 'Responsable',
+            'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'nouveau@example.com',
             'responsable_email_confirmation' => 'nouveau@example.com',
             'responsable_cell_phone' => '514-555-1234',
@@ -79,8 +74,7 @@ class ResponsableManagementTest extends TestCase
 
         $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
             'confirmed_change' => '1',
-            'responsable_first_name' => 'Nouveau',
-            'responsable_last_name' => 'Responsable',
+            'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'nouveau@example.com',
             'responsable_cell_phone' => '514-555-1234',
         ]);
@@ -88,8 +82,7 @@ class ResponsableManagementTest extends TestCase
         $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseHas('organizations', [
             'id' => $organization->id,
-            'responsable_first_name' => 'Nouveau',
-            'responsable_last_name' => 'Responsable',
+            'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'nouveau@example.com',
             'responsable_cell_phone' => '514-555-1234',
         ]);
@@ -101,8 +94,7 @@ class ResponsableManagementTest extends TestCase
         $organization = Organization::factory()->provincial()->create(['responsable_email' => 'moi@example.com']);
 
         $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
-            'responsable_first_name' => 'Nouveau',
-            'responsable_last_name' => 'Responsable',
+            'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'deja-pris@example.com',
             'responsable_email_confirmation' => 'deja-pris@example.com',
             'responsable_cell_phone' => '514-555-1234',

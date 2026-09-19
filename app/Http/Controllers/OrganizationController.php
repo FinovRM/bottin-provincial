@@ -19,8 +19,7 @@ class OrganizationController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'responsable_first_name' => ['required', 'string', 'max:255'],
-            'responsable_last_name' => ['required', 'string', 'max:255'],
+            'responsable_name' => ['required', 'string', 'max:255'],
             'responsable_email' => ['required', 'email', 'max:255', 'unique:organizations,responsable_email'],
         ]);
 

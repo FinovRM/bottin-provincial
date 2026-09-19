@@ -22,8 +22,7 @@ class OrganizationFactory extends Factory
             'parent_id' => null,
             'level' => OrganizationLevel::Provincial,
             'name' => fake()->company(),
-            'responsable_first_name' => fake()->firstName(),
-            'responsable_last_name' => fake()->lastName(),
+            'responsable_name' => fake()->name(),
             'responsable_email' => fake()->unique()->safeEmail(),
         ];
     }

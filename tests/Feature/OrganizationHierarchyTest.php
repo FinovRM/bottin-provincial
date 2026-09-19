@@ -17,8 +17,7 @@ class OrganizationHierarchyTest extends TestCase
 
         $response = $this->actingAs($provincial)->post('/organisations', [
             'name' => 'Région 1',
-            'responsable_first_name' => 'Reg.',
-            'responsable_last_name' => '1',
+            'responsable_name' => 'Reg. 1',
             'responsable_email' => 'regional1@example.com',
         ]);
 
@@ -38,8 +37,7 @@ class OrganizationHierarchyTest extends TestCase
 
         $response = $this->actingAs($local)->post('/organisations', [
             'name' => 'Sous-organisation',
-            'responsable_first_name' => 'Test',
-            'responsable_last_name' => 'Test',
+            'responsable_name' => 'Test Test',
             'responsable_email' => 'sous@example.com',
         ]);
 

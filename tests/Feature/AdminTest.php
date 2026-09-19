@@ -62,8 +62,7 @@ class AdminTest extends TestCase
             'level' => 'provincial',
             'parent_id' => '',
             'name' => 'Nouveau provincial',
-            'responsable_first_name' => 'A',
-            'responsable_last_name' => 'B',
+            'responsable_name' => 'A B',
             'responsable_email' => 'nouveau-provincial@example.com',
         ]);
 
@@ -81,8 +80,7 @@ class AdminTest extends TestCase
             'level' => 'local',
             'parent_id' => $otherRegional->parent_id,
             'name' => 'Local invalide',
-            'responsable_first_name' => 'A',
-            'responsable_last_name' => 'B',
+            'responsable_name' => 'A B',
             'responsable_email' => 'invalide@example.com',
         ]);
 
@@ -95,8 +93,8 @@ class AdminTest extends TestCase
         $admin = Admin::factory()->create();
         $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
 
-        $csv = "level,parent_responsable_email,name,responsable_first_name,responsable_last_name,responsable_email\n"
-            ."regional,prov@example.com,Région Importée,Jean,Tremblay,region-importee@example.com\n";
+        $csv = "level,parent_responsable_email,name,responsable_name,responsable_email\n"
+            ."regional,prov@example.com,Région Importée,Jean Tremblay,region-importee@example.com\n";
 
         $file = UploadedFile::fake()->createWithContent('organisations.csv', $csv);
 

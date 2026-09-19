@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
-    'name', 'responsable_first_name', 'responsable_last_name', 'responsable_email', 'responsable_cell_phone',
+    'name', 'responsable_name', 'responsable_email', 'responsable_cell_phone',
     'address', 'business_number', 'website', 'level', 'parent_id',
 ])]
 class Organization extends Authenticatable
@@ -149,13 +149,11 @@ class Organization extends Authenticatable
      */
     public function identity(): array
     {
-        $name = trim("{$this->responsable_first_name} {$this->responsable_last_name}");
-
         return [
-            'name' => $name,
+            'name' => $this->responsable_name,
             'role' => 'Responsable de bottin',
             'organization' => $this->name,
-            'responsable' => $name,
+            'responsable' => $this->responsable_name,
         ];
     }
 

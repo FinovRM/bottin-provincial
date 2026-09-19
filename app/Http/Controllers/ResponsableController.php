@@ -29,15 +29,14 @@ class ResponsableController extends Controller
 
         if ($request->boolean('confirmed_change')) {
             $organization->update($request->only([
-                'responsable_first_name', 'responsable_last_name', 'responsable_email', 'responsable_cell_phone',
+                'responsable_name', 'responsable_email', 'responsable_cell_phone',
             ]));
 
             return redirect()->route('dashboard.properties');
         }
 
         $validated = $request->validate([
-            'responsable_first_name' => ['required', 'string', 'max:255'],
-            'responsable_last_name' => ['required', 'string', 'max:255'],
+            'responsable_name' => ['required', 'string', 'max:255'],
             'responsable_email' => ['required', 'email', 'max:255', 'confirmed', 'unique:organizations,responsable_email,'.$organization->id],
             'responsable_cell_phone' => ['required', 'string', 'max:255'],
         ]);

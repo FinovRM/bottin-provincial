@@ -16,7 +16,7 @@ class OrganizationImportController extends Controller
      */
     private const COLUMNS = [
         'level', 'parent_responsable_email', 'name',
-        'responsable_first_name', 'responsable_last_name', 'responsable_email',
+        'responsable_name', 'responsable_email',
     ];
 
     public function create(): View
@@ -102,8 +102,7 @@ class OrganizationImportController extends Controller
             'level' => $level,
             'parent_id' => $parent?->id,
             'name' => $data['name'],
-            'responsable_first_name' => $data['responsable_first_name'],
-            'responsable_last_name' => $data['responsable_last_name'],
+            'responsable_name' => $data['responsable_name'],
             'responsable_email' => $data['responsable_email'],
         ]);
     }

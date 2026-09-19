@@ -41,7 +41,7 @@
                         <td class="px-4 py-2 font-medium">{{ $organization->name }}</td>
                         <td class="px-4 py-2 text-gray-500">{{ $organization->level->label() }}</td>
                         <td class="px-4 py-2">
-                            {{ $organization->responsable_first_name }} {{ $organization->responsable_last_name }}
+                            {{ $organization->responsable_name }}
                             <br><span class="text-gray-500">{{ $organization->responsable_email }}</span>
                         </td>
                         <td class="px-4 py-2">{{ $organization->address ?: '—' }}</td>

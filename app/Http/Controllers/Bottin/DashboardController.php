@@ -122,9 +122,7 @@ class DashboardController extends Controller
                 'name' => $authMember->name,
                 'role' => $primaryRole?->role ?? '—',
                 'organization' => $primaryRole?->organization->name ?? '—',
-                'responsable' => $primaryRole
-                    ? trim("{$primaryRole->organization->responsable_first_name} {$primaryRole->organization->responsable_last_name}")
-                    : '—',
+                'responsable' => $primaryRole?->organization->responsable_name ?? '—',
             ];
         }
 
