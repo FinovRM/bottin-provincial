@@ -71,6 +71,7 @@ Route::middleware('auth:web')->group(function () {
     Route::put('/organisations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
     Route::delete('/organisations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
 
+    Route::get('/membres/ajouter', [MemberController::class, 'create'])->name('members.create');
     Route::post('/membres', [MemberController::class, 'store'])->name('members.store');
     Route::delete('/membres/{memberRole}', [MemberController::class, 'destroy'])->name('members.destroy');
 });

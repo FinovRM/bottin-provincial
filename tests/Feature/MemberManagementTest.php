@@ -20,6 +20,7 @@ class MemberManagementTest extends TestCase
             'role' => 'Trésorier',
             'name' => 'Jeanne Tremblay',
             'email' => 'jeanne@example.com',
+            'email_confirmation' => 'jeanne@example.com',
             'cell_phone' => '514-555-1234',
         ]);
 
@@ -40,6 +41,7 @@ class MemberManagementTest extends TestCase
             'role' => 'Trésorier',
             'name' => 'Jeanne Tremblay',
             'email' => 'jeanne@example.com',
+            'email_confirmation' => 'jeanne@example.com',
         ]);
 
         $response->assertRedirect(route('dashboard.properties'));
@@ -58,6 +60,7 @@ class MemberManagementTest extends TestCase
             'role' => 'Bénévole',
             'name' => 'Nom différent',
             'email' => 'jeanne@example.com',
+            'email_confirmation' => 'jeanne@example.com',
             'cell_phone' => '999-999-9999',
         ]);
 
@@ -173,6 +176,7 @@ class MemberManagementTest extends TestCase
             'role' => 'Trésorier',
             'name' => 'Jeanne Tremblay',
             'email' => 'jeanne@example.com',
+            'email_confirmation' => 'jeanne@example.com',
         ]);
 
         $this->assertTrue($organization->fresh()->updated_at->gt($before));
