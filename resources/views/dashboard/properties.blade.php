@@ -48,35 +48,27 @@
             <a href="{{ route('organizations.edit') }}" class="text-sm text-gray-700 hover:underline">Modifier</a>
         </div>
 
-        <dl class="space-y-1 text-sm text-gray-700">
-            <div>
-                <dt class="inline font-medium">Nom :</dt>
-                <dd class="inline">{{ $organization->name }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">Adresse :</dt>
-                <dd class="inline">{{ $organization->address ?: '—' }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">Ville :</dt>
-                <dd class="inline">{{ $organization->city ?: '—' }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">Province :</dt>
-                <dd class="inline">{{ $organization->province ?: '—' }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">CP :</dt>
-                <dd class="inline">{{ $organization->postal_code ?: '—' }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">No d'entreprise :</dt>
-                <dd class="inline">{{ $organization->business_number ?: '—' }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">Site web :</dt>
-                <dd class="inline">{{ $organization->website ?: '—' }}</dd>
-            </div>
+        <dl class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm text-gray-700">
+            <dt class="text-right font-medium">Nom :</dt>
+            <dd>{{ $organization->name }}</dd>
+
+            <dt class="text-right font-medium">Adresse :</dt>
+            <dd>{{ $organization->address ?: '—' }}</dd>
+
+            <dt class="text-right font-medium">Ville :</dt>
+            <dd>{{ $organization->city ?: '—' }}</dd>
+
+            <dt class="text-right font-medium">Province :</dt>
+            <dd>{{ $organization->province ?: '—' }}</dd>
+
+            <dt class="text-right font-medium">CP :</dt>
+            <dd>{{ $organization->postal_code ?: '—' }}</dd>
+
+            <dt class="text-right font-medium">No d'entreprise :</dt>
+            <dd>{{ $organization->business_number ?: '—' }}</dd>
+
+            <dt class="text-right font-medium">Site web :</dt>
+            <dd>{{ $organization->website ?: '—' }}</dd>
         </dl>
     </section>
 
