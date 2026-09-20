@@ -8,27 +8,21 @@
     <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
         <h2 class="mb-4 text-lg font-semibold">Mes coordonnées</h2>
 
-        <dl class="space-y-1 text-sm text-gray-700">
-            <div>
-                <dt class="inline font-medium">Nom :</dt>
-                <dd class="inline">{{ $coordinates['name'] }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">Rôle :</dt>
-                <dd class="inline">{{ $coordinates['role'] }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">Organisation :</dt>
-                <dd class="inline">{{ $coordinates['organization'] }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">Courriel :</dt>
-                <dd class="inline">{{ $coordinates['email'] }}</dd>
-            </div>
-            <div>
-                <dt class="inline font-medium">Cellulaire :</dt>
-                <dd class="inline">{{ $coordinates['cell_phone'] ?: '—' }}</dd>
-            </div>
+        <dl class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm text-gray-700">
+            <dt class="text-right font-medium">Nom :</dt>
+            <dd>{{ $coordinates['name'] }}</dd>
+
+            <dt class="text-right font-medium">Rôle :</dt>
+            <dd>{{ $coordinates['role'] }}</dd>
+
+            <dt class="text-right font-medium">Organisation :</dt>
+            <dd>{{ $coordinates['organization'] }}</dd>
+
+            <dt class="text-right font-medium">Courriel :</dt>
+            <dd>{{ $coordinates['email'] }}</dd>
+
+            <dt class="text-right font-medium">Cellulaire :</dt>
+            <dd>{{ $coordinates['cell_phone'] ?: '—' }}</dd>
         </dl>
     </section>
 
