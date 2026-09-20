@@ -38,12 +38,12 @@ class LoginLinkTest extends TestCase
         Notification::assertSentOnDemand(BottinLoginLinkNotification::class);
     }
 
-    public function test_an_unknown_email_does_not_error(): void
+    public function test_an_unknown_email_shows_an_eligibility_error(): void
     {
         Notification::fake();
 
         $this->post('/connexion/bottin', ['email' => 'inconnu@example.com'])
-            ->assertRedirect(route('login.sent'));
+            ->assertSessionHasErrors('email');
 
         Notification::assertNothingSent();
     }

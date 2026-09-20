@@ -20,14 +20,23 @@ class LoginLinkController extends Controller
     public function storeBottin(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'email' => ['required', 'email'],
+            'email' => [
+                'required',
+                'email',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $isEligible = Organization::where('responsable_email', $value)->exists()
+                        || Member::where('email', $value)->exists();
+
+                    if (! $isEligible) {
+                        $fail("Cette adresse courriel n'est associée à aucun responsable ni membre inscrit au bottin. Seules les adresses des responsables d'organisation et des membres déjà inscrits peuvent recevoir un lien de connexion.");
+                    }
+                },
+            ],
         ]);
 
         $email = $validated['email'];
 
-        if (Organization::where('responsable_email', $email)->exists() || Member::where('email', $email)->exists()) {
-            Notification::route('mail', $email)->notify(new BottinLoginLinkNotification($email));
-        }
+        Notification::route('mail', $email)->notify(new BottinLoginLinkNotification($email));
 
         return redirect()->route('login.sent');
     }
