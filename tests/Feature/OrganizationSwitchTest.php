@@ -16,7 +16,7 @@ class OrganizationSwitchTest extends TestCase
 
         $response = $this->actingAs($organization)->get('/tableau-de-bord/organisations-gerees');
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('dashboard.properties'));
     }
 
     public function test_a_multi_organization_responsable_sees_every_organization_they_manage(): void
@@ -38,7 +38,7 @@ class OrganizationSwitchTest extends TestCase
 
         $response = $this->actingAs($provincial)->post("/tableau-de-bord/organisations-gerees/{$regional->id}");
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertAuthenticatedAs($regional);
     }
 

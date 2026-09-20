@@ -17,7 +17,7 @@ class OrganizationSwitchController extends Controller
         $organizations = $current->organizationsManagedBySameResponsable()->sortBy('name');
 
         if ($organizations->count() <= 1) {
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard.properties');
         }
 
         return view('dashboard.switch', [
@@ -35,6 +35,6 @@ class OrganizationSwitchController extends Controller
 
         Auth::guard('web')->login($organization);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard.properties');
     }
 }

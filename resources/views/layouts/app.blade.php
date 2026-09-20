@@ -13,7 +13,7 @@
 
                 <nav class="flex items-center gap-4 text-sm">
                     @if (auth('web')->check())
-                        <a href="{{ route('dashboard') }}" class="text-gray-700 hover:underline">Mon tableau de bord</a>
+                        <a href="{{ route('dashboard.properties') }}" class="text-gray-700 hover:underline">Mon organisation</a>
                         <a href="{{ route('bottin.index') }}" class="text-gray-700 hover:underline">Bottin</a>
                         @if (auth('web')->user()->organizationsManagedBySameResponsable()->count() > 1)
                             <a href="{{ route('dashboard.switch') }}" class="text-gray-700 hover:underline">Changer d'organisation</a>
