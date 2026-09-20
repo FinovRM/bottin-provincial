@@ -64,6 +64,16 @@ class PersonalFilterTest extends TestCase
         $this->assertDatabaseMissing('personal_filters', ['id' => $filter->id]);
     }
 
+    public function test_the_personal_filters_dropdown_shows_on_the_bottin_page_even_with_no_saved_filters(): void
+    {
+        $tree = $this->tree();
+
+        $response = $this->actingAs($tree['provincial'])->get('/bottin');
+
+        $response->assertOk();
+        $response->assertSee('Filtres personnels');
+    }
+
     public function test_a_responsable_can_update_their_own_personal_filters_selections(): void
     {
         $tree = $this->tree();

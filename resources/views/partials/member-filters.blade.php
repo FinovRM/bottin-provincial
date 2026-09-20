@@ -54,7 +54,7 @@
         </select>
     </div>
 
-    @if (($personalFilters ?? collect())->isNotEmpty())
+    @isset($personalFilters)
         <hr class="mt-6 border-gray-200">
 
         <div class="mt-6">
@@ -69,7 +69,7 @@
                 @endforeach
             </select>
         </div>
-    @endif
+    @endisset
 
     <noscript>
         <button type="submit" class="mt-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
