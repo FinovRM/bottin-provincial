@@ -18,7 +18,7 @@ class AllowedRoleController extends Controller
 
         abort_unless($organization->canCreateChildren(), 403);
 
-        $validated = $request->validate([
+        $validated = $request->validateWithBag('allowed-role-add', [
             'name' => [
                 'required', 'string', 'max:255',
                 Rule::unique('allowed_roles')->where(fn ($query) => $query->where('organization_id', $organization->id)),

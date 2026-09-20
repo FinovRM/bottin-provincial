@@ -18,7 +18,7 @@ class MinimumRoleController extends Controller
 
         abort_unless($organization->canCreateChildren(), 403);
 
-        $validated = $request->validate([
+        $validated = $request->validateWithBag('minimum-role-add', [
             'name' => [
                 'required', 'string', 'max:255',
                 Rule::unique('minimum_roles')->where(fn ($query) => $query->where('organization_id', $organization->id)),

@@ -49,7 +49,7 @@ class MinimumRoleTest extends TestCase
             'name' => 'Président',
         ]);
 
-        $response->assertSessionHasErrors('name');
+        $response->assertSessionHasErrorsIn('minimum-role-add', 'name');
         $this->assertDatabaseCount('minimum_roles', 1);
     }
 

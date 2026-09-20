@@ -49,7 +49,7 @@ class AllowedRoleTest extends TestCase
             'name' => 'Bénévole',
         ]);
 
-        $response->assertSessionHasErrors('name');
+        $response->assertSessionHasErrorsIn('allowed-role-add', 'name');
         $this->assertDatabaseCount('allowed_roles', 1);
     }
 
