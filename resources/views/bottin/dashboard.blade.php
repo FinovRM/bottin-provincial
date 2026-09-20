@@ -72,34 +72,50 @@
                 @endif
             </div>
 
-            <div class="space-y-3">
-                @forelse ($memberRoles as $memberRole)
+            <div class="space-y-4">
+                @forelse ($memberRoles->groupBy('organization_id') as $organizationRoles)
                     @php
-                        $level = $memberRole->organization->level;
+                        $organization = $organizationRoles->first()->organization;
+                        $level = $organization->level;
                         $badgeColor = match ($level->value) {
                             'provincial' => 'bg-indigo-100 text-indigo-700',
                             'regional' => 'bg-blue-100 text-blue-700',
                             default => 'bg-teal-100 text-teal-700',
                         };
                     @endphp
-                    <div class="flex items-start gap-4 rounded-lg bg-white p-4 shadow-sm">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {{ $badgeColor }} font-semibold">
-                            {{ mb_substr($memberRole->member->name, 0, 1) }}
+                    <div class="rounded-lg bg-white p-4 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {{ $badgeColor }} font-semibold">
+                                {{ mb_substr($organization->name, 0, 1) }}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <span class="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-gray-600">
+                                    {{ $level->label() }}
+                                </span>
+                                <p class="mt-1 font-semibold text-gray-900">{{ $organization->name }}</p>
+                            </div>
+                            @if ($organizationRoles->count() > 1)
+                                <span class="shrink-0 text-xs text-gray-400">{{ $organizationRoles->count() }} rôles</span>
+                            @endif
                         </div>
-                        <div class="min-w-0 flex-1">
-                            <span class="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-gray-600">
-                                {{ $level->label() }}
-                            </span>
-                            <p class="mt-1 font-semibold text-gray-900">
-                                {{ $memberRole->organization->name }}
-                                <span class="text-gray-300">-</span> {{ $memberRole->role }}
-                            </p>
-                            <p class="mt-1 text-sm text-gray-500">
-                                {{ $memberRole->member->name }}
-                                <span class="text-gray-300">-</span> {{ $memberRole->member->email }}
-                                <span class="text-gray-300">-</span> {{ $memberRole->member->cell_phone ?: '—' }}
-                            </p>
-                        </div>
+
+                        <ul class="mt-3 divide-y divide-gray-100 border-t border-gray-100">
+                            @foreach ($organizationRoles as $memberRole)
+                                <li class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-2 text-sm">
+                                    <p>
+                                        <span class="font-medium text-gray-900">{{ $memberRole->role }}</span>
+                                        <span class="text-gray-300">·</span>
+                                        <span class="text-gray-700">{{ $memberRole->member->name }}</span>
+                                    </p>
+                                    <p class="flex flex-wrap gap-x-3 text-gray-500">
+                                        <a href="mailto:{{ $memberRole->member->email }}" class="hover:underline">{{ $memberRole->member->email }}</a>
+                                        @if ($memberRole->member->cell_phone)
+                                            <a href="tel:{{ $memberRole->member->cell_phone }}" class="hover:underline">{{ $memberRole->member->cell_phone }}</a>
+                                        @endif
+                                    </p>
+                                </li>
+                            @endforeach
+                        </ul>
                     </div>
                 @empty
                     <div class="rounded-lg bg-white p-6 text-center text-sm text-gray-500 shadow-sm">
