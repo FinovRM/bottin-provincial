@@ -92,6 +92,20 @@ class OrganizationHierarchyTest extends TestCase
         $response->assertSee('Association hockey mineur Acton Vale');
     }
 
+    public function test_the_organizations_directory_shows_the_legal_name(): void
+    {
+        $provincial = Organization::factory()->provincial()->create([
+            'name' => 'AHM Acton Vale',
+            'legal_name' => 'Association hockey mineur Acton Vale',
+        ]);
+
+        $response = $this->actingAs($provincial)->get('/tableau-de-bord/organisations');
+
+        $response->assertOk();
+        $response->assertSee('Nom légal');
+        $response->assertSee('Association hockey mineur Acton Vale');
+    }
+
     public function test_an_organization_cannot_update_another_organizations_fiche(): void
     {
         $provincial = Organization::factory()->provincial()->create();

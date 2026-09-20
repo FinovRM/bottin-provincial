@@ -28,6 +28,7 @@
             <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
                     <th class="px-4 py-2">Organisation</th>
+                    <th class="px-4 py-2">Nom légal</th>
                     <th class="px-4 py-2">Niveau</th>
                     <th class="px-4 py-2">Responsable</th>
                     <th class="px-4 py-2">Adresse</th>
@@ -39,6 +40,7 @@
                 @forelse ($organizations as $organization)
                     <tr class="border-b border-gray-100 last:border-0">
                         <td class="px-4 py-2 font-medium">{{ $organization->name }}</td>
+                        <td class="px-4 py-2">{{ $organization->legal_name ?: '—' }}</td>
                         <td class="px-4 py-2 text-gray-500">{{ $organization->level->label() }}</td>
                         <td class="px-4 py-2">
                             {{ $organization->responsable_name }}
@@ -56,7 +58,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-6 text-center text-gray-500">Aucune organisation trouvée.</td>
+                        <td colspan="7" class="px-4 py-6 text-center text-gray-500">Aucune organisation trouvée.</td>
                     </tr>
                 @endforelse
             </tbody>
