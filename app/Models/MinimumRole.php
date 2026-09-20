@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrganizationGroup;
 use Database\Factories\MinimumRoleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,13 +10,33 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A role name a parent organization requires each of its direct children to fill.
+ * A role name a parent organization requires each of its direct children,
+ * within one of its two groups, to fill.
  */
-#[Fillable(['name'])]
+#[Fillable(['name', 'group'])]
 class MinimumRole extends Model
 {
     /** @use HasFactory<MinimumRoleFactory> */
     use HasFactory;
+
+    /**
+     * Matches the migration's column default — see Organization::$attributes.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'group' => 'organisation',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'group' => OrganizationGroup::class,
+        ];
+    }
 
     /**
      * The parent organization that requires this role of its children.

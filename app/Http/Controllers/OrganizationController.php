@@ -2,23 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrganizationGroup;
 use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class OrganizationController extends Controller
 {
-    public function create(): View
+    public function create(Request $request): View
     {
         /** @var Organization $parent */
         $parent = Auth::user();
 
         Gate::authorize('create', [Organization::class, $parent]);
 
-        return view('dashboard.organization-create');
+        return view('dashboard.organization-create', [
+            'groups' => OrganizationGroup::cases(),
+            'defaultGroup' => OrganizationGroup::tryFrom($request->string('group')->toString()) ?? OrganizationGroup::Organisation,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -30,6 +35,7 @@ class OrganizationController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'group' => ['required', Rule::enum(OrganizationGroup::class)],
             'responsable_name' => ['required', 'string', 'max:255'],
             'responsable_email' => ['required', 'email', 'max:255', 'confirmed', 'unique:organizations,responsable_email'],
         ]);

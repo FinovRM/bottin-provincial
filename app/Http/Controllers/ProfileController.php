@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrganizationGroup;
 use App\Enums\OrganizationLevel;
 use App\Models\AllowedRole;
 use App\Models\Member;
@@ -19,8 +20,7 @@ class ProfileController extends Controller
 {
     public function index(): View
     {
-        $minimumRoles = collect();
-        $allowedRoles = collect();
+        $rolesByGroup = [];
 
         if (Auth::guard('member')->check()) {
             /** @var Member $member */
@@ -47,20 +47,33 @@ class ProfileController extends Controller
             ];
 
             if ($organization->canCreateChildren()) {
-                $minimumRoles = $organization->minimumRoles()->orderBy('name')->get();
-                $allowedRoles = $organization->allowedRoles()->orderBy('name')->get();
+                foreach (OrganizationGroup::cases() as $group) {
+                    $childMemberCountsByRole = MemberRole::whereIn(
+                        'organization_id',
+                        $organization->children()->where('group', $group)->pluck('id')
+                    )
+                        ->selectRaw('role, count(*) as aggregate')
+                        ->groupBy('role')
+                        ->pluck('aggregate', 'role');
 
-                $childMemberCountsByRole = MemberRole::whereIn('organization_id', $organization->children()->pluck('id'))
-                    ->selectRaw('role, count(*) as aggregate')
-                    ->groupBy('role')
-                    ->pluck('aggregate', 'role');
+                    $minimumRoles = $organization->minimumRoles()->where('group', $group)->orderBy('name')->get();
+                    $allowedRoles = $organization->allowedRoles()->where('group', $group)->orderBy('name')->get();
 
-                $minimumRoles->each(fn (MinimumRole $role) => $role->member_count = $childMemberCountsByRole->get($role->name, 0));
-                $allowedRoles->each(fn (AllowedRole $role) => $role->member_count = $childMemberCountsByRole->get($role->name, 0));
+                    $minimumRoles->each(fn (MinimumRole $role) => $role->member_count = $childMemberCountsByRole->get($role->name, 0));
+                    $allowedRoles->each(fn (AllowedRole $role) => $role->member_count = $childMemberCountsByRole->get($role->name, 0));
+
+                    $rolesByGroup[$group->value] = [
+                        'group' => $group,
+                        'minimumRoles' => $minimumRoles,
+                        'allowedRoles' => $allowedRoles,
+                    ];
+                }
             }
         }
 
-        [$scopedOrganizations] = ViewerScope::resolve();
+        // Combines both groups — this picker must offer every organization and
+        // role regardless of "Organisations" vs "Ligues".
+        [$scopedOrganizations] = ViewerScope::resolveAcrossGroups();
 
         $allLocals = $scopedOrganizations->where('level', OrganizationLevel::Local);
         $locals = $allLocals->sortBy('name');
@@ -82,8 +95,7 @@ class ProfileController extends Controller
             'locals' => $locals,
             'roles' => $roles,
             'personalFilters' => ViewerScope::principal()->personalFilters()->orderBy('name')->get(),
-            'minimumRoles' => $minimumRoles,
-            'allowedRoles' => $allowedRoles,
+            'rolesByGroup' => $rolesByGroup,
         ]);
     }
 

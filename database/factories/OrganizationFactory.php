@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\OrganizationGroup;
 use App\Enums\OrganizationLevel;
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -48,6 +49,13 @@ class OrganizationFactory extends Factory
         return $this->state([
             'parent_id' => $parent->id,
             'level' => OrganizationLevel::Local,
+        ]);
+    }
+
+    public function ligue(): static
+    {
+        return $this->state([
+            'group' => OrganizationGroup::Ligue,
         ]);
     }
 }

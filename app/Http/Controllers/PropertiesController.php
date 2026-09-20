@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrganizationGroup;
 use App\Models\Organization;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -14,7 +15,7 @@ class PropertiesController extends Controller
         $organization = Auth::user()->load('children', 'memberRoles.member', 'parent.minimumRoles');
 
         $missingRoles = $organization->parent
-            ? $organization->parent->minimumRoles->pluck('name')
+            ? $organization->parent->minimumRoles->where('group', $organization->group)->pluck('name')
                 ->diff($organization->memberRoles->pluck('role'))
                 ->sort()
                 ->values()
@@ -23,6 +24,7 @@ class PropertiesController extends Controller
         return view('dashboard.properties', [
             'organization' => $organization,
             'missingRoles' => $missingRoles,
+            'groups' => OrganizationGroup::cases(),
         ]);
     }
 }

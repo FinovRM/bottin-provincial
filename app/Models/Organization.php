@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrganizationGroup;
 use App\Enums\OrganizationLevel;
 use App\Support\CellPhone;
 use Database\Factories\OrganizationFactory;
@@ -17,12 +18,23 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
     'name', 'legal_name', 'responsable_name', 'responsable_email', 'responsable_cell_phone',
-    'address', 'city', 'province', 'postal_code', 'business_number', 'website', 'level', 'parent_id',
+    'address', 'city', 'province', 'postal_code', 'business_number', 'website', 'level', 'group', 'parent_id',
 ])]
 class Organization extends Authenticatable
 {
     /** @use HasFactory<OrganizationFactory> */
     use HasFactory, Notifiable;
+
+    /**
+     * Matches the migration's column default. Without this, a newly created
+     * instance that didn't set 'group' explicitly only gets it back from a
+     * fresh read of the database — this keeps the in-memory object correct too.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'group' => 'organisation',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -33,6 +45,7 @@ class Organization extends Authenticatable
     {
         return [
             'level' => OrganizationLevel::class,
+            'group' => OrganizationGroup::class,
         ];
     }
 
@@ -117,8 +130,9 @@ class Organization extends Authenticatable
 
     /**
      * The role names usable by this organization's own members, as set by its
-     * parent (minimum roles union allowed roles). Null when unrestricted —
-     * no parent, or the parent hasn't configured any roles yet.
+     * parent for organizations in this same group (minimum roles union allowed
+     * roles). Null when unrestricted — no parent, or the parent hasn't
+     * configured any roles yet for this group.
      *
      * @return ?array<int, string>
      */
@@ -128,8 +142,8 @@ class Organization extends Authenticatable
             return null;
         }
 
-        $names = $this->parent->minimumRoles->pluck('name')
-            ->merge($this->parent->allowedRoles->pluck('name'))
+        $names = $this->parent->minimumRoles->where('group', $this->group)->pluck('name')
+            ->merge($this->parent->allowedRoles->where('group', $this->group)->pluck('name'))
             ->unique()
             ->sort()
             ->values();
@@ -139,12 +153,13 @@ class Organization extends Authenticatable
 
     /**
      * A minimum/allowed role of this organization was deleted: remove that
-     * role from every direct child's members, deleting a member outright if
-     * they're left without any role. Returns how many member roles were removed.
+     * role from every direct child's members in that same group, deleting a
+     * member outright if they're left without any role. Returns how many
+     * member roles were removed.
      */
-    public function removeChildMemberRolesNamed(string $roleName): int
+    public function removeChildMemberRolesNamed(string $roleName, OrganizationGroup $group): int
     {
-        $memberRoles = MemberRole::whereIn('organization_id', $this->children()->pluck('id'))
+        $memberRoles = MemberRole::whereIn('organization_id', $this->children()->where('group', $group)->pluck('id'))
             ->where('role', $roleName)
             ->with('member')
             ->get();
@@ -167,12 +182,12 @@ class Organization extends Authenticatable
 
     /**
      * A minimum/allowed role of this organization was renamed: rename that
-     * role on every direct child's members to match. Returns how many member
-     * roles were renamed.
+     * role on every direct child's members in that same group to match.
+     * Returns how many member roles were renamed.
      */
-    public function renameChildMemberRoles(string $oldName, string $newName): int
+    public function renameChildMemberRoles(string $oldName, string $newName, OrganizationGroup $group): int
     {
-        $affectedOrganizationIds = MemberRole::whereIn('organization_id', $this->children()->pluck('id'))
+        $affectedOrganizationIds = MemberRole::whereIn('organization_id', $this->children()->where('group', $group)->pluck('id'))
             ->where('role', $oldName)
             ->pluck('organization_id')
             ->unique();
@@ -222,15 +237,29 @@ class Organization extends Authenticatable
 
     /**
      * Every organization visible to a member of this organization: everything at
-     * this level or below, anywhere in the tree — no level above. Used to scope
-     * the "interroger les membres" query for a responsable, matching what a
-     * member holding a role here would themselves see by default. The organization
-     * immediately above ("ma direction") is available separately, on demand —
-     * see directionOrganizations().
+     * this level or below, anywhere in the tree, in this same group — no level
+     * above, no other group. Used to scope the "interroger les membres" query for
+     * a responsable, matching what a member holding a role here would themselves
+     * see by default. The organization immediately above ("ma direction") is
+     * available separately, on demand, unfiltered by group — see directionOrganizations().
      *
      * @return Collection<int, Organization>
      */
     public function visibleToMembers(): Collection
+    {
+        return Organization::whereIn('level', $this->level->andBelow())
+            ->where('group', $this->group)
+            ->get();
+    }
+
+    /**
+     * Same reach as visibleToMembers(), but combining both groups. Used where the
+     * two groups must stay cumulative instead of scoped to one — "Bottin des
+     * membres" and the "Mes filtres personnels" picker.
+     *
+     * @return Collection<int, Organization>
+     */
+    public function visibleToMembersAcrossGroups(): Collection
     {
         return Organization::whereIn('level', $this->level->andBelow())->get();
     }

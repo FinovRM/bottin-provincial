@@ -173,9 +173,9 @@ class DashboardController extends Controller
 
     /**
      * For each given organization, the role names currently usable by its own
-     * members (its parent's minimum roles union allowed roles), or null when
-     * unrestricted. The bottin only ever shows members holding a currently
-     * permitted role.
+     * members (its parent's minimum roles union allowed roles, for this
+     * organization's own group), or null when unrestricted. The bottin only
+     * ever shows members holding a currently permitted role.
      *
      * @param  Collection<int, Organization>  $organizations
      * @return SupportCollection<int, ?array<int, string>>
@@ -194,8 +194,8 @@ class DashboardController extends Controller
                 return [$organization->id => null];
             }
 
-            $names = $parent->minimumRoles->pluck('name')
-                ->merge($parent->allowedRoles->pluck('name'))
+            $names = $parent->minimumRoles->where('group', $organization->group)->pluck('name')
+                ->merge($parent->allowedRoles->where('group', $organization->group)->pluck('name'))
                 ->unique();
 
             return [$organization->id => $names->isNotEmpty() ? $names->all() : null];

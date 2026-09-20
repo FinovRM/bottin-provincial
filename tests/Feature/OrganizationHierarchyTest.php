@@ -17,6 +17,7 @@ class OrganizationHierarchyTest extends TestCase
 
         $response = $this->actingAs($provincial)->post('/organisations', [
             'name' => 'Région 1',
+            'group' => 'organisation',
             'responsable_name' => 'Reg. 1',
             'responsable_email' => 'regional1@example.com',
             'responsable_email_confirmation' => 'regional1@example.com',
@@ -27,6 +28,7 @@ class OrganizationHierarchyTest extends TestCase
             'name' => 'Région 1',
             'parent_id' => $provincial->id,
             'level' => OrganizationLevel::Regional->value,
+            'group' => 'organisation',
         ]);
     }
 

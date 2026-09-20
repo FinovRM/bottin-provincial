@@ -16,6 +16,19 @@
                 @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
             <div>
+                <span class="block text-sm font-medium">Groupe</span>
+                <div class="mt-1 flex gap-4">
+                    @foreach ($groups as $group)
+                        <label class="flex items-center gap-2 text-sm">
+                            <input type="radio" name="group" value="{{ $group->value }}"
+                                @checked(old('group', $defaultGroup->value) === $group->value) required>
+                            {{ $group->label() }}
+                        </label>
+                    @endforeach
+                </div>
+                @error('group')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+            <div>
                 <label for="responsable_name" class="block text-sm font-medium">Nom du responsable</label>
                 <input id="responsable_name" type="text" name="responsable_name" value="{{ old('responsable_name') }}"
                     required class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">

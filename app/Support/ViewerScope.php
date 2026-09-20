@@ -32,6 +32,29 @@ class ViewerScope
     }
 
     /**
+     * Same reach as resolve(), but combining both groups — for the places that
+     * must stay cumulative across "Organisations" and "Ligues": the
+     * "Mes filtres personnels" picker.
+     *
+     * @return array{0: Collection<int, Organization>, 1: Collection<int, Organization>}
+     */
+    public static function resolveAcrossGroups(): array
+    {
+        if (Auth::guard('member')->check()) {
+            /** @var Member $authMember */
+            $authMember = Auth::guard('member')->user();
+
+            return [$authMember->visibleOrganizationsAcrossGroups(), $authMember->directionOrganizations()];
+        }
+
+        /** @var Organization $authOrganization */
+        $authOrganization = Auth::guard('web')->user();
+        $highest = $authOrganization->highestManagedOrganization();
+
+        return [$highest->visibleToMembersAcrossGroups(), $highest->directionOrganizations()];
+    }
+
+    /**
      * Whoever is currently logged in, as a responsable or a member — the owner
      * of things like personal filters.
      */

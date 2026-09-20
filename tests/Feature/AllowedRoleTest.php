@@ -17,12 +17,14 @@ class AllowedRoleTest extends TestCase
 
         $response = $this->actingAs($provincial)->post('/profil/roles-permis', [
             'name' => 'Bénévole',
+            'group' => 'organisation',
         ]);
 
         $response->assertRedirect(route('profile'));
         $this->assertDatabaseHas('allowed_roles', [
             'organization_id' => $provincial->id,
             'name' => 'Bénévole',
+            'group' => 'organisation',
         ]);
     }
 
@@ -47,9 +49,10 @@ class AllowedRoleTest extends TestCase
 
         $response = $this->actingAs($provincial)->post('/profil/roles-permis', [
             'name' => 'Bénévole',
+            'group' => 'organisation',
         ]);
 
-        $response->assertSessionHasErrorsIn('allowed-role-add', 'name');
+        $response->assertSessionHasErrorsIn('allowed-role-add-organisation', 'name');
         $this->assertDatabaseCount('allowed_roles', 1);
     }
 

@@ -17,12 +17,14 @@ class MinimumRoleTest extends TestCase
 
         $response = $this->actingAs($provincial)->post('/profil/roles-minimum', [
             'name' => 'Président',
+            'group' => 'organisation',
         ]);
 
         $response->assertRedirect(route('profile'));
         $this->assertDatabaseHas('minimum_roles', [
             'organization_id' => $provincial->id,
             'name' => 'Président',
+            'group' => 'organisation',
         ]);
     }
 
@@ -47,9 +49,10 @@ class MinimumRoleTest extends TestCase
 
         $response = $this->actingAs($provincial)->post('/profil/roles-minimum', [
             'name' => 'Président',
+            'group' => 'organisation',
         ]);
 
-        $response->assertSessionHasErrorsIn('minimum-role-add', 'name');
+        $response->assertSessionHasErrorsIn('minimum-role-add-organisation', 'name');
         $this->assertDatabaseCount('minimum_roles', 1);
     }
 

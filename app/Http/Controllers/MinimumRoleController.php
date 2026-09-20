@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrganizationGroup;
 use App\Models\MinimumRole;
 use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
@@ -18,10 +19,15 @@ class MinimumRoleController extends Controller
 
         abort_unless($organization->canCreateChildren(), 403);
 
-        $validated = $request->validateWithBag('minimum-role-add', [
+        $bag = 'minimum-role-add-'.$request->string('group');
+
+        $validated = $request->validateWithBag($bag, [
+            'group' => ['required', Rule::enum(OrganizationGroup::class)],
             'name' => [
                 'required', 'string', 'max:255',
-                Rule::unique('minimum_roles')->where(fn ($query) => $query->where('organization_id', $organization->id)),
+                Rule::unique('minimum_roles')->where(
+                    fn ($query) => $query->where('organization_id', $organization->id)->where('group', $request->input('group'))
+                ),
             ],
         ]);
 
@@ -41,7 +47,7 @@ class MinimumRoleController extends Controller
             'name' => [
                 'required', 'string', 'max:255',
                 Rule::unique('minimum_roles')
-                    ->where(fn ($query) => $query->where('organization_id', $organization->id))
+                    ->where(fn ($query) => $query->where('organization_id', $organization->id)->where('group', $minimumRole->group->value))
                     ->ignore($minimumRole),
             ],
         ]);
@@ -50,7 +56,7 @@ class MinimumRoleController extends Controller
         $minimumRole->update($validated);
 
         $renamed = $validated['name'] !== $oldName
-            ? $organization->renameChildMemberRoles($oldName, $validated['name'])
+            ? $organization->renameChildMemberRoles($oldName, $validated['name'], $minimumRole->group)
             : 0;
 
         $status = $renamed > 0
@@ -67,7 +73,7 @@ class MinimumRoleController extends Controller
 
         abort_unless($minimumRole->organization_id === $organization->id, 403);
 
-        $removed = $organization->removeChildMemberRolesNamed($minimumRole->name);
+        $removed = $organization->removeChildMemberRolesNamed($minimumRole->name, $minimumRole->group);
         $minimumRole->delete();
 
         $status = $removed > 0

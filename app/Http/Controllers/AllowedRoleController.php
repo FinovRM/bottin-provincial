@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrganizationGroup;
 use App\Models\AllowedRole;
 use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
@@ -18,10 +19,15 @@ class AllowedRoleController extends Controller
 
         abort_unless($organization->canCreateChildren(), 403);
 
-        $validated = $request->validateWithBag('allowed-role-add', [
+        $bag = 'allowed-role-add-'.$request->string('group');
+
+        $validated = $request->validateWithBag($bag, [
+            'group' => ['required', Rule::enum(OrganizationGroup::class)],
             'name' => [
                 'required', 'string', 'max:255',
-                Rule::unique('allowed_roles')->where(fn ($query) => $query->where('organization_id', $organization->id)),
+                Rule::unique('allowed_roles')->where(
+                    fn ($query) => $query->where('organization_id', $organization->id)->where('group', $request->input('group'))
+                ),
             ],
         ]);
 
@@ -41,7 +47,7 @@ class AllowedRoleController extends Controller
             'name' => [
                 'required', 'string', 'max:255',
                 Rule::unique('allowed_roles')
-                    ->where(fn ($query) => $query->where('organization_id', $organization->id))
+                    ->where(fn ($query) => $query->where('organization_id', $organization->id)->where('group', $allowedRole->group->value))
                     ->ignore($allowedRole),
             ],
         ]);
@@ -50,7 +56,7 @@ class AllowedRoleController extends Controller
         $allowedRole->update($validated);
 
         $renamed = $validated['name'] !== $oldName
-            ? $organization->renameChildMemberRoles($oldName, $validated['name'])
+            ? $organization->renameChildMemberRoles($oldName, $validated['name'], $allowedRole->group)
             : 0;
 
         $status = $renamed > 0
@@ -67,7 +73,7 @@ class AllowedRoleController extends Controller
 
         abort_unless($allowedRole->organization_id === $organization->id, 403);
 
-        $removed = $organization->removeChildMemberRolesNamed($allowedRole->name);
+        $removed = $organization->removeChildMemberRolesNamed($allowedRole->name, $allowedRole->group);
         $allowedRole->delete();
 
         $status = $removed > 0

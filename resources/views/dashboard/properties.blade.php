@@ -132,35 +132,37 @@
     </section>
 
     @if ($organization->canCreateChildren())
-        <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
-            <h2 class="mb-4 text-lg font-semibold">
-                Organisations {{ $organization->level->childLevel()->pluralLabel() }}
-            </h2>
+        @foreach ($groups as $group)
+            <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
+                <h2 class="mb-4 text-lg font-semibold">
+                    {{ $group->pluralLabel() }} {{ $organization->level->childLevel()->pluralLabel() }}
+                </h2>
 
-            @forelse ($organization->children as $child)
-                <div class="mb-2 flex items-center justify-between border-b border-gray-100 pb-2 last:border-0">
-                    <div>
-                        <p class="font-medium">{{ $child->name }}</p>
-                        <p class="text-sm text-gray-500">
-                            {{ $child->responsable_name }} —
-                            {{ $child->responsable_email }}
-                        </p>
+                @forelse ($organization->children->where('group', $group) as $child)
+                    <div class="mb-2 flex items-center justify-between border-b border-gray-100 pb-2 last:border-0">
+                        <div>
+                            <p class="font-medium">{{ $child->name }}</p>
+                            <p class="text-sm text-gray-500">
+                                {{ $child->responsable_name }} —
+                                {{ $child->responsable_email }}
+                            </p>
+                        </div>
+                        <form method="POST" action="{{ route('organizations.destroy', $child) }}"
+                            onsubmit="return confirm('Retirer cette organisation ?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-sm text-red-600 hover:underline">Retirer</button>
+                        </form>
                     </div>
-                    <form method="POST" action="{{ route('organizations.destroy', $child) }}"
-                        onsubmit="return confirm('Retirer cette organisation ?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-sm text-red-600 hover:underline">Retirer</button>
-                    </form>
-                </div>
-            @empty
-                <p class="text-sm text-gray-500">Aucune organisation de niveau {{ $organization->level->childLevel()->label() }} pour l'instant.</p>
-            @endforelse
+                @empty
+                    <p class="text-sm text-gray-500">Aucune {{ mb_strtolower($group->label()) }} de niveau {{ $organization->level->childLevel()->label() }} pour l'instant.</p>
+                @endforelse
 
-            <a href="{{ route('organizations.create') }}"
-                class="inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
-                Ajouter une organisation locale
-            </a>
-        </section>
+                <a href="{{ route('organizations.create', ['group' => $group->value]) }}"
+                    class="inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
+                    Ajouter {{ $group->value === 'ligue' ? 'une ligue' : 'une organisation' }} locale
+                </a>
+            </section>
+        @endforeach
     @endif
 @endsection

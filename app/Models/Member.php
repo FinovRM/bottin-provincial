@@ -81,6 +81,23 @@ class Member extends Authenticatable
     }
 
     /**
+     * Same reach as visibleOrganizations(), but combining both groups — see
+     * Organization::visibleToMembersAcrossGroups().
+     *
+     * @return Collection<int, Organization>
+     */
+    public function visibleOrganizationsAcrossGroups(): Collection
+    {
+        $organizations = $this->consideredRoles()
+            ->flatMap(fn (MemberRole $role) => $role->organization->visibleToMembersAcrossGroups())
+            ->unique('id')
+            ->values()
+            ->all();
+
+        return new Collection($organizations);
+    }
+
+    /**
      * The organization(s) immediately above the considered role(s) — "ma direction".
      * A member holding roles at different levels may have more than one, unless a
      * single role is being considered.
