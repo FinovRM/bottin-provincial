@@ -102,7 +102,7 @@
             </div>
             <a href="{{ route('members.create') }}"
                 class="inline-flex shrink-0 items-center gap-1 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-black">
-                + Ajouter un membre
+                + Ajouter
             </a>
         </div>
         <p class="mb-4 text-xs text-gray-500">
