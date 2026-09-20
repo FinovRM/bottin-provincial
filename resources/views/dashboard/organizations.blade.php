@@ -23,6 +23,24 @@
         </div>
     </form>
 
+    @php
+        $responsableEmails = $organizations->pluck('responsable_email')->unique()->values();
+    @endphp
+
+    <div class="mb-4 flex flex-wrap gap-3">
+        @if ($responsableEmails->isNotEmpty())
+            <button type="button" id="copy-emails" data-emails="{{ $responsableEmails->implode(', ') }}"
+                class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Copier les courriels dans le presse-papier
+            </button>
+
+            <a href="{{ route('dashboard.organizations.export', request()->query()) }}"
+                class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Exporter la sélection en csv
+            </a>
+        @endif
+    </div>
+
     <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
         <table class="w-full text-left text-sm">
             <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
@@ -64,4 +82,14 @@
             </tbody>
         </table>
     </div>
+
+    <script>
+        document.getElementById('copy-emails')?.addEventListener('click', function () {
+            navigator.clipboard.writeText(this.dataset.emails).then(() => {
+                const original = this.textContent;
+                this.textContent = 'Courriels copiés !';
+                setTimeout(() => { this.textContent = original; }, 2000);
+            });
+        });
+    </script>
 @endsection

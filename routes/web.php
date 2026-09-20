@@ -70,6 +70,7 @@ Route::middleware('auth:web')->group(function () {
     Route::post('/tableau-de-bord/proprietes/responsable/modifier', [ResponsableController::class, 'update'])->name('responsable.update');
 
     Route::get('/tableau-de-bord/organisations', OrganizationSearchController::class)->name('dashboard.organizations');
+    Route::get('/tableau-de-bord/organisations/exporter', [OrganizationSearchController::class, 'export'])->name('dashboard.organizations.export');
     Route::get('/tableau-de-bord/membres', MemberSearchController::class)->name('dashboard.members');
 
     Route::get('/tableau-de-bord/proprietes/organisation/modifier', [OrganizationController::class, 'edit'])->name('organizations.edit');

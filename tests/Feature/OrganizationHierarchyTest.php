@@ -140,6 +140,23 @@ class OrganizationHierarchyTest extends TestCase
         $response->assertSee('1505 3e avenue, Acton Vale, Québec J0H1A0');
     }
 
+    public function test_the_organizations_directory_can_be_exported_to_csv(): void
+    {
+        $provincial = Organization::factory()->provincial()->create(['name' => 'Bureau provincial']);
+        $regional = Organization::factory()->regional($provincial)->create([
+            'name' => 'Région 1',
+            'legal_name' => 'Association régionale 1',
+        ]);
+
+        $response = $this->actingAs($provincial)->get('/tableau-de-bord/organisations/exporter');
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('Bureau provincial', $content);
+        $this->assertStringContainsString('Association régionale 1', $content);
+    }
+
     public function test_an_organization_cannot_update_another_organizations_fiche(): void
     {
         $provincial = Organization::factory()->provincial()->create();
