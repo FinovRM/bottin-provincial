@@ -34,39 +34,109 @@
             </p>
 
             <div class="mb-4 overflow-x-auto rounded-lg border border-gray-200">
-                <ul>
-                    @forelse ($minimumRoles as $minimumRole)
-                        @php
-                            $bag = "minimum-role-{$minimumRole->id}";
-                            $deleteConfirm = $minimumRole->member_count > 0
-                                ? "Supprimer ce rôle minimum retirera aussi {$minimumRole->member_count} membre(s) de vos organisations enfant du bottin. Continuer ?"
-                                : 'Supprimer ce rôle minimum ?';
-                        @endphp
-                        <li class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-3 text-sm last:border-0">
-                            <form method="POST" action="{{ route('minimum-roles.update', $minimumRole) }}" class="flex flex-1 items-center gap-2">
-                                @csrf
-                                @method('PUT')
-                                <input type="text" name="name"
-                                    value="{{ $errors->{$bag}->has('name') ? old('name') : $minimumRole->name }}"
-                                    required class="w-full max-w-xs rounded-md border border-gray-300 px-2 py-1 text-sm">
-                                <button type="submit" class="shrink-0 text-sm text-gray-700 hover:underline">Modifier</button>
-                                @if ($minimumRole->member_count > 0)
-                                    <span class="shrink-0 text-xs text-gray-400">({{ $minimumRole->member_count }} membre{{ $minimumRole->member_count > 1 ? 's' : '' }})</span>
-                                @endif
-                                @error('name', $bag)<p class="w-full text-sm text-red-600">{{ $message }}</p>@enderror
-                            </form>
-                            <form method="POST" action="{{ route('minimum-roles.destroy', $minimumRole) }}"
-                                onsubmit="return confirm('{{ $deleteConfirm }}');" class="shrink-0">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-sm text-red-600 hover:underline">Supprimer</button>
-                            </form>
-                        </li>
-                    @empty
-                        <li class="px-5 py-3 text-sm text-gray-500">Aucun rôle minimum défini.</li>
-                    @endforelse
-                </ul>
+                <table class="w-full text-left text-sm">
+                    <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                        <tr>
+                            <th class="px-4 py-2">Nom du rôle</th>
+                            <th class="px-4 py-2 text-center">Nombre de membres</th>
+                            <th class="px-4 py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($minimumRoles as $minimumRole)
+                            @php $bag = "minimum-role-{$minimumRole->id}"; @endphp
+                            <tr class="border-b border-gray-100 last:border-0">
+                                <td class="px-4 py-2">{{ $minimumRole->name }}</td>
+                                <td class="px-4 py-2 text-center">{{ $minimumRole->member_count }}</td>
+                                <td class="px-4 py-2 text-right whitespace-nowrap">
+                                    <button type="button" onclick="document.getElementById('edit-{{ $bag }}').showModal()"
+                                        class="text-sm text-gray-700 hover:underline">
+                                        Modifier
+                                    </button>
+                                    <button type="button" onclick="document.getElementById('delete-{{ $bag }}').showModal()"
+                                        class="ml-3 text-sm text-red-600 hover:underline">
+                                        Supprimer
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-4 py-6 text-center text-gray-500">Aucun rôle minimum défini.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+
+            @foreach ($minimumRoles as $minimumRole)
+                @php $bag = "minimum-role-{$minimumRole->id}"; @endphp
+                <dialog id="edit-{{ $bag }}" class="w-full max-w-sm rounded-lg border border-gray-200 p-6 backdrop:bg-black/30">
+                    <h3 class="mb-4 text-lg font-semibold">Modifier le rôle minimum</h3>
+
+                    <form method="POST" action="{{ route('minimum-roles.update', $minimumRole) }}">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="mb-4">
+                            <label for="{{ $bag }}-name" class="block text-sm font-medium">Nom du rôle</label>
+                            <input id="{{ $bag }}-name" type="text" name="name"
+                                value="{{ $errors->{$bag}->has('name') ? old('name') : $minimumRole->name }}" required
+                                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                            @error('name', $bag)<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+
+                        @if ($minimumRole->member_count > 0)
+                            <p class="mb-4 text-sm text-gray-500">
+                                {{ $minimumRole->member_count }} membre{{ $minimumRole->member_count > 1 ? 's' : '' }}
+                                actuellement affecté{{ $minimumRole->member_count > 1 ? 's' : '' }} à ce rôle
+                                {{ $minimumRole->member_count > 1 ? 'seront corrigés' : 'sera corrigé' }} avec le nouveau nom.
+                            </p>
+                        @endif
+
+                        <div class="flex gap-3">
+                            <button type="button" onclick="document.getElementById('edit-{{ $bag }}').close()"
+                                class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                Annuler
+                            </button>
+                            <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
+                                Confirmer
+                            </button>
+                        </div>
+                    </form>
+                </dialog>
+
+                <dialog id="delete-{{ $bag }}" class="w-full max-w-sm rounded-lg border border-gray-200 p-6 backdrop:bg-black/30">
+                    <h3 class="mb-4 text-lg font-semibold">Supprimer le rôle minimum</h3>
+
+                    <p class="mb-6 text-sm text-gray-700">
+                        @if ($minimumRole->member_count > 0)
+                            Suppression de tous les membres de l'organisation ayant ce rôle
+                            ({{ $minimumRole->member_count }} membre{{ $minimumRole->member_count > 1 ? 's' : '' }}).
+                            Cette action est irréversible.
+                        @else
+                            Aucun membre n'est actuellement affecté à ce rôle.
+                        @endif
+                    </p>
+
+                    <form method="POST" action="{{ route('minimum-roles.destroy', $minimumRole) }}">
+                        @csrf
+                        @method('DELETE')
+                        <div class="flex gap-3">
+                            <button type="button" onclick="document.getElementById('delete-{{ $bag }}').close()"
+                                class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                Annuler
+                            </button>
+                            <button type="submit" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+                                Supprimer
+                            </button>
+                        </div>
+                    </form>
+                </dialog>
+
+                @if ($errors->{$bag}->any())
+                    <script>document.getElementById('edit-{{ $bag }}').showModal();</script>
+                @endif
+            @endforeach
 
             <form method="POST" action="{{ route('minimum-roles.store') }}" class="flex max-w-sm gap-2">
                 @csrf
@@ -88,39 +158,109 @@
             </p>
 
             <div class="mb-4 overflow-x-auto rounded-lg border border-gray-200">
-                <ul>
-                    @forelse ($allowedRoles as $allowedRole)
-                        @php
-                            $bag = "allowed-role-{$allowedRole->id}";
-                            $deleteConfirm = $allowedRole->member_count > 0
-                                ? "Supprimer ce rôle permis retirera aussi {$allowedRole->member_count} membre(s) de vos organisations enfant du bottin. Continuer ?"
-                                : 'Supprimer ce rôle permis ?';
-                        @endphp
-                        <li class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-3 text-sm last:border-0">
-                            <form method="POST" action="{{ route('allowed-roles.update', $allowedRole) }}" class="flex flex-1 items-center gap-2">
-                                @csrf
-                                @method('PUT')
-                                <input type="text" name="name"
-                                    value="{{ $errors->{$bag}->has('name') ? old('name') : $allowedRole->name }}"
-                                    required class="w-full max-w-xs rounded-md border border-gray-300 px-2 py-1 text-sm">
-                                <button type="submit" class="shrink-0 text-sm text-gray-700 hover:underline">Modifier</button>
-                                @if ($allowedRole->member_count > 0)
-                                    <span class="shrink-0 text-xs text-gray-400">({{ $allowedRole->member_count }} membre{{ $allowedRole->member_count > 1 ? 's' : '' }})</span>
-                                @endif
-                                @error('name', $bag)<p class="w-full text-sm text-red-600">{{ $message }}</p>@enderror
-                            </form>
-                            <form method="POST" action="{{ route('allowed-roles.destroy', $allowedRole) }}"
-                                onsubmit="return confirm('{{ $deleteConfirm }}');" class="shrink-0">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-sm text-red-600 hover:underline">Supprimer</button>
-                            </form>
-                        </li>
-                    @empty
-                        <li class="px-5 py-3 text-sm text-gray-500">Aucun rôle permis défini.</li>
-                    @endforelse
-                </ul>
+                <table class="w-full text-left text-sm">
+                    <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                        <tr>
+                            <th class="px-4 py-2">Nom du rôle</th>
+                            <th class="px-4 py-2 text-center">Nombre de membres</th>
+                            <th class="px-4 py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($allowedRoles as $allowedRole)
+                            @php $bag = "allowed-role-{$allowedRole->id}"; @endphp
+                            <tr class="border-b border-gray-100 last:border-0">
+                                <td class="px-4 py-2">{{ $allowedRole->name }}</td>
+                                <td class="px-4 py-2 text-center">{{ $allowedRole->member_count }}</td>
+                                <td class="px-4 py-2 text-right whitespace-nowrap">
+                                    <button type="button" onclick="document.getElementById('edit-{{ $bag }}').showModal()"
+                                        class="text-sm text-gray-700 hover:underline">
+                                        Modifier
+                                    </button>
+                                    <button type="button" onclick="document.getElementById('delete-{{ $bag }}').showModal()"
+                                        class="ml-3 text-sm text-red-600 hover:underline">
+                                        Supprimer
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-4 py-6 text-center text-gray-500">Aucun rôle permis défini.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+
+            @foreach ($allowedRoles as $allowedRole)
+                @php $bag = "allowed-role-{$allowedRole->id}"; @endphp
+                <dialog id="edit-{{ $bag }}" class="w-full max-w-sm rounded-lg border border-gray-200 p-6 backdrop:bg-black/30">
+                    <h3 class="mb-4 text-lg font-semibold">Modifier le rôle permis</h3>
+
+                    <form method="POST" action="{{ route('allowed-roles.update', $allowedRole) }}">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="mb-4">
+                            <label for="{{ $bag }}-name" class="block text-sm font-medium">Nom du rôle</label>
+                            <input id="{{ $bag }}-name" type="text" name="name"
+                                value="{{ $errors->{$bag}->has('name') ? old('name') : $allowedRole->name }}" required
+                                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                            @error('name', $bag)<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+
+                        @if ($allowedRole->member_count > 0)
+                            <p class="mb-4 text-sm text-gray-500">
+                                {{ $allowedRole->member_count }} membre{{ $allowedRole->member_count > 1 ? 's' : '' }}
+                                actuellement affecté{{ $allowedRole->member_count > 1 ? 's' : '' }} à ce rôle
+                                {{ $allowedRole->member_count > 1 ? 'seront corrigés' : 'sera corrigé' }} avec le nouveau nom.
+                            </p>
+                        @endif
+
+                        <div class="flex gap-3">
+                            <button type="button" onclick="document.getElementById('edit-{{ $bag }}').close()"
+                                class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                Annuler
+                            </button>
+                            <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
+                                Confirmer
+                            </button>
+                        </div>
+                    </form>
+                </dialog>
+
+                <dialog id="delete-{{ $bag }}" class="w-full max-w-sm rounded-lg border border-gray-200 p-6 backdrop:bg-black/30">
+                    <h3 class="mb-4 text-lg font-semibold">Supprimer le rôle permis</h3>
+
+                    <p class="mb-6 text-sm text-gray-700">
+                        @if ($allowedRole->member_count > 0)
+                            Suppression de tous les membres de l'organisation ayant ce rôle
+                            ({{ $allowedRole->member_count }} membre{{ $allowedRole->member_count > 1 ? 's' : '' }}).
+                            Cette action est irréversible.
+                        @else
+                            Aucun membre n'est actuellement affecté à ce rôle.
+                        @endif
+                    </p>
+
+                    <form method="POST" action="{{ route('allowed-roles.destroy', $allowedRole) }}">
+                        @csrf
+                        @method('DELETE')
+                        <div class="flex gap-3">
+                            <button type="button" onclick="document.getElementById('delete-{{ $bag }}').close()"
+                                class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                Annuler
+                            </button>
+                            <button type="submit" class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+                                Supprimer
+                            </button>
+                        </div>
+                    </form>
+                </dialog>
+
+                @if ($errors->{$bag}->any())
+                    <script>document.getElementById('edit-{{ $bag }}').showModal();</script>
+                @endif
+            @endforeach
 
             <form method="POST" action="{{ route('allowed-roles.store') }}" class="flex max-w-sm gap-2">
                 @csrf

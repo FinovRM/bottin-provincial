@@ -119,6 +119,20 @@ class MinimumRoleTest extends TestCase
         $this->assertDatabaseMissing('member_roles', ['organization_id' => $regional->id, 'role' => 'Président']);
     }
 
+    public function test_renaming_a_minimum_role_to_an_existing_name_shows_a_scoped_error(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $provincial->minimumRoles()->create(['name' => 'Président']);
+        $treasurer = $provincial->minimumRoles()->create(['name' => 'Trésorier']);
+
+        $response = $this->actingAs($provincial)->put("/profil/roles-minimum/{$treasurer->id}", [
+            'name' => 'Président',
+        ]);
+
+        $response->assertSessionHasErrorsIn("minimum-role-{$treasurer->id}", 'name');
+        $this->assertDatabaseHas('minimum_roles', ['id' => $treasurer->id, 'name' => 'Trésorier']);
+    }
+
     public function test_deleting_a_minimum_role_never_touches_grandchild_organizations(): void
     {
         $provincial = Organization::factory()->provincial()->create();
