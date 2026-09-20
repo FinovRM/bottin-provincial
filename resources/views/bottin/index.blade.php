@@ -11,9 +11,9 @@
             <p class="text-sm text-gray-500">Provincial</p>
 
             @if ($provincial->children->isNotEmpty())
-                <ul class="mt-4 space-y-3 border-l border-gray-200 pl-4">
+                <ul class="mt-4 grid gap-4 sm:grid-cols-3">
                     @foreach ($provincial->children as $regional)
-                        <li>
+                        <li class="rounded-md border border-gray-200 p-3">
                             <p class="font-medium">{{ $regional->name }}</p>
                             <p class="text-sm text-gray-500">Régional</p>
 
