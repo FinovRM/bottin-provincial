@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MemberController extends Controller
@@ -32,7 +33,9 @@ class MemberController extends Controller
 
         $request->validate(['responsable_confirmed' => ['accepted']]);
 
-        return view('dashboard.members-create');
+        return view('dashboard.members-create', [
+            'roleOptions' => $organization->usableRoleNames(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -42,8 +45,10 @@ class MemberController extends Controller
 
         Gate::authorize('create', [MemberRole::class, $organization]);
 
+        $roleOptions = $organization->usableRoleNames();
+
         $validated = $request->validate([
-            'role' => ['required', 'string', 'max:255'],
+            'role' => ['required', 'string', 'max:255', ...($roleOptions ? [Rule::in($roleOptions)] : [])],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'confirmed'],
             'cell_phone' => ['nullable', 'string', 'max:255'],

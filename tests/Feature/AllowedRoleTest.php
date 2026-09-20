@@ -1,0 +1,101 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Organization;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class AllowedRoleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_a_parent_organization_can_add_an_allowed_role_for_its_children(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+
+        $response = $this->actingAs($provincial)->post('/profil/roles-permis', [
+            'name' => 'Bénévole',
+        ]);
+
+        $response->assertRedirect(route('profile'));
+        $this->assertDatabaseHas('allowed_roles', [
+            'organization_id' => $provincial->id,
+            'name' => 'Bénévole',
+        ]);
+    }
+
+    public function test_a_local_organization_cannot_add_an_allowed_role(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create();
+        $local = Organization::factory()->local($regional)->create();
+
+        $response = $this->actingAs($local)->post('/profil/roles-permis', [
+            'name' => 'Bénévole',
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('allowed_roles', ['name' => 'Bénévole']);
+    }
+
+    public function test_a_parent_organization_cannot_add_a_duplicate_allowed_role(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $provincial->allowedRoles()->create(['name' => 'Bénévole']);
+
+        $response = $this->actingAs($provincial)->post('/profil/roles-permis', [
+            'name' => 'Bénévole',
+        ]);
+
+        $response->assertSessionHasErrors('name');
+        $this->assertDatabaseCount('allowed_roles', 1);
+    }
+
+    public function test_a_parent_organization_can_delete_its_own_allowed_role(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $allowedRole = $provincial->allowedRoles()->create(['name' => 'Bénévole']);
+
+        $response = $this->actingAs($provincial)->delete("/profil/roles-permis/{$allowedRole->id}");
+
+        $response->assertRedirect(route('profile'));
+        $this->assertDatabaseMissing('allowed_roles', ['id' => $allowedRole->id]);
+    }
+
+    public function test_an_organization_cannot_delete_another_organizations_allowed_role(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $otherProvincial = Organization::factory()->provincial()->create();
+        $allowedRole = $otherProvincial->allowedRoles()->create(['name' => 'Bénévole']);
+
+        $response = $this->actingAs($provincial)->delete("/profil/roles-permis/{$allowedRole->id}");
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('allowed_roles', ['id' => $allowedRole->id]);
+    }
+
+    public function test_the_profile_page_shows_allowed_roles_only_for_a_parent_organization(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $provincial->allowedRoles()->create(['name' => 'Bénévole']);
+
+        $response = $this->actingAs($provincial)->get('/profil');
+
+        $response->assertOk();
+        $response->assertSee('Rôles permis de mes organisations enfant');
+        $response->assertSee('Bénévole');
+    }
+
+    public function test_the_profile_page_hides_allowed_roles_for_a_local_organization(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create();
+        $local = Organization::factory()->local($regional)->create();
+
+        $response = $this->actingAs($local)->get('/profil');
+
+        $response->assertOk();
+        $response->assertDontSee('Rôles permis de mes organisations enfant');
+    }
+}

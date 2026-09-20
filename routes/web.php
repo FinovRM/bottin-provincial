@@ -10,12 +10,13 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\BottinLoginController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginLinkController;
+use App\Http\Controllers\AllowedRoleController;
 use App\Http\Controllers\Bottin\DashboardController as BottinDashboardController;
 use App\Http\Controllers\BottinController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
-use App\Http\Controllers\MinimumRoleController;
 use App\Http\Controllers\MemberSearchController;
+use App\Http\Controllers\MinimumRoleController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\OrganizationSearchController;
 use App\Http\Controllers\OrganizationSwitchController;
@@ -86,6 +87,9 @@ Route::middleware('auth:web')->group(function () {
 
     Route::post('/profil/roles-minimum', [MinimumRoleController::class, 'store'])->name('minimum-roles.store');
     Route::delete('/profil/roles-minimum/{minimumRole}', [MinimumRoleController::class, 'destroy'])->name('minimum-roles.destroy');
+
+    Route::post('/profil/roles-permis', [AllowedRoleController::class, 'store'])->name('allowed-roles.store');
+    Route::delete('/profil/roles-permis/{allowedRole}', [AllowedRoleController::class, 'destroy'])->name('allowed-roles.destroy');
 });
 
 // Admin space.

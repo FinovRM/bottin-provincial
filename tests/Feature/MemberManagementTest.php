@@ -197,6 +197,61 @@ class MemberManagementTest extends TestCase
         $response->assertDontSee('Rôle(s) minimum manquant(s)');
     }
 
+    public function test_a_child_organization_can_only_use_roles_allowed_by_its_parent(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $provincial->minimumRoles()->create(['name' => 'Président']);
+        $provincial->allowedRoles()->create(['name' => 'Bénévole']);
+        $regional = Organization::factory()->regional($provincial)->create();
+
+        $rejected = $this->actingAs($regional)->post('/membres', [
+            'role' => 'Rôle non autorisé',
+            'name' => 'Jeanne Tremblay',
+            'email' => 'jeanne@example.com',
+            'email_confirmation' => 'jeanne@example.com',
+        ]);
+        $rejected->assertSessionHasErrors('role');
+        $this->assertDatabaseMissing('members', ['email' => 'jeanne@example.com']);
+
+        $accepted = $this->actingAs($regional)->post('/membres', [
+            'role' => 'Bénévole',
+            'name' => 'Jeanne Tremblay',
+            'email' => 'jeanne@example.com',
+            'email_confirmation' => 'jeanne@example.com',
+        ]);
+        $accepted->assertRedirect(route('dashboard.properties'));
+        $this->assertDatabaseHas('member_roles', ['organization_id' => $regional->id, 'role' => 'Bénévole']);
+    }
+
+    public function test_a_child_organization_is_unrestricted_when_its_parent_has_configured_no_roles(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create();
+
+        $response = $this->actingAs($regional)->post('/membres', [
+            'role' => 'N\'importe quel rôle',
+            'name' => 'Jeanne Tremblay',
+            'email' => 'jeanne@example.com',
+            'email_confirmation' => 'jeanne@example.com',
+        ]);
+
+        $response->assertRedirect(route('dashboard.properties'));
+        $this->assertDatabaseHas('member_roles', ['organization_id' => $regional->id, 'role' => 'N\'importe quel rôle']);
+    }
+
+    public function test_the_members_create_form_shows_a_dropdown_when_roles_are_restricted(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $provincial->allowedRoles()->create(['name' => 'Bénévole']);
+        $regional = Organization::factory()->regional($provincial)->create();
+
+        $response = $this->actingAs($regional)->post('/membres/ajouter', ['responsable_confirmed' => '1']);
+
+        $response->assertOk();
+        $response->assertSee('<select', false);
+        $response->assertSee('Bénévole');
+    }
+
     public function test_adding_a_role_updates_the_organizations_last_updated_timestamp(): void
     {
         $organization = Organization::factory()->provincial()->create(['updated_at' => now()->subDay()]);

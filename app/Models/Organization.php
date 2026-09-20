@@ -104,6 +104,39 @@ class Organization extends Authenticatable
         return $this->hasMany(MinimumRole::class);
     }
 
+    /**
+     * The role names this organization permits (beyond its minimum roles)
+     * for each of its direct children.
+     *
+     * @return HasMany<AllowedRole, $this>
+     */
+    public function allowedRoles(): HasMany
+    {
+        return $this->hasMany(AllowedRole::class);
+    }
+
+    /**
+     * The role names usable by this organization's own members, as set by its
+     * parent (minimum roles union allowed roles). Null when unrestricted —
+     * no parent, or the parent hasn't configured any roles yet.
+     *
+     * @return ?array<int, string>
+     */
+    public function usableRoleNames(): ?array
+    {
+        if (! $this->parent) {
+            return null;
+        }
+
+        $names = $this->parent->minimumRoles->pluck('name')
+            ->merge($this->parent->allowedRoles->pluck('name'))
+            ->unique()
+            ->sort()
+            ->values();
+
+        return $names->isNotEmpty() ? $names->all() : null;
+    }
+
     public function canCreateChildren(): bool
     {
         return $this->level->childLevel() !== null;
