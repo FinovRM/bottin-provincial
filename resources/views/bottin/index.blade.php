@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Bottin de communication')
+@section('title', 'Organisations')
 
 @section('content')
     @include('partials.hero-banner', [
-        'title' => 'Bottin de communication',
+        'title' => 'Organisations',
         'description' => 'Consultez les organisations affiliées et leurs coordonnées.',
         'backgroundImage' => asset('images/logo-hockey-quebec.avif'),
     ])
