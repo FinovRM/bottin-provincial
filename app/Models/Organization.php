@@ -37,6 +37,21 @@ class Organization extends Authenticatable
     }
 
     /**
+     * The full mailing address (street, city, province, postal code) as a single
+     * line, or null if none of those fields are filled in.
+     */
+    public function fullPostalAddress(): ?string
+    {
+        $line = collect([$this->address, $this->city, $this->province])->filter()->implode(', ');
+
+        if ($this->postal_code) {
+            $line = trim("{$line} {$this->postal_code}");
+        }
+
+        return $line !== '' ? $line : null;
+    }
+
+    /**
      * Stored as digits only, presented as "(xxx) xxx-xxxx".
      */
     protected function responsableCellPhone(): Attribute

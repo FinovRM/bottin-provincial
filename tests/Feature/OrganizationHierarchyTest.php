@@ -124,6 +124,22 @@ class OrganizationHierarchyTest extends TestCase
         $response->assertSee('Association hockey mineur Acton Vale');
     }
 
+    public function test_the_organizations_directory_shows_the_full_postal_address(): void
+    {
+        $provincial = Organization::factory()->provincial()->create([
+            'name' => 'AHM Acton Vale',
+            'address' => '1505 3e avenue',
+            'city' => 'Acton Vale',
+            'province' => 'Québec',
+            'postal_code' => 'J0H1A0',
+        ]);
+
+        $response = $this->actingAs($provincial)->get('/tableau-de-bord/organisations');
+
+        $response->assertOk();
+        $response->assertSee('1505 3e avenue, Acton Vale, Québec J0H1A0');
+    }
+
     public function test_an_organization_cannot_update_another_organizations_fiche(): void
     {
         $provincial = Organization::factory()->provincial()->create();
