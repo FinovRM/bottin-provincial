@@ -264,6 +264,57 @@ class QueryScopeTest extends TestCase
         $response->assertDontSee('Membre Provincial');
     }
 
+    public function test_the_bottin_only_shows_currently_permitted_roles(): void
+    {
+        $tree = $this->tree();
+        $tree['region1']->minimumRoles()->create(['name' => 'Président']);
+
+        $president = Member::create(['name' => 'Membre Permis', 'email' => 'permis@example.com']);
+        $tree['local1']->memberRoles()->create(['member_id' => $president->id, 'role' => 'Président']);
+
+        $other = Member::create(['name' => 'Membre Non Permis', 'email' => 'nonpermis@example.com']);
+        $tree['local1']->memberRoles()->create(['member_id' => $other->id, 'role' => 'Rôle non permis']);
+
+        // Région 2 has no configured roles for its children, so Local 3 stays unrestricted.
+        $unrestricted = Member::create(['name' => 'Membre Non Restreint', 'email' => 'nonrestreint@example.com']);
+        $tree['local3']->memberRoles()->create(['member_id' => $unrestricted->id, 'role' => 'Rôle quelconque']);
+
+        $response = $this->actingAs($tree['provincial'])->get('/bottin');
+
+        $response->assertOk();
+        $response->assertSee('Membre Permis');
+        $response->assertDontSee('Membre Non Permis');
+        $response->assertSee('Membre Non Restreint');
+    }
+
+    public function test_the_bottin_permitted_roles_filter_uses_each_organizations_own_direct_parent(): void
+    {
+        $tree = $this->tree();
+        // Provincial's own list must never govern Local 1 — only Local 1's direct
+        // parent (Région 1) does. Provincial "authorizing" Président is irrelevant here.
+        $tree['provincial']->minimumRoles()->create(['name' => 'Président']);
+        // Région 1 (Local 1's direct parent) allows a different role instead.
+        $tree['region1']->allowedRoles()->create(['name' => 'Bénévole']);
+
+        $local1President = Member::create(['name' => 'Local1 Président', 'email' => 'l1p@example.com']);
+        $tree['local1']->memberRoles()->create(['member_id' => $local1President->id, 'role' => 'Président']);
+
+        $local1Benevole = Member::create(['name' => 'Local1 Bénévole', 'email' => 'l1b@example.com']);
+        $tree['local1']->memberRoles()->create(['member_id' => $local1Benevole->id, 'role' => 'Bénévole']);
+
+        // A member directly on Région 1 itself is governed by Région 1's own direct
+        // parent, Provincial — which permits "Président", not "Bénévole".
+        $region1President = Member::create(['name' => 'Région1 Président', 'email' => 'r1p@example.com']);
+        $tree['region1']->memberRoles()->create(['member_id' => $region1President->id, 'role' => 'Président']);
+
+        $response = $this->actingAs($tree['provincial'])->get('/bottin');
+
+        $response->assertOk();
+        $response->assertDontSee('Local1 Président');
+        $response->assertSee('Local1 Bénévole');
+        $response->assertSee('Région1 Président');
+    }
+
     public function test_the_bottin_csv_export_respects_the_current_filters(): void
     {
         $tree = $this->tree();

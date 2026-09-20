@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Member;
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -73,6 +74,40 @@ class AllowedRoleTest extends TestCase
 
         $response->assertForbidden();
         $this->assertDatabaseHas('allowed_roles', ['id' => $allowedRole->id]);
+    }
+
+    public function test_deleting_an_allowed_role_removes_it_from_every_child_member(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $allowedRole = $provincial->allowedRoles()->create(['name' => 'Bénévole']);
+        $regional = Organization::factory()->regional($provincial)->create();
+        $member = Member::create(['name' => 'Membre', 'email' => 'membre@example.com']);
+        $regional->memberRoles()->create(['member_id' => $member->id, 'role' => 'Bénévole']);
+
+        $response = $this->actingAs($provincial)->delete("/profil/roles-permis/{$allowedRole->id}");
+
+        $response->assertRedirect(route('profile'));
+        $this->assertDatabaseMissing('allowed_roles', ['id' => $allowedRole->id]);
+        $this->assertDatabaseMissing('member_roles', ['organization_id' => $regional->id, 'role' => 'Bénévole']);
+        $this->assertDatabaseMissing('members', ['id' => $member->id]);
+    }
+
+    public function test_renaming_an_allowed_role_renames_it_on_every_child_member(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $allowedRole = $provincial->allowedRoles()->create(['name' => 'Bénévole']);
+        $regional = Organization::factory()->regional($provincial)->create();
+        $member = Member::create(['name' => 'Membre', 'email' => 'membre@example.com']);
+        $regional->memberRoles()->create(['member_id' => $member->id, 'role' => 'Bénévole']);
+
+        $response = $this->actingAs($provincial)->put("/profil/roles-permis/{$allowedRole->id}", [
+            'name' => 'Bénévole occasionnel',
+        ]);
+
+        $response->assertRedirect(route('profile'));
+        $this->assertDatabaseHas('allowed_roles', ['id' => $allowedRole->id, 'name' => 'Bénévole occasionnel']);
+        $this->assertDatabaseHas('member_roles', ['organization_id' => $regional->id, 'role' => 'Bénévole occasionnel']);
+        $this->assertDatabaseMissing('member_roles', ['organization_id' => $regional->id, 'role' => 'Bénévole']);
     }
 
     public function test_the_profile_page_shows_allowed_roles_only_for_a_parent_organization(): void

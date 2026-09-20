@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OrganizationLevel;
+use App\Models\AllowedRole;
 use App\Models\Member;
 use App\Models\MemberRole;
+use App\Models\MinimumRole;
 use App\Models\Organization;
 use App\Models\PersonalFilter;
 use App\Support\ViewerScope;
@@ -47,6 +49,14 @@ class ProfileController extends Controller
             if ($organization->canCreateChildren()) {
                 $minimumRoles = $organization->minimumRoles()->orderBy('name')->get();
                 $allowedRoles = $organization->allowedRoles()->orderBy('name')->get();
+
+                $childMemberCountsByRole = MemberRole::whereIn('organization_id', $organization->children()->pluck('id'))
+                    ->selectRaw('role, count(*) as aggregate')
+                    ->groupBy('role')
+                    ->pluck('aggregate', 'role');
+
+                $minimumRoles->each(fn (MinimumRole $role) => $role->member_count = $childMemberCountsByRole->get($role->name, 0));
+                $allowedRoles->each(fn (AllowedRole $role) => $role->member_count = $childMemberCountsByRole->get($role->name, 0));
             }
         }
 

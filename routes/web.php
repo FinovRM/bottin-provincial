@@ -86,9 +86,11 @@ Route::middleware('auth:web')->group(function () {
     Route::delete('/membres/{memberRole}', [MemberController::class, 'destroy'])->name('members.destroy');
 
     Route::post('/profil/roles-minimum', [MinimumRoleController::class, 'store'])->name('minimum-roles.store');
+    Route::put('/profil/roles-minimum/{minimumRole}', [MinimumRoleController::class, 'update'])->name('minimum-roles.update');
     Route::delete('/profil/roles-minimum/{minimumRole}', [MinimumRoleController::class, 'destroy'])->name('minimum-roles.destroy');
 
     Route::post('/profil/roles-permis', [AllowedRoleController::class, 'store'])->name('allowed-roles.store');
+    Route::put('/profil/roles-permis/{allowedRole}', [AllowedRoleController::class, 'update'])->name('allowed-roles.update');
     Route::delete('/profil/roles-permis/{allowedRole}', [AllowedRoleController::class, 'destroy'])->name('allowed-roles.destroy');
 });
 

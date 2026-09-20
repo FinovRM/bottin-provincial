@@ -11,6 +11,7 @@ use App\Models\PersonalFilter;
 use App\Support\ViewerScope;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -149,14 +150,56 @@ class DashboardController extends Controller
             }
         }
 
-        return $memberRoles
+        $results = $memberRoles
             ->when(! $personalFilter && $role !== '', fn ($memberRoles) => $memberRoles->where('role', $role))
-            ->get()
+            ->get();
+
+        $permittedRoleNamesByOrganization = $this->permittedRoleNamesByOrganization(
+            Organization::whereIn('id', $results->pluck('organization_id')->unique())->get()
+        );
+
+        return $results
+            ->filter(function (MemberRole $memberRole) use ($permittedRoleNamesByOrganization) {
+                $permitted = $permittedRoleNamesByOrganization->get($memberRole->organization_id);
+
+                return $permitted === null || in_array($memberRole->role, $permitted, true);
+            })
             ->sortBy([
                 ['organization.name', 'asc'],
                 ['role', 'asc'],
                 ['member.name', 'asc'],
             ]);
+    }
+
+    /**
+     * For each given organization, the role names currently usable by its own
+     * members (its parent's minimum roles union allowed roles), or null when
+     * unrestricted. The bottin only ever shows members holding a currently
+     * permitted role.
+     *
+     * @param  Collection<int, Organization>  $organizations
+     * @return SupportCollection<int, ?array<int, string>>
+     */
+    private function permittedRoleNamesByOrganization(Collection $organizations): SupportCollection
+    {
+        $parents = Organization::whereIn('id', $organizations->pluck('parent_id')->filter()->unique())
+            ->with('minimumRoles', 'allowedRoles')
+            ->get()
+            ->keyBy('id');
+
+        return $organizations->mapWithKeys(function (Organization $organization) use ($parents) {
+            $parent = $organization->parent_id ? $parents->get($organization->parent_id) : null;
+
+            if (! $parent) {
+                return [$organization->id => null];
+            }
+
+            $names = $parent->minimumRoles->pluck('name')
+                ->merge($parent->allowedRoles->pluck('name'))
+                ->unique();
+
+            return [$organization->id => $names->isNotEmpty() ? $names->all() : null];
+        });
     }
 
     /**

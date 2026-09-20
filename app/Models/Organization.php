@@ -137,6 +137,55 @@ class Organization extends Authenticatable
         return $names->isNotEmpty() ? $names->all() : null;
     }
 
+    /**
+     * A minimum/allowed role of this organization was deleted: remove that
+     * role from every direct child's members, deleting a member outright if
+     * they're left without any role. Returns how many member roles were removed.
+     */
+    public function removeChildMemberRolesNamed(string $roleName): int
+    {
+        $memberRoles = MemberRole::whereIn('organization_id', $this->children()->pluck('id'))
+            ->where('role', $roleName)
+            ->with('member')
+            ->get();
+
+        $affectedOrganizationIds = $memberRoles->pluck('organization_id')->unique();
+
+        foreach ($memberRoles as $memberRole) {
+            $member = $memberRole->member;
+            $memberRole->delete();
+
+            if ($member->roles()->doesntExist()) {
+                $member->delete();
+            }
+        }
+
+        Organization::whereIn('id', $affectedOrganizationIds)->get()->each->touch();
+
+        return $memberRoles->count();
+    }
+
+    /**
+     * A minimum/allowed role of this organization was renamed: rename that
+     * role on every direct child's members to match. Returns how many member
+     * roles were renamed.
+     */
+    public function renameChildMemberRoles(string $oldName, string $newName): int
+    {
+        $affectedOrganizationIds = MemberRole::whereIn('organization_id', $this->children()->pluck('id'))
+            ->where('role', $oldName)
+            ->pluck('organization_id')
+            ->unique();
+
+        $count = MemberRole::whereIn('organization_id', $affectedOrganizationIds)
+            ->where('role', $oldName)
+            ->update(['role' => $newName]);
+
+        Organization::whereIn('id', $affectedOrganizationIds)->get()->each->touch();
+
+        return $count;
+    }
+
     public function canCreateChildren(): bool
     {
         return $this->level->childLevel() !== null;
