@@ -6,6 +6,7 @@
     @include('partials.hero-banner', [
         'title' => 'Bottin de communication',
         'description' => 'Consultez les organisations affiliées et leurs coordonnées.',
+        'backgroundImage' => asset('images/logo-hockey-quebec.avif'),
     ])
 
     @forelse ($provincialOrganizations as $provincial)
