@@ -49,8 +49,11 @@
         </div>
 
         <dl class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm text-gray-700">
-            <dt class="text-right font-medium">Nom :</dt>
+            <dt class="text-right font-medium">Organisation :</dt>
             <dd>{{ $organization->name }}</dd>
+
+            <dt class="text-right font-medium">Nom légal :</dt>
+            <dd>{{ $organization->legal_name ?: '—' }}</dd>
 
             <dt class="text-right font-medium">Adresse :</dt>
             <dd>{{ $organization->address ?: '—' }}</dd>

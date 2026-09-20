@@ -61,6 +61,37 @@ class OrganizationHierarchyTest extends TestCase
         ]);
     }
 
+    public function test_an_organization_can_set_its_legal_name(): void
+    {
+        $organization = Organization::factory()->provincial()->create(['name' => 'AHM Acton Vale']);
+
+        $response = $this->actingAs($organization)->put("/organisations/{$organization->id}", [
+            'name' => 'AHM Acton Vale',
+            'legal_name' => 'Association hockey mineur Acton Vale',
+        ]);
+
+        $response->assertRedirect(route('dashboard.properties'));
+        $this->assertDatabaseHas('organizations', [
+            'id' => $organization->id,
+            'legal_name' => 'Association hockey mineur Acton Vale',
+        ]);
+    }
+
+    public function test_the_properties_page_shows_the_organizations_legal_name(): void
+    {
+        $organization = Organization::factory()->provincial()->create([
+            'name' => 'AHM Acton Vale',
+            'legal_name' => 'Association hockey mineur Acton Vale',
+        ]);
+
+        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+
+        $response->assertOk();
+        $response->assertSee('Organisation :');
+        $response->assertSee('Nom légal :');
+        $response->assertSee('Association hockey mineur Acton Vale');
+    }
+
     public function test_an_organization_cannot_update_another_organizations_fiche(): void
     {
         $provincial = Organization::factory()->provincial()->create();
