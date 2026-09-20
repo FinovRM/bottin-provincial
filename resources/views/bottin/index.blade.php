@@ -1,11 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Organisations')
+@section('title', 'Bottin des organisations')
 
 @section('content')
     @include('partials.hero-banner', [
-        'title' => 'Organisations',
-        'description' => 'Consultez les organisations affiliées et leurs coordonnées.',
+        'eyebrow' => 'Provincial, Régional et Local',
+        'title' => 'Bottin des organisations',
+        'description' => 'Adresse des organisations affiliées et coordonnées des dirigeants/responsables',
         'backgroundImage' => asset('images/logo-hockey-quebec.avif'),
     ])
 

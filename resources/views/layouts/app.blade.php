@@ -9,7 +9,7 @@
     <body class="min-h-screen bg-gray-50 text-gray-900 antialiased">
         <header class="border-b border-gray-200 bg-white">
             <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-                <a href="{{ route('bottin') }}" class="font-semibold">Bottin de communication</a>
+                <a href="{{ route('bottin') }}" class="font-semibold">Bottin de la fédération</a>
 
                 <nav class="flex items-center gap-4 text-sm">
                     @if (auth('web')->check())

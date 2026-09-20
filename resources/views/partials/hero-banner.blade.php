@@ -6,7 +6,7 @@
         @endisset
 
         <div class="col-start-1 row-start-1 mx-auto w-full max-w-5xl px-6 pb-10 pt-8 sm:px-10">
-            <p class="text-xs font-medium uppercase tracking-wide text-gray-300">Bottin de communication</p>
+            <p class="text-xs font-medium uppercase tracking-wide text-gray-300">{{ $eyebrow ?? 'Bottin de communication' }}</p>
             <h1 class="mt-1 text-3xl font-semibold text-white">{{ $title }}</h1>
             @isset($meta)
                 <p class="mt-2">
