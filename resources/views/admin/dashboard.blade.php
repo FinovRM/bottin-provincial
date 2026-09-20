@@ -21,13 +21,5 @@
                 Voir, ajouter, supprimer ou importer des membres.
             </p>
         </a>
-
-        <a href="{{ route('admin.roles.index') }}"
-            class="rounded-lg border border-gray-200 bg-white p-5 hover:border-gray-400">
-            <h2 class="font-semibold">Rôles</h2>
-            <p class="mt-1 text-sm text-gray-500">
-                Rôles minimum à compléter des différents niveaux.
-            </p>
-        </a>
     </div>
 @endsection

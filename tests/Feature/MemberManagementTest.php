@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Member;
 use App\Models\Organization;
-use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -159,15 +158,16 @@ class MemberManagementTest extends TestCase
         $response->assertDontSee('Déclaration du responsable');
     }
 
-    public function test_properties_page_notifies_missing_roles_for_the_organizations_level(): void
+    public function test_properties_page_notifies_missing_roles_required_by_the_parent(): void
     {
-        $organization = Organization::factory()->provincial()->create();
-        Role::factory()->create(['level' => 'provincial', 'name' => 'Président']);
-        Role::factory()->create(['level' => 'provincial', 'name' => 'Trésorier']);
+        $provincial = Organization::factory()->provincial()->create();
+        $provincial->minimumRoles()->create(['name' => 'Président']);
+        $provincial->minimumRoles()->create(['name' => 'Trésorier']);
+        $regional = Organization::factory()->regional($provincial)->create();
         $member = Member::create(['name' => 'Filled', 'email' => 'filled@example.com']);
-        $organization->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
+        $regional->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($regional)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertSee('Trésorier');
@@ -175,12 +175,23 @@ class MemberManagementTest extends TestCase
 
     public function test_properties_page_does_not_notify_when_every_role_is_filled(): void
     {
-        $organization = Organization::factory()->provincial()->create();
-        Role::factory()->create(['level' => 'provincial', 'name' => 'Président']);
+        $provincial = Organization::factory()->provincial()->create();
+        $provincial->minimumRoles()->create(['name' => 'Président']);
+        $regional = Organization::factory()->regional($provincial)->create();
         $member = Member::create(['name' => 'Filled', 'email' => 'filled@example.com']);
-        $organization->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
+        $regional->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($regional)->get('/tableau-de-bord/proprietes');
+
+        $response->assertOk();
+        $response->assertDontSee('Rôle(s) minimum manquant(s)');
+    }
+
+    public function test_properties_page_does_not_notify_a_top_level_organization_without_a_parent(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+
+        $response = $this->actingAs($provincial)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertDontSee('Rôle(s) minimum manquant(s)');

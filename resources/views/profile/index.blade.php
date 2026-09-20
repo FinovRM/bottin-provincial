@@ -26,6 +26,45 @@
         </dl>
     </section>
 
+    @if (auth('web')->check() && auth('web')->user()->canCreateChildren())
+        <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
+            <h2 class="mb-1 text-lg font-semibold">Rôles minimum des organisations enfant</h2>
+            <p class="mb-4 text-sm text-gray-500">
+                Rôles exigés de chacune de vos organisations {{ auth('web')->user()->level->childLevel()->pluralLabel() }}.
+            </p>
+
+            <div class="mb-4 overflow-x-auto rounded-lg border border-gray-200">
+                <ul>
+                    @forelse ($minimumRoles as $minimumRole)
+                        <li class="flex items-center justify-between gap-4 border-b border-gray-100 px-5 py-3 text-sm last:border-0">
+                            <span>{{ $minimumRole->name }}</span>
+                            <form method="POST" action="{{ route('minimum-roles.destroy', $minimumRole) }}"
+                                onsubmit="return confirm('Supprimer ce rôle minimum ?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-sm text-red-600 hover:underline">Supprimer</button>
+                            </form>
+                        </li>
+                    @empty
+                        <li class="px-5 py-3 text-sm text-gray-500">Aucun rôle minimum défini.</li>
+                    @endforelse
+                </ul>
+            </div>
+
+            <form method="POST" action="{{ route('minimum-roles.store') }}" class="flex max-w-sm gap-2">
+                @csrf
+                <div class="flex-1">
+                    <input type="text" name="name" value="{{ old('name') }}" placeholder="Nom du rôle" required
+                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                    @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
+                    Ajouter
+                </button>
+            </form>
+        </section>
+    @endif
+
     <section class="rounded-lg border border-gray-200 bg-white p-5">
         <h2 class="mb-4 text-lg font-semibold">Mes filtres personnels</h2>
 

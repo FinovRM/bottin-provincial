@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Enums\OrganizationLevel;
 use App\Models\Admin;
 use App\Models\Member;
 use App\Models\Organization;
-use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -309,69 +307,5 @@ class AdminTest extends TestCase
         $response->assertRedirect(route('admin.members.import.create'));
         $this->assertDatabaseHas('members', ['email' => 'membre-importe@example.com']);
         $this->assertDatabaseHas('member_roles', ['organization_id' => $organization->id, 'role' => 'Bénévole']);
-    }
-
-    public function test_an_admin_sees_roles_grouped_by_level(): void
-    {
-        $admin = Admin::factory()->create();
-        Role::factory()->create(['level' => OrganizationLevel::Provincial, 'name' => 'Président']);
-        Role::factory()->create(['level' => OrganizationLevel::Local, 'name' => 'Registraire']);
-
-        $response = $this->actingAs($admin, 'admin')->get('/admin/roles');
-
-        $response->assertOk();
-        $response->assertSee('Président');
-        $response->assertSee('Registraire');
-    }
-
-    public function test_an_admin_can_add_a_role(): void
-    {
-        $admin = Admin::factory()->create();
-
-        $response = $this->actingAs($admin, 'admin')->post('/admin/roles', [
-            'level' => 'regional',
-            'name' => 'Directeur des tournois',
-        ]);
-
-        $response->assertRedirect(route('admin.roles.index'));
-        $this->assertDatabaseHas('roles', ['level' => 'regional', 'name' => 'Directeur des tournois']);
-    }
-
-    public function test_an_admin_cannot_add_a_duplicate_role_at_the_same_level(): void
-    {
-        $admin = Admin::factory()->create();
-        Role::factory()->create(['level' => OrganizationLevel::Local, 'name' => 'Registraire']);
-
-        $response = $this->actingAs($admin, 'admin')->post('/admin/roles', [
-            'level' => 'local',
-            'name' => 'Registraire',
-        ]);
-
-        $response->assertSessionHasErrors('name');
-        $this->assertDatabaseCount('roles', 1);
-    }
-
-    public function test_an_admin_can_rename_a_role(): void
-    {
-        $admin = Admin::factory()->create();
-        $role = Role::factory()->create(['level' => OrganizationLevel::Local, 'name' => 'Ancien nom']);
-
-        $response = $this->actingAs($admin, 'admin')->put("/admin/roles/{$role->id}", [
-            'name' => 'Nouveau nom',
-        ]);
-
-        $response->assertRedirect(route('admin.roles.index'));
-        $this->assertDatabaseHas('roles', ['id' => $role->id, 'name' => 'Nouveau nom']);
-    }
-
-    public function test_an_admin_can_delete_a_predefined_role(): void
-    {
-        $admin = Admin::factory()->create();
-        $role = Role::factory()->create();
-
-        $response = $this->actingAs($admin, 'admin')->delete("/admin/roles/{$role->id}");
-
-        $response->assertRedirect(route('admin.roles.index'));
-        $this->assertDatabaseMissing('roles', ['id' => $role->id]);
     }
 }

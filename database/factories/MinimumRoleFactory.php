@@ -2,14 +2,14 @@
 
 namespace Database\Factories;
 
-use App\Enums\OrganizationLevel;
-use App\Models\Role;
+use App\Models\MinimumRole;
+use App\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Role>
+ * @extends Factory<MinimumRole>
  */
-class RoleFactory extends Factory
+class MinimumRoleFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -19,7 +19,7 @@ class RoleFactory extends Factory
     public function definition(): array
     {
         return [
-            'level' => fake()->randomElement(OrganizationLevel::cases()),
+            'organization_id' => Organization::factory(),
             'name' => fake()->unique()->jobTitle(),
         ];
     }

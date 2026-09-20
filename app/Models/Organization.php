@@ -94,6 +94,16 @@ class Organization extends Authenticatable
         return $this->hasMany(MemberRole::class);
     }
 
+    /**
+     * The role names this organization requires each of its direct children to fill.
+     *
+     * @return HasMany<MinimumRole, $this>
+     */
+    public function minimumRoles(): HasMany
+    {
+        return $this->hasMany(MinimumRole::class);
+    }
+
     public function canCreateChildren(): bool
     {
         return $this->level->childLevel() !== null;

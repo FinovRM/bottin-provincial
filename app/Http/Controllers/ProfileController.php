@@ -17,6 +17,8 @@ class ProfileController extends Controller
 {
     public function index(): View
     {
+        $minimumRoles = collect();
+
         if (Auth::guard('member')->check()) {
             /** @var Member $member */
             $member = Auth::guard('member')->user();
@@ -40,6 +42,10 @@ class ProfileController extends Controller
                 'email' => $organization->responsable_email,
                 'cell_phone' => $organization->responsable_cell_phone,
             ];
+
+            if ($organization->canCreateChildren()) {
+                $minimumRoles = $organization->minimumRoles()->orderBy('name')->get();
+            }
         }
 
         [$scopedOrganizations] = ViewerScope::resolve();
@@ -64,6 +70,7 @@ class ProfileController extends Controller
             'locals' => $locals,
             'roles' => $roles,
             'personalFilters' => ViewerScope::principal()->personalFilters()->orderBy('name')->get(),
+            'minimumRoles' => $minimumRoles,
         ]);
     }
 
