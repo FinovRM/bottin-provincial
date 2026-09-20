@@ -154,7 +154,7 @@ class MemberManagementTest extends TestCase
         $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
-        $response->assertSee('Membres de');
+        $response->assertSee('Membres');
         $response->assertDontSee('Déclaration du responsable');
     }
 

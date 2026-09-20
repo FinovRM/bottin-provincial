@@ -64,7 +64,7 @@ class OrganizationGroupTest extends TestCase
         $response = $this->actingAs($tree['regional'])->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
-        $response->assertSeeInOrder(['Organisations Locales', 'AHM Local', 'Ligues Locales', 'Ligue Locale']);
+        $response->assertSeeInOrder(['Organisations enfant', 'AHM Local', 'Ligues enfant', 'Ligue Locale']);
     }
 
     public function test_the_bottin_scopes_a_member_to_their_own_group(): void
