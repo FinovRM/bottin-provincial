@@ -118,7 +118,7 @@ class AllowedRoleTest extends TestCase
         $response = $this->actingAs($provincial)->get('/profil');
 
         $response->assertOk();
-        $response->assertSee('Rôles permis de mes organisations enfant');
+        $response->assertSee('Rôles permis');
         $response->assertSee('Bénévole');
     }
 
@@ -131,6 +131,6 @@ class AllowedRoleTest extends TestCase
         $response = $this->actingAs($local)->get('/profil');
 
         $response->assertOk();
-        $response->assertDontSee('Rôles permis de mes organisations enfant');
+        $response->assertDontSee('Rôles permis');
     }
 }

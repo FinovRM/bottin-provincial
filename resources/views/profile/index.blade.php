@@ -37,7 +37,7 @@
         @php
             $roleTables = [
                 [
-                    'heading' => 'Rôles minimum de mes organisations enfant',
+                    'heading' => 'Rôles minimum',
                     'roles' => $minimumRoles,
                     'bagPrefix' => 'minimum-role',
                     'addDialog' => 'add-minimum-role-dialog',
@@ -50,7 +50,7 @@
                     'addTitle' => 'Ajouter un rôle minimum',
                 ],
                 [
-                    'heading' => 'Rôles permis de mes organisations enfant',
+                    'heading' => 'Rôles permis',
                     'roles' => $allowedRoles,
                     'bagPrefix' => 'allowed-role',
                     'addDialog' => 'add-allowed-role-dialog',

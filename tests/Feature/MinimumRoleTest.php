@@ -176,7 +176,7 @@ class MinimumRoleTest extends TestCase
         $response = $this->actingAs($provincial)->get('/profil');
 
         $response->assertOk();
-        $response->assertSee('Rôles minimum de mes organisations enfant');
+        $response->assertSee('Rôles minimum');
         $response->assertSee('Président');
     }
 
@@ -189,6 +189,6 @@ class MinimumRoleTest extends TestCase
         $response = $this->actingAs($local)->get('/profil');
 
         $response->assertOk();
-        $response->assertDontSee('Rôles minimum de mes organisations enfant');
+        $response->assertDontSee('Rôles minimum');
     }
 }
