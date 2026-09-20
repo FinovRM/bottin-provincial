@@ -62,10 +62,11 @@ class Member extends Authenticatable
 
     /**
      * Every organization this member can query: for each considered role, everything
-     * at that role's level or below, anywhere in the tree, plus that role's own
-     * parent organization. A regional member sees every region and every local
-     * organization, plus their own provincial office; a local member sees every
-     * local organization, plus their own regional direction.
+     * at that role's level or below, anywhere in the tree and in either group, plus
+     * that role's own parent organization. A regional member sees every region and
+     * every local organization (both "Organisations" and "Ligues"), plus their own
+     * provincial office; a local member sees every local organization, plus their
+     * own regional direction.
      *
      * @return Collection<int, Organization>
      */
@@ -73,23 +74,6 @@ class Member extends Authenticatable
     {
         $organizations = $this->consideredRoles()
             ->flatMap(fn (MemberRole $role) => $role->organization->visibleToMembers())
-            ->unique('id')
-            ->values()
-            ->all();
-
-        return new Collection($organizations);
-    }
-
-    /**
-     * Same reach as visibleOrganizations(), but combining both groups — see
-     * Organization::visibleToMembersAcrossGroups().
-     *
-     * @return Collection<int, Organization>
-     */
-    public function visibleOrganizationsAcrossGroups(): Collection
-    {
-        $organizations = $this->consideredRoles()
-            ->flatMap(fn (MemberRole $role) => $role->organization->visibleToMembersAcrossGroups())
             ->unique('id')
             ->values()
             ->all();

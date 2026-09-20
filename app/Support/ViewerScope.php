@@ -10,8 +10,9 @@ use Illuminate\Support\Facades\Auth;
 class ViewerScope
 {
     /**
-     * Every organization the current viewer (responsable or member) can see,
-     * and the organization(s) immediately above them ("ma direction").
+     * Every organization the current viewer (responsable or member) can see —
+     * everything at their level or below, anywhere in the tree and in either
+     * group — and the organization(s) immediately above them ("ma direction").
      *
      * @return array{0: Collection<int, Organization>, 1: Collection<int, Organization>}
      */
@@ -29,29 +30,6 @@ class ViewerScope
         $highest = $authOrganization->highestManagedOrganization();
 
         return [$highest->visibleToMembers(), $highest->directionOrganizations()];
-    }
-
-    /**
-     * Same reach as resolve(), but combining both groups — for the places that
-     * must stay cumulative across "Organisations" and "Ligues": the
-     * "Mes filtres personnels" picker.
-     *
-     * @return array{0: Collection<int, Organization>, 1: Collection<int, Organization>}
-     */
-    public static function resolveAcrossGroups(): array
-    {
-        if (Auth::guard('member')->check()) {
-            /** @var Member $authMember */
-            $authMember = Auth::guard('member')->user();
-
-            return [$authMember->visibleOrganizationsAcrossGroups(), $authMember->directionOrganizations()];
-        }
-
-        /** @var Organization $authOrganization */
-        $authOrganization = Auth::guard('web')->user();
-        $highest = $authOrganization->highestManagedOrganization();
-
-        return [$highest->visibleToMembersAcrossGroups(), $highest->directionOrganizations()];
     }
 
     /**

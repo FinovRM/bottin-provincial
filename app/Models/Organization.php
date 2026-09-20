@@ -237,29 +237,15 @@ class Organization extends Authenticatable
 
     /**
      * Every organization visible to a member of this organization: everything at
-     * this level or below, anywhere in the tree, in this same group — no level
-     * above, no other group. Used to scope the "interroger les membres" query for
-     * a responsable, matching what a member holding a role here would themselves
-     * see by default. The organization immediately above ("ma direction") is
-     * available separately, on demand, unfiltered by group — see directionOrganizations().
+     * this level or below, anywhere in the tree, in either group — no level above.
+     * Used to scope the "interroger les membres" query for a responsable, matching
+     * what a member holding a role here would themselves see by default. The
+     * organization immediately above ("ma direction") is available separately, on
+     * demand — see directionOrganizations().
      *
      * @return Collection<int, Organization>
      */
     public function visibleToMembers(): Collection
-    {
-        return Organization::whereIn('level', $this->level->andBelow())
-            ->where('group', $this->group)
-            ->get();
-    }
-
-    /**
-     * Same reach as visibleToMembers(), but combining both groups. Used where the
-     * two groups must stay cumulative instead of scoped to one — "Bottin des
-     * membres" and the "Mes filtres personnels" picker.
-     *
-     * @return Collection<int, Organization>
-     */
-    public function visibleToMembersAcrossGroups(): Collection
     {
         return Organization::whereIn('level', $this->level->andBelow())->get();
     }

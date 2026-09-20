@@ -71,9 +71,7 @@ class ProfileController extends Controller
             }
         }
 
-        // Combines both groups — this picker must offer every organization and
-        // role regardless of "Organisations" vs "Ligues".
-        [$scopedOrganizations] = ViewerScope::resolveAcrossGroups();
+        [$scopedOrganizations] = ViewerScope::resolve();
 
         $allLocals = $scopedOrganizations->where('level', OrganizationLevel::Local);
         $locals = $allLocals->sortBy('name');

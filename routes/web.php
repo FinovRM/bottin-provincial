@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginLinkController;
 use App\Http\Controllers\AllowedRoleController;
 use App\Http\Controllers\Bottin\DashboardController as BottinDashboardController;
+use App\Http\Controllers\Bottin\OrganizationDirectoryController as BottinOrganizationDirectoryController;
 use App\Http\Controllers\BottinController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
@@ -46,6 +47,7 @@ Route::post('/connexion/verifier', [BottinLoginController::class, 'store'])
 Route::middleware('auth:member,web')->group(function () {
     Route::get('/bottin', BottinDashboardController::class)->name('bottin.index');
     Route::get('/bottin/exporter', [BottinDashboardController::class, 'export'])->name('bottin.export');
+    Route::get('/bottin/organisations', BottinOrganizationDirectoryController::class)->name('bottin.organizations');
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profil/filtres', [ProfileController::class, 'storeFilter'])->name('profile.filters.store');
     Route::put('/profil/filtres/{personalFilter}', [ProfileController::class, 'updateFilter'])->name('profile.filters.update');

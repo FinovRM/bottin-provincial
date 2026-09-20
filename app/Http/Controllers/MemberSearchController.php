@@ -22,8 +22,7 @@ class MemberSearchController extends Controller
         /** @var Organization $authOrganization */
         $authOrganization = Auth::user();
 
-        // "Bottin des membres" stays cumulative across both groups.
-        $scopedOrganizations = $authOrganization->visibleToMembersAcrossGroups();
+        $scopedOrganizations = $authOrganization->visibleToMembers();
         $organizationIds = $scopedOrganizations->pluck('id');
         $directionOrganizations = $authOrganization->directionOrganizations();
 

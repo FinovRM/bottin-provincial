@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Member;
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class OrganizationGroupTest extends TestCase
@@ -67,30 +68,21 @@ class OrganizationGroupTest extends TestCase
         $response->assertSeeInOrder(['Organisations enfant', 'AHM Local', 'Ligues enfant', 'Ligue Locale']);
     }
 
-    public function test_the_bottin_scopes_a_member_to_their_own_group(): void
-    {
-        $tree = $this->tree();
-        $orgMember = $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
-        $leagueMember = $this->addRole($tree['localLeague'], 'Membre Ligue', 'ligue@example.com');
-
-        $response = $this->actingAs($tree['localOrg'])->get('/bottin');
-
-        $response->assertOk();
-        $response->assertSee('Membre Organisation');
-        $response->assertDontSee('Membre Ligue');
-    }
-
-    public function test_the_bottin_scopes_a_league_member_to_their_own_group_too(): void
+    public function test_the_bottin_shows_members_of_both_groups_at_the_same_level(): void
     {
         $tree = $this->tree();
         $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
         $this->addRole($tree['localLeague'], 'Membre Ligue', 'ligue@example.com');
 
-        $response = $this->actingAs($tree['localLeague'])->get('/bottin');
+        $asOrg = $this->actingAs($tree['localOrg'])->get('/bottin');
+        $asOrg->assertOk();
+        $asOrg->assertSee('Membre Organisation');
+        $asOrg->assertSee('Membre Ligue');
 
-        $response->assertOk();
-        $response->assertSee('Membre Ligue');
-        $response->assertDontSee('Membre Organisation');
+        $asLeague = $this->actingAs($tree['localLeague'])->get('/bottin');
+        $asLeague->assertOk();
+        $asLeague->assertSee('Membre Ligue');
+        $asLeague->assertSee('Membre Organisation');
     }
 
     public function test_bottin_des_membres_stays_cumulative_across_groups(): void
@@ -178,5 +170,48 @@ class OrganizationGroupTest extends TestCase
         $this->assertDatabaseMissing('member_roles', ['organization_id' => $tree['localLeague']->id, 'role' => 'Président']);
         // Organisations group: untouched.
         $this->assertDatabaseHas('member_roles', ['organization_id' => $tree['localOrg']->id, 'role' => 'Président']);
+    }
+
+    public function test_the_organizations_directory_shows_both_groups_at_the_same_level(): void
+    {
+        $tree = $this->tree();
+
+        $response = $this->actingAs($tree['localOrg'])->get('/bottin/organisations');
+
+        $response->assertOk();
+        $response->assertSee('AHM Local');
+        $response->assertSee('Ligue Locale');
+    }
+
+    public function test_the_organizations_directory_is_accessible_to_a_member(): void
+    {
+        $tree = $this->tree();
+        $viewer = $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
+        $this->loginAsMember($viewer->email);
+
+        $response = $this->get('/bottin/organisations');
+
+        $response->assertOk();
+        $response->assertSee('AHM Local');
+        $response->assertSee('Ligue Locale');
+    }
+
+    public function test_the_organizations_nav_link_is_visible_to_a_local_organization_and_a_member(): void
+    {
+        $tree = $this->tree();
+        $viewer = $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
+
+        $asLocalOrg = $this->actingAs($tree['localOrg'])->get('/bottin');
+        $asLocalOrg->assertSee(route('bottin.organizations'), false);
+
+        $this->loginAsMember($viewer->email);
+        $asMember = $this->get('/bottin');
+        $asMember->assertSee(route('bottin.organizations'), false);
+    }
+
+    private function loginAsMember(string $email): void
+    {
+        $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => $email]);
+        $this->post($url, ['confirmed' => '1']);
     }
 }

@@ -14,9 +14,7 @@
                 <nav class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                     @if (auth('web')->check())
                         <a href="{{ route('dashboard.properties') }}" class="text-gray-700 hover:underline">Mon organisation</a>
-                        @if (auth('web')->user()->canCreateChildren())
-                            <a href="{{ route('dashboard.organizations') }}" class="text-gray-700 hover:underline">Organisations</a>
-                        @endif
+                        <a href="{{ route('bottin.organizations') }}" class="text-gray-700 hover:underline">Organisations</a>
                         <a href="{{ route('bottin.index') }}" class="text-gray-700 hover:underline">Membres</a>
                         @if (auth('web')->user()->organizationsManagedBySameResponsable()->count() > 1)
                             <a href="{{ route('dashboard.switch') }}" class="text-gray-700 hover:underline">Changer d'organisation</a>
@@ -32,6 +30,7 @@
                             <button type="submit" class="text-gray-700 hover:underline">Déconnexion</button>
                         </form>
                     @elseif (auth('member')->check())
+                        <a href="{{ route('bottin.organizations') }}" class="text-gray-700 hover:underline">Organisations</a>
                         <a href="{{ route('bottin.index') }}" class="text-gray-700 hover:underline">Membres</a>
                         <a href="{{ route('profile') }}" title="Propriétés" aria-label="Propriétés" class="text-gray-700 hover:text-gray-900">
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
