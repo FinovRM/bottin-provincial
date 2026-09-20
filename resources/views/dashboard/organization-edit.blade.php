@@ -10,12 +10,20 @@
             @csrf
             @method('PUT')
 
-            <div>
-                <label for="name" class="block text-sm font-medium">Organisation</label>
-                <input id="name" type="text" name="name" value="{{ old('name', $organization->name) }}" required
-                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-            </div>
+            @if ($organization->parent_id === null)
+                <div>
+                    <label for="name" class="block text-sm font-medium">Organisation</label>
+                    <input id="name" type="text" name="name" value="{{ old('name', $organization->name) }}" required
+                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                    @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+            @else
+                <div>
+                    <span class="block text-sm font-medium">Organisation</span>
+                    <p class="mt-1 text-sm text-gray-700">{{ $organization->name }}</p>
+                    <p class="mt-1 text-xs text-gray-500">Défini par l'organisation parente.</p>
+                </div>
+            @endif
             <div>
                 <label for="legal_name" class="block text-sm font-medium">Nom légal</label>
                 <input id="legal_name" type="text" name="legal_name"

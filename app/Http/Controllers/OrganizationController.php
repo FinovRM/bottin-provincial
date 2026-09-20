@@ -56,8 +56,7 @@ class OrganizationController extends Controller
     {
         Gate::authorize('update', $organization);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+        $rules = [
             'legal_name' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:255'],
@@ -65,7 +64,15 @@ class OrganizationController extends Controller
             'postal_code' => ['nullable', 'string', 'max:255'],
             'business_number' => ['nullable', 'string', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],
-        ]);
+        ];
+
+        // A child organization's name is set by its parent at creation; only a
+        // top-level (parentless) organization can rename itself.
+        if ($organization->parent_id === null) {
+            $rules['name'] = ['required', 'string', 'max:255'];
+        }
+
+        $validated = $request->validate($rules);
 
         $organization->update($validated);
 

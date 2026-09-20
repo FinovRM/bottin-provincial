@@ -61,6 +61,24 @@ class OrganizationHierarchyTest extends TestCase
         ]);
     }
 
+    public function test_a_child_organization_cannot_rename_itself(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create(['name' => 'Région 1']);
+
+        $response = $this->actingAs($regional)->put("/organisations/{$regional->id}", [
+            'name' => 'Nouveau nom',
+            'address' => '123 rue Test',
+        ]);
+
+        $response->assertRedirect(route('dashboard.properties'));
+        $this->assertDatabaseHas('organizations', [
+            'id' => $regional->id,
+            'name' => 'Région 1',
+            'address' => '123 rue Test',
+        ]);
+    }
+
     public function test_an_organization_can_set_its_legal_name(): void
     {
         $organization = Organization::factory()->provincial()->create(['name' => 'AHM Acton Vale']);
