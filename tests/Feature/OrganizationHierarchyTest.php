@@ -120,7 +120,6 @@ class OrganizationHierarchyTest extends TestCase
         $response = $this->actingAs($provincial)->get('/tableau-de-bord/organisations');
 
         $response->assertOk();
-        $response->assertSee('Nom légal');
         $response->assertSee('Association hockey mineur Acton Vale');
     }
 

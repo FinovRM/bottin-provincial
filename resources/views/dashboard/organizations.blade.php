@@ -41,46 +41,62 @@
         @endif
     </div>
 
-    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table class="w-full text-left text-sm">
-            <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
-                <tr>
-                    <th class="px-4 py-2">Organisation</th>
-                    <th class="px-4 py-2">Niveau</th>
-                    <th class="px-4 py-2">Nom légal</th>
-                    <th class="px-4 py-2 min-w-[18rem]">Adresse</th>
-                    <th class="px-4 py-2">N° d'entreprise</th>
-                    <th class="px-4 py-2">Site web</th>
-                    <th class="px-4 py-2">Responsable</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($organizations as $organization)
-                    <tr class="border-b border-gray-100 last:border-0">
-                        <td class="px-4 py-2 font-medium">{{ $organization->name }}</td>
-                        <td class="px-4 py-2 text-gray-500">{{ $organization->level->label() }}</td>
-                        <td class="px-4 py-2">{{ $organization->legal_name ?: '—' }}</td>
-                        <td class="px-4 py-2 min-w-[18rem]">{{ $organization->fullPostalAddress() ?? '—' }}</td>
-                        <td class="px-4 py-2">{{ $organization->business_number ?: '—' }}</td>
-                        <td class="px-4 py-2">
-                            @if ($organization->website)
-                                <a href="{{ $organization->website }}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">{{ $organization->website }}</a>
-                            @else
-                                —
+    <div class="space-y-3">
+        @forelse ($organizations as $organization)
+            @php
+                $badgeColor = match ($organization->level->value) {
+                    'provincial' => 'bg-indigo-100 text-indigo-700',
+                    'regional' => 'bg-blue-100 text-blue-700',
+                    default => 'bg-teal-100 text-teal-700',
+                };
+            @endphp
+            <div class="rounded-lg bg-white p-4 shadow-sm">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full {{ $badgeColor }} font-semibold">
+                            {{ mb_substr($organization->name, 0, 1) }}
+                        </div>
+                        <div>
+                            <span class="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-gray-600">
+                                {{ $organization->level->label() }}
+                            </span>
+                            <p class="font-semibold text-gray-900">{{ $organization->name }}</p>
+                            @if ($organization->legal_name && $organization->legal_name !== $organization->name)
+                                <p class="text-xs text-gray-400">{{ $organization->legal_name }}</p>
                             @endif
-                        </td>
-                        <td class="px-4 py-2">
+                        </div>
+                    </div>
+                    @if ($organization->website)
+                        <a href="{{ $organization->website }}" target="_blank" rel="noopener" class="shrink-0 text-sm text-blue-600 hover:underline">
+                            Site web ↗
+                        </a>
+                    @endif
+                </div>
+
+                <dl class="mt-3 grid gap-x-6 gap-y-2 border-t border-gray-100 pt-3 text-sm sm:grid-cols-2">
+                    <div>
+                        <dt class="text-xs uppercase tracking-wide text-gray-400">Adresse</dt>
+                        <dd class="text-gray-700">{{ $organization->fullPostalAddress() ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs uppercase tracking-wide text-gray-400">N° d'entreprise</dt>
+                        <dd class="text-gray-700">{{ $organization->business_number ?: '—' }}</dd>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <dt class="text-xs uppercase tracking-wide text-gray-400">Responsable</dt>
+                        <dd class="text-gray-700">
                             {{ $organization->responsable_name }}
-                            <br><span class="text-gray-500">{{ $organization->responsable_email }}</span>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="px-4 py-6 text-center text-gray-500">Aucune organisation trouvée.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                            <span class="text-gray-300">·</span>
+                            <a href="mailto:{{ $organization->responsable_email }}" class="hover:underline">{{ $organization->responsable_email }}</a>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        @empty
+            <div class="rounded-lg bg-white p-6 text-center text-sm text-gray-500 shadow-sm">
+                Aucune organisation trouvée.
+            </div>
+        @endforelse
     </div>
 
     <script>
