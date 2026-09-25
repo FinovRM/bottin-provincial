@@ -20,7 +20,7 @@
     </div>
 
     <div class="mb-8 flex flex-col gap-6 lg:flex-row">
-        <aside class="w-full lg:w-48 lg:shrink-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
+        <aside class="w-full lg:w-48 lg:shrink-0 lg:sticky lg:top-[calc(var(--sticky-top,0px)+1.5rem)] lg:self-start lg:max-h-[calc(100vh-var(--sticky-top,0px)-3rem)] lg:overflow-y-auto">
             <form method="GET" action="{{ route('admin.organizations.index') }}">
                 @if ($query !== '')
                     <input type="hidden" name="q" value="{{ $query }}">

@@ -13,7 +13,7 @@
     </p>
 
     <div class="flex flex-col gap-6 lg:flex-row">
-        <aside class="w-full lg:w-56 lg:shrink-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
+        <aside class="w-full lg:w-56 lg:shrink-0 lg:sticky lg:top-[calc(var(--sticky-top,0px)+1.5rem)] lg:self-start lg:max-h-[calc(100vh-var(--sticky-top,0px)-3rem)] lg:overflow-y-auto">
             <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Filtres</p>
 
             @include('partials.member-filters', ['action' => route('dashboard.members')])
