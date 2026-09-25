@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class OrganizationImportController extends Controller
@@ -70,7 +71,7 @@ class OrganizationImportController extends Controller
      */
     private function createFromRow(array $data): void
     {
-        $level = OrganizationLevel::tryFrom($data['level']);
+        $level = OrganizationLevel::tryFrom(Str::lower(Str::ascii($data['level'])));
 
         if (! $level) {
             throw new \RuntimeException('niveau invalide ("'.$data['level'].'").');
