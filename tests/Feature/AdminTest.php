@@ -244,6 +244,24 @@ class AdminTest extends TestCase
         $this->assertDatabaseHas('organizations', ['name' => 'Local Importé', 'level' => 'local']);
     }
 
+    public function test_the_organization_import_rejects_a_row_without_a_valid_responsable_email(): void
+    {
+        $admin = Admin::factory()->create();
+        Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
+
+        $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
+            ."regional,prov@example.com,Région Décalée,jean@example.com,,514-555-1234\n";
+
+        $file = UploadedFile::fake()->createWithContent('organisations.csv', $csv);
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/organisations/importer', [
+            'file' => $file,
+        ]);
+
+        $response->assertSessionHas('import_errors', fn ($errors) => count($errors) === 1);
+        $this->assertDatabaseMissing('organizations', ['name' => 'Région Décalée']);
+    }
+
     public function test_an_admin_can_delete_a_childless_organization(): void
     {
         $admin = Admin::factory()->create();

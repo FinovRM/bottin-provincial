@@ -77,6 +77,14 @@ class OrganizationImportController extends Controller
             throw new \RuntimeException('niveau invalide ("'.$data['level'].'").');
         }
 
+        if ($data['name'] === '' || $data['responsable_name'] === '') {
+            throw new \RuntimeException('nom de l\'organisation ou du responsable manquant.');
+        }
+
+        if (! filter_var($data['responsable_email'], FILTER_VALIDATE_EMAIL)) {
+            throw new \RuntimeException('courriel du responsable invalide ("'.$data['responsable_email'].'").');
+        }
+
         $parent = null;
 
         if ($data['parent_responsable_email'] !== '') {
