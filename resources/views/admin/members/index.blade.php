@@ -53,7 +53,7 @@
                             <th class="px-4 py-2">Fonction</th>
                             <th class="px-4 py-2">Nom</th>
                             <th class="px-4 py-2">Courriel</th>
-                            <th class="px-4 py-2">Cellulaire</th>
+                            <th class="px-4 py-2">Cellulaire / Téléphone</th>
                             <th class="px-4 py-2"></th>
                         </tr>
                     </thead>
@@ -64,7 +64,7 @@
                                 <td class="px-4 py-2">{{ $memberRole->role }}</td>
                                 <td class="px-4 py-2 font-medium">{{ $memberRole->member->name }}</td>
                                 <td class="px-4 py-2">{{ $memberRole->member->email }}</td>
-                                <td class="px-4 py-2">{{ $memberRole->member->cell_phone ?: '—' }}</td>
+                                <td class="px-4 py-2"><x-member-phone :member="$memberRole->member" fallback="—" /></td>
                                 <td class="px-4 py-2 text-right">
                                     <form method="POST" action="{{ route('admin.members.destroy', $memberRole) }}"
                                         onsubmit="return confirm('Retirer ce rôle ?');">
@@ -126,8 +126,13 @@
                 @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label for="cell_phone" class="block text-sm font-medium">Cellulaire</label>
+                <label for="cell_phone" class="block text-sm font-medium">Cellulaire / Téléphone</label>
                 <input id="cell_phone" type="tel" inputmode="numeric" maxlength="14" name="cell_phone" value="{{ old('cell_phone') }}"
+                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label for="extension" class="block text-sm font-medium">Poste</label>
+                <input id="extension" type="text" inputmode="numeric" maxlength="10" name="extension" value="{{ old('extension') }}"
                     class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             </div>
 

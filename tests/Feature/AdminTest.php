@@ -524,4 +524,21 @@ class AdminTest extends TestCase
         $this->assertDatabaseHas('members', ['email' => 'membre-importe@example.com']);
         $this->assertDatabaseHas('member_roles', ['organization_id' => $organization->id, 'role' => 'Bénévole']);
     }
+
+    public function test_a_member_import_reads_the_extension_column_or_splits_it_from_the_phone(): void
+    {
+        $admin = Admin::factory()->create();
+        Organization::factory()->provincial()->create(['responsable_email' => 'org@example.com']);
+
+        $csv = "organization_responsable_email,role,name,email,cell_phone,extension\n"
+            ."org@example.com,Bénévole,Avec Poste,avec-poste@example.com,819-562-0044,221\n"
+            ."org@example.com,Bénévole,Poste Collé,poste-colle@example.com,8195620044234\n";
+
+        $this->actingAs($admin, 'admin')->post('/admin/membres/importer', [
+            'file' => UploadedFile::fake()->createWithContent('membres.csv', $csv),
+        ]);
+
+        $this->assertDatabaseHas('members', ['email' => 'avec-poste@example.com', 'cell_phone' => '8195620044', 'extension' => '221']);
+        $this->assertDatabaseHas('members', ['email' => 'poste-colle@example.com', 'cell_phone' => '8195620044', 'extension' => '234']);
+    }
 }

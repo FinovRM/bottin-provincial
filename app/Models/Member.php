@@ -15,7 +15,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection as SupportCollection;
 
-#[Fillable(['name', 'email', 'cell_phone'])]
+#[Fillable(['name', 'email', 'cell_phone', 'extension'])]
 class Member extends Authenticatable
 {
     /** @use HasFactory<MemberFactory> */
@@ -28,6 +28,16 @@ class Member extends Authenticatable
     {
         return Attribute::make(
             get: fn (?string $value) => CellPhone::format($value),
+            set: fn (?string $value) => CellPhone::normalize($value),
+        );
+    }
+
+    /**
+     * Stored as digits only.
+     */
+    protected function extension(): Attribute
+    {
+        return Attribute::make(
             set: fn (?string $value) => CellPhone::normalize($value),
         );
     }
@@ -50,14 +60,14 @@ class Member extends Authenticatable
 
     /**
      * Find the person already registered under this email, or create a new one.
-     * Name and cell phone are only ever set on first entry — an existing person's
+     * Name, phone and extension are only ever set on first entry — an existing person's
      * data is never overwritten by a later role submission.
      */
-    public static function findOrCreateByEmail(string $email, string $name, ?string $cellPhone): self
+    public static function findOrCreateByEmail(string $email, string $name, ?string $cellPhone, ?string $extension = null): self
     {
         return static::firstOrCreate(
             ['email' => $email],
-            ['name' => $name, 'cell_phone' => $cellPhone],
+            ['name' => $name, 'cell_phone' => $cellPhone, 'extension' => $extension],
         );
     }
 

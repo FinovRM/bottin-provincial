@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\MemberRole;
 use App\Models\Organization;
+use App\Support\CellPhone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,7 +16,12 @@ class MemberImportController extends Controller
     /**
      * The CSV header this importer expects, in order.
      */
-    private const COLUMNS = ['organization_responsable_email', 'role', 'name', 'email', 'cell_phone'];
+    private const COLUMNS = ['organization_responsable_email', 'role', 'name', 'email', 'cell_phone', 'extension'];
+
+    /**
+     * Trailing columns a row may omit, so files made before they existed still import.
+     */
+    private const OPTIONAL_COLUMNS = ['extension'];
 
     public function create(): View
     {
@@ -40,13 +46,14 @@ class MemberImportController extends Controller
         while (($row = fgetcsv($handle)) !== false) {
             $line++;
 
-            if (count($row) < count(self::COLUMNS)) {
+            if (count($row) < count(self::COLUMNS) - count(self::OPTIONAL_COLUMNS)) {
                 $errors[] = "Ligne {$line} : nombre de colonnes invalide.";
 
                 continue;
             }
 
-            $data = array_combine(self::COLUMNS, array_map('trim', array_slice($row, 0, count(self::COLUMNS))));
+            $row = array_pad(array_slice($row, 0, count(self::COLUMNS)), count(self::COLUMNS), '');
+            $data = array_combine(self::COLUMNS, array_map('trim', $row));
 
             try {
                 $this->createFromRow($data);
@@ -74,11 +81,15 @@ class MemberImportController extends Controller
             throw new \RuntimeException('organisation introuvable.');
         }
 
-        $member = Member::findOrCreateByEmail(
-            $data['email'],
-            $data['name'],
-            $data['cell_phone'] !== '' ? $data['cell_phone'] : null,
-        );
+        $phone = CellPhone::normalize($data['cell_phone']);
+        $extension = CellPhone::normalize($data['extension']);
+
+        // Digits typed after the 10-digit number are an extension.
+        if ($extension === null && $phone !== null && strlen($phone) > 10) {
+            [$phone, $extension] = [substr($phone, 0, 10), substr($phone, 10)];
+        }
+
+        $member = Member::findOrCreateByEmail($data['email'], $data['name'], $phone, $extension);
 
         MemberRole::create([
             'member_id' => $member->id,

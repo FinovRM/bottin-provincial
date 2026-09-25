@@ -16,7 +16,8 @@
         <code class="block overflow-x-auto rounded bg-gray-50 p-3 text-xs">{{ implode(',', $columns) }}</code>
         <ul class="mt-3 list-disc space-y-1 pl-5 text-gray-600">
             <li><code>organization_responsable_email</code> : courriel du responsable de l'organisation à laquelle rattacher le rôle.</li>
-            <li>Chaque ligne ajoute un rôle. Si l'adresse <code>email</code> existe déjà, le nom et le cellulaire déjà en fiche sont conservés — seul le rôle s'ajoute pour cette organisation.</li>
+            <li><code>extension</code> : poste téléphonique, facultatif. Si la colonne est vide et que <code>cell_phone</code> compte plus de 10 chiffres, les chiffres en trop deviennent le poste.</li>
+            <li>Chaque ligne ajoute un rôle. Si l'adresse <code>email</code> existe déjà, le nom, le téléphone et le poste déjà en fiche sont conservés — seul le rôle s'ajoute pour cette organisation.</li>
         </ul>
     </div>
 

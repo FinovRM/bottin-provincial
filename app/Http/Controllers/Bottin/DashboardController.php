@@ -90,7 +90,7 @@ class DashboardController extends Controller
         return response()->streamDownload(function () use ($memberRoles) {
             $handle = fopen('php://output', 'w');
 
-            fputcsv($handle, ['Organisation', 'Fonction', 'Nom', 'Courriel', 'Cellulaire']);
+            fputcsv($handle, ['Organisation', 'Fonction', 'Nom', 'Courriel', 'Cellulaire / Téléphone', 'Poste']);
 
             foreach ($memberRoles as $memberRole) {
                 fputcsv($handle, [
@@ -99,6 +99,7 @@ class DashboardController extends Controller
                     $memberRole->member->name,
                     $memberRole->member->email,
                     $memberRole->member->cell_phone ?: '',
+                    $memberRole->member->extension ?: '',
                 ]);
             }
 

@@ -28,8 +28,8 @@
             <dt class="text-right font-medium">Courriel :</dt>
             <dd>{{ $coordinates['email'] }}</dd>
 
-            <dt class="text-right font-medium">Cellulaire :</dt>
-            <dd>{{ $coordinates['cell_phone'] ?: '—' }}</dd>
+            <dt class="text-right font-medium">Cellulaire / Téléphone :</dt>
+            <dd>{{ $coordinates['cell_phone'] ?: '—' }}@if ($coordinates['cell_phone'] && $coordinates['extension']) poste {{ $coordinates['extension'] }}@endif</dd>
         </dl>
     </section>
 

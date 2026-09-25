@@ -28,6 +28,7 @@ class ProfileController extends Controller
             'organization' => $primaryRole?->organization->name ?? '—',
             'email' => $member->email,
             'cell_phone' => $member->cell_phone,
+            'extension' => $member->extension,
         ];
 
         [$scopedOrganizations] = ViewerScope::resolve();

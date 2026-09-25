@@ -27,9 +27,7 @@
                     </p>
                     <p class="flex flex-wrap gap-x-3 text-gray-500">
                         <a href="mailto:{{ $memberRole->member->email }}" class="hover:underline">{{ $memberRole->member->email }}</a>
-                        @if ($memberRole->member->cell_phone)
-                            <a href="tel:{{ $memberRole->member->cell_phone }}" class="hover:underline">{{ $memberRole->member->cell_phone }}</a>
-                        @endif
+                        <x-member-phone :member="$memberRole->member" />
                     </p>
                 </li>
             @endforeach

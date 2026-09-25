@@ -79,9 +79,10 @@ class MemberController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'cell_phone' => ['nullable', 'string', 'max:255'],
+            'extension' => ['nullable', 'string', 'max:10'],
         ]);
 
-        $member = Member::findOrCreateByEmail($validated['email'], $validated['name'], $validated['cell_phone'] ?? null);
+        $member = Member::findOrCreateByEmail($validated['email'], $validated['name'], $validated['cell_phone'] ?? null, $validated['extension'] ?? null);
 
         MemberRole::create([
             'member_id' => $member->id,

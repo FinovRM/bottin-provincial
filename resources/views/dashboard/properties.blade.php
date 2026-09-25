@@ -123,7 +123,7 @@
                         <th class="px-4 py-2">Fonction</th>
                         <th class="px-4 py-2">Nom</th>
                         <th class="px-4 py-2">Courriel</th>
-                        <th class="px-4 py-2">Cellulaire</th>
+                        <th class="px-4 py-2">Cellulaire / Téléphone</th>
                         <th class="px-4 py-2"></th>
                     </tr>
                 </thead>
@@ -134,11 +134,7 @@
                             <td class="px-4 py-2 font-medium">{{ $memberRole->member->name }}</td>
                             <td class="px-4 py-2"><a href="mailto:{{ $memberRole->member->email }}" class="hover:underline">{{ $memberRole->member->email }}</a></td>
                             <td class="px-4 py-2">
-                                @if ($memberRole->member->cell_phone)
-                                    <a href="tel:{{ $memberRole->member->cell_phone }}" class="hover:underline">{{ $memberRole->member->cell_phone }}</a>
-                                @else
-                                    —
-                                @endif
+                                <x-member-phone :member="$memberRole->member" fallback="—" />
                             </td>
                             <td class="px-4 py-2 text-right">
                                 <form method="POST" action="{{ route('members.destroy', $memberRole) }}"

@@ -52,6 +52,25 @@ class MemberManagementTest extends TestCase
         ]);
     }
 
+    public function test_a_phone_extension_is_saved_and_shown_on_the_properties_page(): void
+    {
+        $organization = Organization::factory()->provincial()->create();
+
+        $this->actingAs($organization)->post('/membres', [
+            'role' => 'Trésorier',
+            'name' => 'Jeanne Tremblay',
+            'email' => 'jeanne@example.com',
+            'email_confirmation' => 'jeanne@example.com',
+            'cell_phone' => '819-562-0044',
+            'extension' => '221',
+        ]);
+
+        $this->assertDatabaseHas('members', ['email' => 'jeanne@example.com', 'cell_phone' => '8195620044', 'extension' => '221']);
+        $this->actingAs($organization)->get('/proprietes')
+            ->assertSee('(819) 562-0044 poste 221')
+            ->assertSee('tel:8195620044,221', false);
+    }
+
     public function test_a_new_role_is_always_attached_to_the_acting_organization(): void
     {
         $provincial = Organization::factory()->provincial()->create();
