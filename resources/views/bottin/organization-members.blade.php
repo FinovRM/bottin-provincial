@@ -1,0 +1,40 @@
+{{-- Loaded into the members dialog of the home page. --}}
+<div>
+    <span class="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-gray-600">
+        {{ $organization->level->label() }}
+    </span>
+    <h2 class="mt-1 text-lg font-semibold text-gray-900">{{ $organization->name }}</h2>
+
+    <p class="mt-2 text-sm text-gray-500">
+        <span class="text-gray-400">Responsable :</span>
+        {{ $organization->responsable_name }}
+        <span class="text-gray-300">·</span>
+        <a href="mailto:{{ $organization->responsable_email }}" class="hover:underline">{{ $organization->responsable_email }}</a>
+        @if ($organization->responsable_cell_phone)
+            <span class="text-gray-300">·</span>
+            <a href="tel:{{ $organization->responsable_cell_phone }}" class="hover:underline">{{ $organization->responsable_cell_phone }}</a>
+        @endif
+    </p>
+
+    @if ($memberRoles->isNotEmpty())
+        <ul class="mt-4 divide-y divide-gray-100 border-t border-gray-100">
+            @foreach ($memberRoles as $memberRole)
+                <li class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-2 text-sm">
+                    <p>
+                        <span class="font-medium text-gray-900">{{ $memberRole->role }}</span>
+                        <span class="text-gray-300">·</span>
+                        <span class="text-gray-700">{{ $memberRole->member->name }}</span>
+                    </p>
+                    <p class="flex flex-wrap gap-x-3 text-gray-500">
+                        <a href="mailto:{{ $memberRole->member->email }}" class="hover:underline">{{ $memberRole->member->email }}</a>
+                        @if ($memberRole->member->cell_phone)
+                            <a href="tel:{{ $memberRole->member->cell_phone }}" class="hover:underline">{{ $memberRole->member->cell_phone }}</a>
+                        @endif
+                    </p>
+                </li>
+            @endforeach
+        </ul>
+    @else
+        <p class="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-500">Aucun membre inscrit.</p>
+    @endif
+</div>

@@ -33,6 +33,19 @@ class ViewerScope
     }
 
     /**
+     * Every organization whose members the current viewer may look at: the
+     * usual scope plus the organization(s) immediately above them.
+     *
+     * @return array<int, int>
+     */
+    public static function viewableOrganizationIds(): array
+    {
+        [$scopedOrganizations, $directionOrganizations] = static::resolve();
+
+        return $scopedOrganizations->pluck('id')->merge($directionOrganizations->pluck('id'))->unique()->values()->all();
+    }
+
+    /**
      * Whoever is currently logged in, as a responsable or a member — the owner
      * of things like personal filters.
      */
@@ -50,13 +63,24 @@ class ViewerScope
     /**
      * Who is looking at the bottin right now — for the black banner under the menu.
      *
-     * @return array{name: string, role: string, organization: string, responsable: string}
+     * @return array{name: string, role: string, organization: ?string, responsable: string}
      */
     public static function identity(): array
     {
         if (Auth::guard('member')->check()) {
             /** @var Member $authMember */
             $authMember = Auth::guard('member')->user();
+
+            // Several roles and none chosen yet: a plain member, not tied to one organization.
+            if (! $authMember->activeRole() && $authMember->roles->count() > 1) {
+                return [
+                    'name' => $authMember->name,
+                    'role' => 'membre (aucun rôle choisi)',
+                    'organization' => null,
+                    'responsable' => '—',
+                ];
+            }
+
             $primaryRole = $authMember->primaryRole();
 
             return [

@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\LoginLinkController;
 use App\Http\Controllers\AllowedRoleController;
 use App\Http\Controllers\Bottin\DashboardController as BottinDashboardController;
 use App\Http\Controllers\Bottin\OrganizationDirectoryController as BottinOrganizationDirectoryController;
+use App\Http\Controllers\Bottin\OrganizationMembersController as BottinOrganizationMembersController;
 use App\Http\Controllers\BottinController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\OrganizationSwitchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertiesController;
 use App\Http\Controllers\ResponsableController;
+use App\Http\Controllers\RoleSwitchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', BottinController::class)->name('bottin');
@@ -48,6 +50,8 @@ Route::middleware('auth:member,web')->group(function () {
     Route::get('/bottin', BottinDashboardController::class)->name('bottin.index');
     Route::get('/bottin/exporter', [BottinDashboardController::class, 'export'])->name('bottin.export');
     Route::get('/bottin/organisations', BottinOrganizationDirectoryController::class)->name('bottin.organizations');
+    Route::get('/bottin/organisations/{organization}/membres', BottinOrganizationMembersController::class)->name('bottin.organization-members');
+    Route::post('/role', [RoleSwitchController::class, 'store'])->name('role.switch');
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profil/filtres', [ProfileController::class, 'storeFilter'])->name('profile.filters.store');
     Route::put('/profil/filtres/{personalFilter}', [ProfileController::class, 'updateFilter'])->name('profile.filters.update');

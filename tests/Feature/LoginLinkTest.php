@@ -60,7 +60,7 @@ class LoginLinkTest extends TestCase
         $this->assertGuest('member');
     }
 
-    public function test_confirming_the_declaration_with_a_single_matching_member_logs_in_and_reaches_the_bottin(): void
+    public function test_confirming_the_declaration_with_a_single_matching_member_logs_in_and_returns_home(): void
     {
         $member = Member::create(['name' => 'Test', 'email' => 'membre@example.com']);
         $organization = Organization::factory()->provincial()->create();
@@ -70,11 +70,11 @@ class LoginLinkTest extends TestCase
 
         $response = $this->post($url, ['confirmed' => '1']);
 
-        $response->assertRedirect(route('bottin.index'));
+        $response->assertRedirect(route('bottin'));
         $this->assertAuthenticatedAs($member, 'member');
     }
 
-    public function test_confirming_the_declaration_with_a_single_matching_organization_logs_in_and_reaches_properties(): void
+    public function test_confirming_the_declaration_with_a_single_matching_organization_logs_in_and_returns_home(): void
     {
         $organization = Organization::factory()->provincial()->create(['responsable_email' => 'resp@example.com']);
 
@@ -82,7 +82,7 @@ class LoginLinkTest extends TestCase
 
         $response = $this->post($url, ['confirmed' => '1']);
 
-        $response->assertRedirect(route('dashboard.properties'));
+        $response->assertRedirect(route('bottin'));
         $this->assertAuthenticatedAs($organization);
     }
 
@@ -95,7 +95,7 @@ class LoginLinkTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_multiple_roles_shows_a_choice_and_scopes_access_to_the_chosen_one(): void
+    public function test_multiple_roles_log_in_as_a_plain_member_then_a_role_can_be_chosen_from_the_menu(): void
     {
         $member = Member::create(['name' => 'Test', 'email' => 'membre@example.com']);
         $provincial = Organization::factory()->provincial()->create(['name' => 'Provincial X']);
@@ -105,40 +105,65 @@ class LoginLinkTest extends TestCase
 
         $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => 'membre@example.com']);
 
-        $response = $this->post($url, ['confirmed' => '1']);
+        $this->post($url, ['confirmed' => '1'])->assertRedirect(route('bottin'));
+        $this->assertAuthenticatedAs($member, 'member');
+        $this->assertNull(session('active_member_role_id'));
 
-        $response->assertOk();
-        $response->assertSee('Provincial X');
-        $response->assertSee('Régional Y');
-        $response->assertSee('Direction');
-        $response->assertSee('Bénévole');
-        $this->assertGuest('member');
+        $home = $this->get('/');
+        $home->assertSee('membre (aucun rôle choisi)');
+        $home->assertSee('Direction — Provincial X');
+        $home->assertSee('Bénévole — Régional Y');
 
-        $choiceResponse = $this->post($url, ['role_choice' => "member_role:{$roleAtProvincial->id}"]);
-
-        $choiceResponse->assertRedirect(route('bottin.index'));
+        $this->post('/role', ['identity' => "member_role:{$roleAtProvincial->id}"])->assertRedirect(route('bottin'));
         $this->assertAuthenticatedAs($member, 'member');
         $this->assertSame($roleAtProvincial->id, session('active_member_role_id'));
+
+        $this->post('/role', ['identity' => 'member'])->assertRedirect(route('bottin'));
+        $this->assertNull(session('active_member_role_id'));
     }
 
-    public function test_a_responsable_of_several_organizations_gets_a_choice_and_reaches_properties(): void
+    public function test_a_member_who_is_also_a_responsable_can_switch_to_the_responsable_role(): void
     {
-        $orgA = Organization::factory()->provincial()->create(['name' => 'Org A', 'responsable_email' => 'multi@example.com']);
-        Organization::factory()->provincial()->create(['name' => 'Org B', 'responsable_email' => 'multi@example.com']);
+        $organization = Organization::factory()->provincial()->create(['name' => 'Org A', 'responsable_email' => 'multi@example.com']);
+        $member = Member::create(['name' => 'Test', 'email' => 'multi@example.com']);
+        $member->roles()->create(['organization_id' => $organization->id, 'role' => 'Bénévole']);
 
         $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => 'multi@example.com']);
 
-        $response = $this->post($url, ['confirmed' => '1']);
+        $this->post($url, ['confirmed' => '1'])->assertRedirect(route('bottin'));
+        $this->assertAuthenticatedAs($member, 'member');
 
-        $response->assertOk();
-        $response->assertSee('Org A');
-        $response->assertSee('Org B');
-        $response->assertSee('Responsable de bottin');
-        $this->assertGuest();
+        $this->post('/role', ['identity' => "organization:{$organization->id}"])->assertRedirect(route('bottin'));
+        $this->assertAuthenticatedAs($organization, 'web');
+        $this->assertGuest('member');
 
-        $choiceResponse = $this->post($url, ['role_choice' => "organization:{$orgA->id}"]);
+        $this->post('/role', ['identity' => 'member'])->assertRedirect(route('bottin'));
+        $this->assertAuthenticatedAs($member, 'member');
+        $this->assertGuest('web');
+    }
 
-        $choiceResponse->assertRedirect(route('dashboard.properties'));
-        $this->assertAuthenticatedAs($orgA);
+    public function test_a_responsable_of_several_organizations_logs_in_with_the_most_senior_one(): void
+    {
+        $provincial = Organization::factory()->provincial()->create(['name' => 'Org A', 'responsable_email' => 'multi@example.com']);
+        $regional = Organization::factory()->regional($provincial)->create(['name' => 'Org B', 'responsable_email' => 'multi@example.com']);
+
+        $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => 'multi@example.com']);
+
+        $this->post($url, ['confirmed' => '1'])->assertRedirect(route('bottin'));
+        $this->assertAuthenticatedAs($provincial);
+
+        $this->post('/role', ['identity' => "organization:{$regional->id}"])->assertRedirect(route('bottin'));
+        $this->assertAuthenticatedAs($regional);
+    }
+
+    public function test_a_visitor_cannot_switch_to_a_role_that_is_not_theirs(): void
+    {
+        $member = Member::create(['name' => 'Test', 'email' => 'membre@example.com']);
+        $organization = Organization::factory()->provincial()->create();
+        $member->roles()->create(['organization_id' => $organization->id, 'role' => 'Bénévole']);
+        $other = Organization::factory()->provincial()->create(['responsable_email' => 'autre@example.com']);
+
+        $this->actingAs($member, 'member')->post('/role', ['identity' => "organization:{$other->id}"])->assertNotFound();
+        $this->assertGuest('web');
     }
 }

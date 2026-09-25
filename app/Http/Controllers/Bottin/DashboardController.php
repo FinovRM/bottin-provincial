@@ -170,10 +170,8 @@ class DashboardController extends Controller
     }
 
     /**
-     * For each given organization, the role names currently usable by its own
-     * members (its parent's minimum roles union allowed roles, for this
-     * organization's own group), or null when unrestricted. The bottin only
-     * ever shows members holding a currently permitted role.
+     * For each given organization, its permitted role names (see
+     * Organization::usableRoleNames()), with parents loaded in one query.
      *
      * @param  Collection<int, Organization>  $organizations
      * @return SupportCollection<int, ?array<int, string>>
@@ -186,17 +184,9 @@ class DashboardController extends Controller
             ->keyBy('id');
 
         return $organizations->mapWithKeys(function (Organization $organization) use ($parents) {
-            $parent = $organization->parent_id ? $parents->get($organization->parent_id) : null;
+            $organization->setRelation('parent', $organization->parent_id ? $parents->get($organization->parent_id) : null);
 
-            if (! $parent) {
-                return [$organization->id => null];
-            }
-
-            $names = $parent->minimumRoles->where('group', $organization->group)->pluck('name')
-                ->merge($parent->allowedRoles->where('group', $organization->group)->pluck('name'))
-                ->unique();
-
-            return [$organization->id => $names->isNotEmpty() ? $names->all() : null];
+            return [$organization->id => $organization->usableRoleNames()];
         });
     }
 

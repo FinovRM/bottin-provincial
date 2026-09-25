@@ -17,7 +17,7 @@
                     {{ mb_substr($provincial->name, 0, 1) }}
                 </span>
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900">{{ $provincial->name }}</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">@include('partials.organization-name', ['organization' => $provincial])</h2>
                     <span class="inline-block rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-indigo-700">
                         Provincial
                     </span>
@@ -33,7 +33,7 @@
                                     {{ mb_substr($regional->name, 0, 1) }}
                                 </span>
                                 <div class="min-w-0">
-                                    <p class="truncate font-medium text-gray-900">{{ $regional->name }}</p>
+                                    <p class="truncate font-medium text-gray-900">@include('partials.organization-name', ['organization' => $regional])</p>
                                     <span class="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-blue-700">
                                         Régional
                                     </span>
@@ -53,7 +53,7 @@
                                     </summary>
                                     <ul class="mt-2 max-h-48 space-y-0.5 overflow-y-auto border-t border-gray-100 pt-2 text-sm text-gray-700">
                                         @foreach ($regional->children as $local)
-                                            <li class="rounded px-1.5 py-1 odd:bg-gray-50">{{ $local->name }}</li>
+                                            <li class="rounded px-1.5 py-1 odd:bg-gray-50">@include('partials.organization-name', ['organization' => $local])</li>
                                         @endforeach
                                     </ul>
                                 </details>
@@ -68,4 +68,43 @@
     @empty
         <p class="text-gray-500">Aucune organisation n'a encore été inscrite.</p>
     @endforelse
+
+    @if ($viewableOrganizationIds)
+        <dialog id="members-dialog" class="w-full max-w-2xl rounded-lg p-0 shadow-xl backdrop:bg-black/50">
+            <div class="flex justify-end px-4 pt-3">
+                <button type="button" data-close-dialog aria-label="Fermer" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="members-dialog-content" class="px-6 pb-6"></div>
+        </dialog>
+
+        <script>
+            (() => {
+                const dialog = document.getElementById('members-dialog');
+                const content = document.getElementById('members-dialog-content');
+
+                document.querySelectorAll('[data-members-url]').forEach((link) => {
+                    link.addEventListener('click', async () => {
+                        content.innerHTML = '<p class="py-6 text-center text-sm text-gray-500">Chargement…</p>';
+                        dialog.showModal();
+
+                        const response = await fetch(link.dataset.membersUrl, { headers: { Accept: 'text/html' } });
+                        content.innerHTML = response.ok
+                            ? await response.text()
+                            : '<p class="py-6 text-center text-sm text-red-600">Impossible d\'afficher les membres de cette organisation.</p>';
+                    });
+                });
+
+                dialog.querySelector('[data-close-dialog]').addEventListener('click', () => dialog.close());
+                dialog.addEventListener('click', (event) => {
+                    if (event.target === dialog) {
+                        dialog.close();
+                    }
+                });
+            })();
+        </script>
+    @endif
 @endsection

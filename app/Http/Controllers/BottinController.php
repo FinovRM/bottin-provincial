@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrganizationLevel;
 use App\Models\Organization;
+use App\Support\ViewerScope;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class BottinController extends Controller
@@ -15,8 +17,13 @@ class BottinController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Once logged in on the bottin, each organization the visitor may look at opens its members.
+        $isVisitor = Auth::guard('member')->check() || Auth::guard('web')->check();
+
         return view('bottin.index', [
             'provincialOrganizations' => $provincialOrganizations,
+            'viewableOrganizationIds' => $isVisitor ? ViewerScope::viewableOrganizationIds() : [],
+            'identity' => $isVisitor ? ViewerScope::identity() : null,
         ]);
     }
 }
