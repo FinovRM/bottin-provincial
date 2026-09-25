@@ -18,7 +18,7 @@
         <aside class="w-full lg:w-48 lg:shrink-0">
             @include('partials.member-filters', ['action' => route('admin.members.index')])
 
-            @if ($query !== '' || $regionId !== '' || $localId !== '' || $role !== '')
+            @if ($query !== '' || $regionId !== '' || $localId !== '' || $role !== '' || $level !== '')
                 <a href="{{ route('admin.members.index') }}"
                     class="mt-4 block rounded-md bg-gray-800 px-3 py-2 text-center text-sm font-medium text-white hover:bg-gray-900">
                     ✕ Réinitialiser
@@ -36,6 +36,9 @@
                 @endif
                 @if ($role !== '')
                     <input type="hidden" name="role" value="{{ $role }}">
+                @endif
+                @if ($level !== '')
+                    <input type="hidden" name="level" value="{{ $level }}">
                 @endif
                 <label for="q" class="block text-sm font-medium">Rechercher par nom, fonction ou courriel</label>
                 <input id="q" type="text" name="q" value="{{ $query }}"

@@ -19,6 +19,7 @@ class MemberController extends Controller
         $regionId = $request->string('region_id')->trim()->toString();
         $localId = $request->string('local_id')->trim()->toString();
         $role = $request->string('role')->trim()->toString();
+        $level = $request->string('level')->trim()->toString();
 
         $organizations = Organization::orderBy('name')->get();
 
@@ -36,6 +37,7 @@ class MemberController extends Controller
                 $memberRoles->whereIn('organization_id', $regionOrganizationIds);
             })
             ->when($role !== '', fn ($memberRoles) => $memberRoles->where('role', $role))
+            ->when($level !== '', fn ($memberRoles) => $memberRoles->whereHas('organization', fn ($organizations) => $organizations->where('level', $level)))
             ->get()
             ->sortBy([
                 ['organization.name', 'asc'],
@@ -63,6 +65,9 @@ class MemberController extends Controller
             'regionId' => $regionId,
             'localId' => $localId,
             'role' => $role,
+            'showLevelFilter' => true,
+            'levels' => OrganizationLevel::cases(),
+            'level' => $level,
         ]);
     }
 

@@ -13,6 +13,21 @@
         </div>
     @endif
 
+    @if ($showLevelFilter ?? false)
+        <div class="mb-4">
+            <label for="filter_level" class="block text-sm font-medium">Niveau</label>
+            <select id="filter_level" name="level" onchange="this.form.submit()"
+                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                <option value="">Tous</option>
+                @foreach ($levels as $levelOption)
+                    <option value="{{ $levelOption->value }}" @selected($level === $levelOption->value)>
+                        {{ $levelOption->label() }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    @endif
+
     @if ($showRegionFilter)
         <div class="mb-4">
             <label for="filter_region_id" class="block text-sm font-medium">Région</label>

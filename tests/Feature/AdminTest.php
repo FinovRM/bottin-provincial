@@ -336,6 +336,23 @@ class AdminTest extends TestCase
         $this->assertTrue($provincial->fresh()->updated_at->gt($provincial->updated_at));
     }
 
+    public function test_an_admin_can_filter_members_by_organization_level(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create();
+        $provincialMember = Member::create(['name' => 'Membre Provincial', 'email' => 'membre-provincial@example.com']);
+        $regionalMember = Member::create(['name' => 'Membre Régional', 'email' => 'membre-regional@example.com']);
+        $provincial->memberRoles()->create(['member_id' => $provincialMember->id, 'role' => 'Direction']);
+        $regional->memberRoles()->create(['member_id' => $regionalMember->id, 'role' => 'Direction']);
+
+        $response = $this->actingAs($admin, 'admin')->get('/admin/membres?level=regional');
+
+        $response->assertOk();
+        $response->assertSee('Membre Régional');
+        $response->assertDontSee('Membre Provincial');
+    }
+
     public function test_an_admin_can_delete_a_role(): void
     {
         $admin = Admin::factory()->create();
