@@ -217,6 +217,28 @@ class OrganizationGroupTest extends TestCase
             ->assertSee('Réinitialiser');
     }
 
+    public function test_the_identity_banner_is_shown_on_every_bottin_page_for_a_member(): void
+    {
+        $tree = $this->tree();
+        $viewer = $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
+
+        $this->loginAsMember($viewer->email);
+
+        foreach (['/bottin', '/bottin/organisations', '/profil'] as $url) {
+            $this->get($url)->assertOk()->assertSee('Visiteur :')->assertSee('Membre Organisation');
+        }
+
+    }
+
+    public function test_the_identity_banner_is_shown_on_every_bottin_page_for_a_responsable(): void
+    {
+        $tree = $this->tree();
+
+        foreach (['/bottin', '/bottin/organisations', '/profil'] as $url) {
+            $this->actingAs($tree['localOrg'])->get($url)->assertOk()->assertSee('Visiteur :');
+        }
+    }
+
     public function test_the_organizations_nav_link_is_visible_to_a_local_organization_and_a_member(): void
     {
         $tree = $this->tree();

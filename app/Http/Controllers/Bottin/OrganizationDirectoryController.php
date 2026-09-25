@@ -65,6 +65,7 @@ class OrganizationDirectoryController extends Controller
         return view('bottin.organizations', [
             'organizations' => $organizations,
             'query' => $query,
+            'identity' => ViewerScope::identity(),
             'levelFilters' => [
                 ['name' => 'provincial_id', 'label' => 'Provincial', 'options' => $provincials, 'value' => $provincialId],
                 ['name' => 'regional_id', 'label' => 'Régional', 'options' => $regionals, 'value' => $regionalId],

@@ -94,6 +94,7 @@ class ProfileController extends Controller
             'roles' => $roles,
             'personalFilters' => ViewerScope::principal()->personalFilters()->orderBy('name')->get(),
             'rolesByGroup' => $rolesByGroup,
+            'identity' => ViewerScope::identity(),
         ]);
     }
 

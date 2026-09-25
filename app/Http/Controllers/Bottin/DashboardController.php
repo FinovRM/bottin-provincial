@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Bottin;
 
 use App\Enums\OrganizationLevel;
 use App\Http\Controllers\Controller;
-use App\Models\Member;
 use App\Models\MemberRole;
 use App\Models\Organization;
 use App\Models\PersonalFilter;
@@ -12,7 +11,6 @@ use App\Support\ViewerScope;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection as SupportCollection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -68,7 +66,7 @@ class DashboardController extends Controller
             'role' => $role,
             'myDirection' => $myDirection,
             'personalFilterId' => $personalFilterId,
-            'identity' => $this->identity(),
+            'identity' => ViewerScope::identity(),
         ]);
     }
 
@@ -250,38 +248,5 @@ class DashboardController extends Controller
     private function scope(): array
     {
         return ViewerScope::resolve();
-    }
-
-    /**
-     * Who is looking at the bottin right now — for the black banner under the menu.
-     *
-     * @return array{name: string, role: string, organization: string, responsable: string}
-     */
-    private function identity(): array
-    {
-        if (Auth::guard('member')->check()) {
-            /** @var Member $authMember */
-            $authMember = Auth::guard('member')->user();
-            $primaryRole = $authMember->primaryRole();
-
-            return [
-                'name' => $authMember->name,
-                'role' => $primaryRole?->role ?? '—',
-                'organization' => $primaryRole?->organization->name ?? '—',
-                'responsable' => $primaryRole
-                    ? "{$primaryRole->organization->responsable_name} ({$primaryRole->organization->responsable_email})"
-                    : '—',
-            ];
-        }
-
-        /** @var Organization $authOrganization */
-        $authOrganization = Auth::guard('web')->user();
-        $highest = $authOrganization->highestManagedOrganization();
-
-        return [
-            ...$authOrganization->identity(),
-            'organization' => $highest->name,
-            'responsable' => $highest->identity()['responsable'],
-        ];
     }
 }
