@@ -33,7 +33,7 @@ class AllowedRoleController extends Controller
 
         $organization->allowedRoles()->create($validated);
 
-        return redirect()->route('profile')->with('status', 'Rôle permis ajouté.');
+        return redirect()->route('dashboard.properties')->with('status', 'Rôle permis ajouté.');
     }
 
     public function update(Request $request, AllowedRole $allowedRole): RedirectResponse
@@ -63,7 +63,7 @@ class AllowedRoleController extends Controller
             ? "Rôle permis modifié ({$renamed} membre(s) corrigé(s))."
             : 'Rôle permis modifié.';
 
-        return redirect()->route('profile')->with('status', $status);
+        return redirect()->route('dashboard.properties')->with('status', $status);
     }
 
     public function destroy(AllowedRole $allowedRole): RedirectResponse
@@ -80,6 +80,6 @@ class AllowedRoleController extends Controller
             ? "Rôle permis supprimé ({$removed} membre(s) retiré(s))."
             : 'Rôle permis supprimé.';
 
-        return redirect()->route('profile')->with('status', $status);
+        return redirect()->route('dashboard.properties')->with('status', $status);
     }
 }

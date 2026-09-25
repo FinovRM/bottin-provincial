@@ -33,7 +33,7 @@ class MinimumRoleController extends Controller
 
         $organization->minimumRoles()->create($validated);
 
-        return redirect()->route('profile')->with('status', 'Rôle minimum ajouté.');
+        return redirect()->route('dashboard.properties')->with('status', 'Rôle minimum ajouté.');
     }
 
     public function update(Request $request, MinimumRole $minimumRole): RedirectResponse
@@ -63,7 +63,7 @@ class MinimumRoleController extends Controller
             ? "Rôle minimum modifié ({$renamed} membre(s) corrigé(s))."
             : 'Rôle minimum modifié.';
 
-        return redirect()->route('profile')->with('status', $status);
+        return redirect()->route('dashboard.properties')->with('status', $status);
     }
 
     public function destroy(MinimumRole $minimumRole): RedirectResponse
@@ -80,6 +80,6 @@ class MinimumRoleController extends Controller
             ? "Rôle minimum supprimé ({$removed} membre(s) retiré(s))."
             : 'Rôle minimum supprimé.';
 
-        return redirect()->route('profile')->with('status', $status);
+        return redirect()->route('dashboard.properties')->with('status', $status);
     }
 }

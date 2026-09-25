@@ -74,12 +74,12 @@ class OrganizationGroupTest extends TestCase
         $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
         $this->addRole($tree['localLeague'], 'Membre Ligue', 'ligue@example.com');
 
-        $asOrg = $this->actingAs($tree['localOrg'])->get('/bottin');
+        $asOrg = $this->actingAs($this->viewerOf($tree['localOrg']), 'member')->get('/bottin');
         $asOrg->assertOk();
         $asOrg->assertSee('Membre Organisation');
         $asOrg->assertSee('Membre Ligue');
 
-        $asLeague = $this->actingAs($tree['localLeague'])->get('/bottin');
+        $asLeague = $this->actingAs($this->viewerOf($tree['localLeague']), 'member')->get('/bottin');
         $asLeague->assertOk();
         $asLeague->assertSee('Membre Ligue');
         $asLeague->assertSee('Membre Organisation');
@@ -91,7 +91,7 @@ class OrganizationGroupTest extends TestCase
         $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
         $this->addRole($tree['localLeague'], 'Membre Ligue', 'ligue@example.com');
 
-        $response = $this->actingAs($tree['regional'])->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['regional']), 'member')->get('/bottin');
 
         $response->assertOk();
         $response->assertSee('Membre Organisation');
@@ -102,7 +102,7 @@ class OrganizationGroupTest extends TestCase
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($tree['regional'])->get('/bottin/organisations');
+        $response = $this->actingAs($this->viewerOf($tree['regional']), 'member')->get('/bottin/organisations');
 
         $response->assertOk();
         $response->assertSee('AHM Local');
@@ -113,22 +113,21 @@ class OrganizationGroupTest extends TestCase
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($tree['regional'])->get('/profil');
+        $response = $this->actingAs($this->viewerOf($tree['regional']), 'member')->get('/profil');
 
         $response->assertOk();
         $response->assertSee('AHM Local');
         $response->assertSee('Ligue Locale');
     }
 
-    public function test_the_profile_page_shows_a_separate_section_for_leagues(): void
+    public function test_the_properties_page_shows_each_groups_roles_after_its_children(): void
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($tree['regional'])->get('/profil');
+        $response = $this->actingAs($tree['regional'])->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
-        $response->assertSee('Rôles de mes organisations enfant');
-        $response->assertSee('Rôles de mes ligues enfant');
+        $response->assertSeeInOrder(['Organisations enfant', 'Rôles de mes organisations enfant', 'Ligues enfant', 'Rôles de mes ligues enfant']);
     }
 
     public function test_a_minimum_role_for_one_group_does_not_restrict_the_other_group(): void
@@ -176,7 +175,7 @@ class OrganizationGroupTest extends TestCase
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($tree['localOrg'])->get('/bottin/organisations');
+        $response = $this->actingAs($this->viewerOf($tree['localOrg']), 'member')->get('/bottin/organisations');
 
         $response->assertOk();
         $response->assertSee('AHM Local');
@@ -204,14 +203,14 @@ class OrganizationGroupTest extends TestCase
 
         $card = fn (string $name) => 'text-gray-900">'.$name.'</p>';
 
-        $this->actingAs($tree['provincial'])->get("/bottin/organisations?regional_id={$tree['regional']->id}")
+        $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get("/bottin/organisations?regional_id={$tree['regional']->id}")
             ->assertSee($card('Régional'), false)
             ->assertSee($card('AHM Local'), false)
             ->assertSee($card('Ligue Locale'), false)
             ->assertDontSee($card('Autre Local'), false)
             ->assertDontSee($card('Provincial'), false);
 
-        $this->actingAs($tree['regional'])->get("/bottin/organisations?local_id={$tree['localLeague']->id}")
+        $this->actingAs($this->viewerOf($tree['regional']), 'member')->get("/bottin/organisations?local_id={$tree['localLeague']->id}")
             ->assertSee($card('Ligue Locale'), false)
             ->assertDontSee($card('AHM Local'), false)
             ->assertSee('Réinitialiser');
@@ -230,22 +229,22 @@ class OrganizationGroupTest extends TestCase
 
     }
 
-    public function test_the_identity_banner_is_shown_on_every_bottin_page_for_a_responsable(): void
+    public function test_the_identity_banner_is_shown_to_a_responsable_on_the_properties_page(): void
     {
         $tree = $this->tree();
 
-        foreach (['/bottin', '/bottin/organisations', '/profil'] as $url) {
-            $this->actingAs($tree['localOrg'])->get($url)->assertOk()->assertSee('Visiteur :');
-        }
+        $this->actingAs($tree['localOrg'])->get('/tableau-de-bord/proprietes')
+            ->assertOk()
+            ->assertSee('Visiteur :')
+            ->assertSee('Responsable de bottin de AHM Local')
+            // A responsable only works on their properties: no Organisations link.
+            ->assertDontSee('href="'.route('bottin.organizations').'"', false);
     }
 
-    public function test_the_organizations_nav_link_is_visible_to_a_local_organization_and_a_member(): void
+    public function test_the_organizations_nav_link_is_visible_to_a_member(): void
     {
         $tree = $this->tree();
         $viewer = $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
-
-        $asLocalOrg = $this->actingAs($tree['localOrg'])->get('/bottin');
-        $asLocalOrg->assertSee(route('bottin.organizations'), false);
 
         $this->loginAsMember($viewer->email);
         $asMember = $this->get('/bottin');

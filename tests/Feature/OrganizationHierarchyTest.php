@@ -119,7 +119,7 @@ class OrganizationHierarchyTest extends TestCase
             'legal_name' => 'Association hockey mineur Acton Vale',
         ]);
 
-        $response = $this->actingAs($provincial)->get('/bottin/organisations');
+        $response = $this->actingAs($this->viewerOf($provincial), 'member')->get('/bottin/organisations');
 
         $response->assertOk();
         $response->assertSee('Association hockey mineur Acton Vale');
@@ -136,10 +136,10 @@ class OrganizationHierarchyTest extends TestCase
         Organization::factory()->local($regional)->create(['name' => 'Local de la région 1']);
         Organization::factory()->local($otherRegional)->create(['name' => 'Local de la région 2']);
 
-        $response = $this->actingAs($provincial)->get('/bottin/organisations');
+        $response = $this->actingAs($this->viewerOf($provincial), 'member')->get('/bottin/organisations');
         $response->assertSee(route('bottin.organizations.export'), false);
 
-        $response = $this->actingAs($provincial)->get('/bottin/organisations/exporter');
+        $response = $this->actingAs($this->viewerOf($provincial), 'member')->get('/bottin/organisations/exporter');
 
         $response->assertOk();
         $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
@@ -147,7 +147,7 @@ class OrganizationHierarchyTest extends TestCase
         $this->assertStringContainsString('Bureau provincial', $content);
         $this->assertStringContainsString('Association régionale 1', $content);
 
-        $filtered = $this->actingAs($provincial)->get("/bottin/organisations/exporter?regional_id={$regional->id}")->streamedContent();
+        $filtered = $this->actingAs($this->viewerOf($provincial), 'member')->get("/bottin/organisations/exporter?regional_id={$regional->id}")->streamedContent();
         $this->assertStringContainsString('Local de la région 1', $filtered);
         $this->assertStringNotContainsString('Local de la région 2', $filtered);
     }
@@ -162,7 +162,7 @@ class OrganizationHierarchyTest extends TestCase
             'postal_code' => 'J0H1A0',
         ]);
 
-        $response = $this->actingAs($provincial)->get('/bottin/organisations');
+        $response = $this->actingAs($this->viewerOf($provincial), 'member')->get('/bottin/organisations');
 
         $response->assertOk();
         $response->assertSee('1505 3e avenue, Acton Vale, Québec J0H1A0');

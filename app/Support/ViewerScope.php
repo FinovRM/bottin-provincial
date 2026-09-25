@@ -27,6 +27,17 @@ class ViewerScope
 
         /** @var Organization $authOrganization */
         $authOrganization = Auth::guard('web')->user();
+
+        // Only a responsable, of several organizations, none picked yet.
+        if (VisitorIdentities::hasNoChosenRole()) {
+            return [
+                'name' => $authOrganization->responsable_name,
+                'role' => 'responsable de bottin (aucune organisation choisie)',
+                'organization' => null,
+                'responsable' => '—',
+            ];
+        }
+
         $highest = $authOrganization->highestManagedOrganization();
 
         return [$highest->visibleToMembers(), $highest->directionOrganizations()];
@@ -95,12 +106,17 @@ class ViewerScope
 
         /** @var Organization $authOrganization */
         $authOrganization = Auth::guard('web')->user();
-        $highest = $authOrganization->highestManagedOrganization();
 
-        return [
-            ...$authOrganization->identity(),
-            'organization' => $highest->name,
-            'responsable' => $highest->identity()['responsable'],
-        ];
+        // Only a responsable, of several organizations, none picked yet.
+        if (VisitorIdentities::hasNoChosenRole()) {
+            return [
+                'name' => $authOrganization->responsable_name,
+                'role' => 'responsable de bottin (aucune organisation choisie)',
+                'organization' => null,
+                'responsable' => '—',
+            ];
+        }
+
+        return $authOrganization->identity();
     }
 }

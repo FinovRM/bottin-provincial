@@ -12,30 +12,13 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_responsable_sees_their_own_coordinates_on_the_profile_page(): void
+    public function test_a_responsable_cannot_reach_the_profile_page(): void
     {
-        $organization = Organization::factory()->provincial()->create([
-            'name' => 'Provincial Inc.',
-            'responsable_name' => 'Jeanne Tremblay',
-            'responsable_email' => 'jeanne@example.com',
-            'responsable_cell_phone' => '5145551234',
-        ]);
+        $organization = Organization::factory()->provincial()->create();
 
-        $response = $this->actingAs($organization)->get('/profil');
-
-        $response->assertOk();
-        $response->assertSee('Mes coordonnées');
-        $response->assertSee('Jeanne Tremblay');
-        $response->assertSee('Responsable de bottin');
-        $response->assertSee('Provincial Inc.');
-        $response->assertSee('jeanne@example.com');
-        $response->assertSee('(514) 555-1234');
-        $response->assertSee('Mes filtres personnels');
-        $response->assertSee('Régional');
-        $response->assertSee('Local');
-        $response->assertSee('Rôle');
-        $response->assertSee('Ajouter un filtre');
-        $response->assertSee('Réinitialiser');
+        $this->actingAs($organization)->get('/profil')->assertRedirect(route('bottin'));
+        $this->actingAs($organization)->post('/profil/filtres', ['name' => 'Filtre'])->assertRedirect(route('bottin'));
+        $this->assertDatabaseCount('personal_filters', 0);
     }
 
     public function test_a_member_sees_their_own_coordinates_on_the_profile_page(): void

@@ -31,7 +31,7 @@ class BottinHomeTest extends TestCase
         $local = Organization::factory()->local($regional)->create();
         $otherLocal = Organization::factory()->local($otherRegional)->create();
 
-        $response = $this->actingAs($local)->get('/');
+        $response = $this->actingAs($this->viewerOf($local), 'member')->get('/');
 
         $response->assertSee('Visiteur :');
         // Own level (anywhere in the tree) and own parent: yes.
@@ -54,7 +54,7 @@ class BottinHomeTest extends TestCase
         $regional->memberRoles()->create(['member_id' => $president->id, 'role' => 'Président']);
         $regional->memberRoles()->create(['member_id' => $former->id, 'role' => 'Rôle retiré']);
 
-        $response = $this->actingAs($regional)->get(route('bottin.organization-members', $regional));
+        $response = $this->actingAs($this->viewerOf($regional), 'member')->get(route('bottin.organization-members', $regional));
 
         $response->assertOk();
         $response->assertSee('Marie Présidente');
@@ -68,7 +68,7 @@ class BottinHomeTest extends TestCase
         $otherRegional = Organization::factory()->regional($provincial)->create();
         $local = Organization::factory()->local($regional)->create();
 
-        $this->actingAs($local)->get(route('bottin.organization-members', $otherRegional))->assertForbidden();
+        $this->actingAs($this->viewerOf($local), 'member')->get(route('bottin.organization-members', $otherRegional))->assertForbidden();
         $this->get(route('bottin.organization-members', $regional))->assertOk();
     }
 

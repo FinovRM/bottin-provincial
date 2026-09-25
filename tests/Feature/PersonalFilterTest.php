@@ -37,7 +37,7 @@ class PersonalFilterTest extends TestCase
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($tree['provincial'])->post('/profil/filtres', [
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->post('/profil/filtres', [
             'name' => 'Mon filtre',
             'description' => 'Une description',
             'region_ids' => [$tree['region1']->id],
@@ -46,8 +46,8 @@ class PersonalFilterTest extends TestCase
 
         $response->assertRedirect(route('profile'));
         $this->assertDatabaseHas('personal_filters', [
-            'filterable_type' => Organization::class,
-            'filterable_id' => $tree['provincial']->id,
+            'filterable_type' => Member::class,
+            'filterable_id' => $this->viewerOf($tree['provincial'])->id,
             'name' => 'Mon filtre',
             'description' => 'Une description',
         ]);
@@ -56,9 +56,9 @@ class PersonalFilterTest extends TestCase
     public function test_a_responsable_can_delete_their_own_personal_filter(): void
     {
         $tree = $this->tree();
-        $filter = $tree['provincial']->personalFilters()->create(['name' => 'À retirer']);
+        $filter = $this->viewerOf($tree['provincial'])->personalFilters()->create(['name' => 'À retirer']);
 
-        $response = $this->actingAs($tree['provincial'])->delete("/profil/filtres/{$filter->id}");
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->delete("/profil/filtres/{$filter->id}");
 
         $response->assertRedirect(route('profile'));
         $this->assertDatabaseMissing('personal_filters', ['id' => $filter->id]);
@@ -68,7 +68,7 @@ class PersonalFilterTest extends TestCase
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($tree['provincial'])->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin');
 
         $response->assertOk();
         $response->assertSee('Filtres personnels');
@@ -77,12 +77,12 @@ class PersonalFilterTest extends TestCase
     public function test_a_responsable_can_update_their_own_personal_filters_selections(): void
     {
         $tree = $this->tree();
-        $filter = $tree['provincial']->personalFilters()->create([
+        $filter = $this->viewerOf($tree['provincial'])->personalFilters()->create([
             'name' => 'Mon filtre',
             'region_ids' => [$tree['region1']->id],
         ]);
 
-        $response = $this->actingAs($tree['provincial'])->put("/profil/filtres/{$filter->id}", [
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->put("/profil/filtres/{$filter->id}", [
             'region_ids' => [$tree['region2']->id],
             'local_ids' => [$tree['local3']->id],
             'roles' => ['Trésorier'],
@@ -99,13 +99,13 @@ class PersonalFilterTest extends TestCase
     public function test_updating_a_personal_filter_with_no_selections_clears_previous_ones(): void
     {
         $tree = $this->tree();
-        $filter = $tree['provincial']->personalFilters()->create([
+        $filter = $this->viewerOf($tree['provincial'])->personalFilters()->create([
             'name' => 'Mon filtre',
             'region_ids' => [$tree['region1']->id],
             'roles' => ['Bénévole'],
         ]);
 
-        $response = $this->actingAs($tree['provincial'])->put("/profil/filtres/{$filter->id}", []);
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->put("/profil/filtres/{$filter->id}", []);
 
         $response->assertRedirect(route('profile'));
         $filter->refresh();
@@ -117,12 +117,12 @@ class PersonalFilterTest extends TestCase
     {
         $tree = $this->tree();
         $otherOrganization = Organization::factory()->provincial()->create();
-        $filter = $otherOrganization->personalFilters()->create([
+        $filter = $this->viewerOf($otherOrganization)->personalFilters()->create([
             'name' => 'Pas le mien',
             'region_ids' => [$tree['region1']->id],
         ]);
 
-        $response = $this->actingAs($tree['provincial'])->put("/profil/filtres/{$filter->id}", [
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->put("/profil/filtres/{$filter->id}", [
             'region_ids' => [$tree['region2']->id],
         ]);
 
@@ -134,9 +134,9 @@ class PersonalFilterTest extends TestCase
     {
         $tree = $this->tree();
         $otherOrganization = Organization::factory()->provincial()->create();
-        $filter = $otherOrganization->personalFilters()->create(['name' => 'Pas le mien']);
+        $filter = $this->viewerOf($otherOrganization)->personalFilters()->create(['name' => 'Pas le mien']);
 
-        $response = $this->actingAs($tree['provincial'])->delete("/profil/filtres/{$filter->id}");
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->delete("/profil/filtres/{$filter->id}");
 
         $response->assertForbidden();
         $this->assertDatabaseHas('personal_filters', ['id' => $filter->id]);
@@ -148,12 +148,12 @@ class PersonalFilterTest extends TestCase
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
-        $filter = $tree['provincial']->personalFilters()->create([
+        $filter = $this->viewerOf($tree['provincial'])->personalFilters()->create([
             'name' => 'Région 1 seulement',
             'region_ids' => [$tree['region1']->id],
         ]);
 
-        $response = $this->actingAs($tree['provincial'])->get("/bottin?personal_filter_id={$filter->id}");
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get("/bottin?personal_filter_id={$filter->id}");
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');
@@ -166,12 +166,12 @@ class PersonalFilterTest extends TestCase
         $this->addRole($tree['local1'], 'Trésorier Local 1', 't1@example.com', 'Trésorier');
         $this->addRole($tree['local1'], 'Bénévole Local 1', 'b1@example.com', 'Bénévole');
 
-        $filter = $tree['provincial']->personalFilters()->create([
+        $filter = $this->viewerOf($tree['provincial'])->personalFilters()->create([
             'name' => 'Trésoriers',
             'roles' => ['Trésorier'],
         ]);
 
-        $response = $this->actingAs($tree['provincial'])->get("/bottin?personal_filter_id={$filter->id}");
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get("/bottin?personal_filter_id={$filter->id}");
 
         $response->assertOk();
         $response->assertSee('Trésorier Local 1');
@@ -183,14 +183,14 @@ class PersonalFilterTest extends TestCase
         $tree = $this->tree();
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
-        $filter = $tree['provincial']->personalFilters()->create([
+        $filter = $this->viewerOf($tree['provincial'])->personalFilters()->create([
             'name' => 'Privé',
             'region_ids' => [$tree['region1']->id],
         ]);
 
         // A regional responsable sees every local across the whole tree by default —
         // if someone else's filter were silently applied, Local 3 would disappear.
-        $response = $this->actingAs($tree['region2'])->get("/bottin?personal_filter_id={$filter->id}");
+        $response = $this->actingAs($this->viewerOf($tree['region2']), 'member')->get("/bottin?personal_filter_id={$filter->id}");
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');

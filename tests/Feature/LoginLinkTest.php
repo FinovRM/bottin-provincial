@@ -144,7 +144,7 @@ class LoginLinkTest extends TestCase
         $this->assertGuest('web');
     }
 
-    public function test_a_responsable_of_several_organizations_logs_in_with_the_most_senior_one(): void
+    public function test_a_responsable_of_several_organizations_first_chooses_an_organization(): void
     {
         $provincial = Organization::factory()->provincial()->create(['name' => 'Org A', 'responsable_email' => 'multi@example.com']);
         $regional = Organization::factory()->regional($provincial)->create(['name' => 'Org B', 'responsable_email' => 'multi@example.com']);
@@ -152,10 +152,42 @@ class LoginLinkTest extends TestCase
         $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => 'multi@example.com']);
 
         $this->post($url, ['confirmed' => '1'])->assertRedirect(route('bottin'));
-        $this->assertAuthenticatedAs($provincial);
+
+        // Home page with no links: the only thing to do is choose an organization.
+        $home = $this->get('/');
+        $home->assertOk();
+        $home->assertSee('responsable de bottin (aucune organisation choisie)');
+        $home->assertSee('Choisir une organisation');
+        $home->assertDontSee('data-members-url="', false);
+        $home->assertDontSee('href="'.route('dashboard.properties').'"', false);
+        $this->get('/tableau-de-bord/proprietes')->assertRedirect(route('bottin'));
+        $this->get('/bottin')->assertRedirect(route('bottin'));
 
         $this->post('/role', ['identity' => "organization:{$regional->id}"])->assertRedirect(route('bottin'));
         $this->assertAuthenticatedAs($regional);
+
+        // Once chosen, the properties page is all there is.
+        $this->get('/')->assertRedirect(route('dashboard.properties'));
+        $this->get('/tableau-de-bord/proprietes')->assertOk()->assertSee('Responsable de bottin de Org B');
+        $this->get('/bottin')->assertRedirect(route('bottin'));
+        $this->get('/bottin/organisations')->assertRedirect(route('bottin'));
+        $this->get('/profil')->assertRedirect(route('bottin'));
+    }
+
+    public function test_a_single_organization_responsable_goes_straight_to_its_properties(): void
+    {
+        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'resp@example.com']);
+
+        $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => 'resp@example.com']);
+
+        $this->post($url, ['confirmed' => '1']);
+
+        $this->get('/')->assertRedirect(route('dashboard.properties'));
+        $properties = $this->get('/tableau-de-bord/proprietes');
+        $properties->assertOk();
+        $properties->assertDontSee('id="role-menu"', false);
+        $properties->assertDontSee('aria-label="Accueil"', false);
+        $properties->assertDontSee('href="'.route('profile').'"', false);
     }
 
     public function test_a_visitor_cannot_switch_to_a_role_that_is_not_theirs(): void

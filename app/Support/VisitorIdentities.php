@@ -11,12 +11,15 @@ use Illuminate\Support\Facades\Auth;
 /**
  * Every way a visitor (one courriel) can be logged in: as the responsable of
  * each organization they're in charge of, as the holder of each member role,
- * and — when they have several — as a plain member not tied to one role.
+ * and — when they have several — without a chosen role yet.
  */
 class VisitorIdentities
 {
     /** A visitor with several roles who hasn't picked one: a plain member at the local level, tied to no organization. */
     public const NO_CHOSEN_ROLE = 'member';
+
+    /** A visitor who is only a responsable, of several organizations, and hasn't picked one yet. */
+    public const NO_CHOSEN_ORGANIZATION = 'organization';
 
     /**
      * @return Collection<int, array{key: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}>
@@ -53,8 +56,9 @@ class VisitorIdentities
     }
 
     /**
-     * What the role menu offers: every identity, plus "Aucun rôle choisi" first
-     * when the visitor is a member and has more than one identity.
+     * What the role menu offers: every identity, plus — when there are several —
+     * "Aucun rôle choisi" first for a member, or "Choisir une organisation"
+     * first for someone who is only a responsable.
      *
      * @return Collection<int, array{key: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}>
      */
@@ -63,13 +67,26 @@ class VisitorIdentities
         $identities = static::forEmail($email);
         $member = $identities->firstWhere('guard', 'member')['model'] ?? null;
 
-        if ($member && $identities->count() > 1) {
+        if ($identities->count() <= 1) {
+            return $identities;
+        }
+
+        if ($member) {
             $identities->prepend([
                 'key' => self::NO_CHOSEN_ROLE,
                 'organization' => null,
                 'role' => 'Aucun rôle choisi (niveau local)',
                 'guard' => 'member',
                 'model' => $member,
+                'roleId' => null,
+            ]);
+        } else {
+            $identities->prepend([
+                'key' => self::NO_CHOSEN_ORGANIZATION,
+                'organization' => null,
+                'role' => 'Choisir une organisation',
+                'guard' => 'web',
+                'model' => $identities->sortBy(fn (array $identity) => $identity['model']->level->rank())->first()['model'],
                 'roleId' => null,
             ]);
         }
@@ -79,18 +96,22 @@ class VisitorIdentities
 
     /**
      * The identity to log in with once the declaration is confirmed: the only
-     * one if there's just one; otherwise a plain member (local level) when the
-     * visitor is a member, or else the most senior organization they're in
-     * charge of.
+     * one if there's just one; otherwise no chosen role yet (see choicesForEmail()).
      *
      * @return ?array{key: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}
      */
     public static function defaultForEmail(string $email): ?array
     {
-        $choices = static::choicesForEmail($email);
+        return static::choicesForEmail($email)->first();
+    }
 
-        return $choices->firstWhere('key', self::NO_CHOSEN_ROLE)
-            ?? $choices->sortBy(fn (array $identity) => $identity['model'] instanceof Organization ? $identity['model']->level->rank() : 0)->first();
+    /**
+     * Whether the visitor has several roles and hasn't picked one yet.
+     */
+    public static function hasNoChosenRole(): bool
+    {
+        return (Auth::guard('member')->check() || Auth::guard('web')->check())
+            && session('without_chosen_role') === true;
     }
 
     /**
@@ -102,7 +123,8 @@ class VisitorIdentities
     {
         if ($identity['guard'] === 'web') {
             Auth::guard('member')->logout();
-            session()->forget(['active_member_role_id', 'without_chosen_role']);
+            session()->forget('active_member_role_id');
+            session(['without_chosen_role' => $identity['key'] === self::NO_CHOSEN_ORGANIZATION]);
             Auth::guard('web')->login($identity['model']);
 
             return;
@@ -147,6 +169,10 @@ class VisitorIdentities
 
         $organization = Auth::guard('web')->user();
 
-        return $organization ? "organization:{$organization->id}" : null;
+        if (! $organization) {
+            return null;
+        }
+
+        return static::hasNoChosenRole() ? self::NO_CHOSEN_ORGANIZATION : "organization:{$organization->id}";
     }
 }

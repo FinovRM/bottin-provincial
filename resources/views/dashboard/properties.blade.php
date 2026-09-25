@@ -166,9 +166,11 @@
                 $children = $organization->children->where('group', $group);
                 $badgeColor = $isLigue ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700';
                 $avatarColor = $isLigue ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700';
+                // The children section and its roles section share this group's color.
+                $sectionBorder = $isLigue ? 'border-purple-200' : 'border-blue-200';
             @endphp
 
-            <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
+            <section class="mb-8 rounded-lg border {{ $sectionBorder }} bg-white p-5">
                 <div class="mb-4 flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full {{ $badgeColor }}">
@@ -224,6 +226,11 @@
                     </p>
                 @endif
             </section>
+
+            @include('dashboard.partials.child-roles', [
+                'minimumRoles' => $rolesByGroup[$group->value]['minimumRoles'],
+                'allowedRoles' => $rolesByGroup[$group->value]['allowedRoles'],
+            ])
         @endforeach
     @endif
 @endsection

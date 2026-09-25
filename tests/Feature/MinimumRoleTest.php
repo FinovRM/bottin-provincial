@@ -20,7 +20,7 @@ class MinimumRoleTest extends TestCase
             'group' => 'organisation',
         ]);
 
-        $response->assertRedirect(route('profile'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseHas('minimum_roles', [
             'organization_id' => $provincial->id,
             'name' => 'Président',
@@ -63,7 +63,7 @@ class MinimumRoleTest extends TestCase
 
         $response = $this->actingAs($provincial)->delete("/profil/roles-minimum/{$minimumRole->id}");
 
-        $response->assertRedirect(route('profile'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseMissing('minimum_roles', ['id' => $minimumRole->id]);
     }
 
@@ -94,7 +94,7 @@ class MinimumRoleTest extends TestCase
 
         $response = $this->actingAs($provincial)->delete("/profil/roles-minimum/{$minimumRole->id}");
 
-        $response->assertRedirect(route('profile'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseMissing('minimum_roles', ['id' => $minimumRole->id]);
         $this->assertDatabaseMissing('member_roles', ['organization_id' => $regional->id, 'role' => 'Président']);
         // Had only that role: the member itself is removed.
@@ -116,7 +116,7 @@ class MinimumRoleTest extends TestCase
             'name' => 'Président du CA',
         ]);
 
-        $response->assertRedirect(route('profile'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseHas('minimum_roles', ['id' => $minimumRole->id, 'name' => 'Président du CA']);
         $this->assertDatabaseHas('member_roles', ['organization_id' => $regional->id, 'role' => 'Président du CA']);
         $this->assertDatabaseMissing('member_roles', ['organization_id' => $regional->id, 'role' => 'Président']);
@@ -171,25 +171,25 @@ class MinimumRoleTest extends TestCase
         $this->assertDatabaseHas('member_roles', ['organization_id' => $local->id, 'role' => 'Président']);
     }
 
-    public function test_the_profile_page_shows_minimum_roles_only_for_a_parent_organization(): void
+    public function test_the_properties_page_shows_minimum_roles_only_for_a_parent_organization(): void
     {
         $provincial = Organization::factory()->provincial()->create();
         $provincial->minimumRoles()->create(['name' => 'Président']);
 
-        $response = $this->actingAs($provincial)->get('/profil');
+        $response = $this->actingAs($provincial)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertSee('Rôles minimum');
         $response->assertSee('Président');
     }
 
-    public function test_the_profile_page_hides_minimum_roles_for_a_local_organization(): void
+    public function test_the_properties_page_hides_minimum_roles_for_a_local_organization(): void
     {
         $provincial = Organization::factory()->provincial()->create();
         $regional = Organization::factory()->regional($provincial)->create();
         $local = Organization::factory()->local($regional)->create();
 
-        $response = $this->actingAs($local)->get('/profil');
+        $response = $this->actingAs($local)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertDontSee('Rôles minimum');

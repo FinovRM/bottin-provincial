@@ -58,7 +58,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
         $this->addRole($tree['provincial'], 'Membre Provincial', 'p1@example.com');
 
-        $response = $this->actingAs($tree['region1'])->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['region1']), 'member')->get('/bottin');
 
         $response->assertOk();
         // every local organization, anywhere in the tree, is visible
@@ -77,7 +77,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
-        $response = $this->actingAs($tree['region1'])->get('/bottin?region_id='.$tree['region1']->id);
+        $response = $this->actingAs($this->viewerOf($tree['region1']), 'member')->get('/bottin?region_id='.$tree['region1']->id);
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');
@@ -209,7 +209,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['region1'], 'Membre Région 1', 'r1@example.com');
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
 
-        $response = $this->actingAs($tree['local1'])->get('/bottin?my_direction=1');
+        $response = $this->actingAs($this->viewerOf($tree['local1']), 'member')->get('/bottin?my_direction=1');
 
         $response->assertOk();
         $response->assertSee('Membre Région 1');
@@ -224,29 +224,12 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
 
-        $response = $this->actingAs($tree['region1'])->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['region1']), 'member')->get('/bottin');
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');
         $response->assertSee('Membre Local 3');
         $response->assertSee('Membre Région 2');
-    }
-
-    public function test_a_responsable_in_charge_of_several_organizations_uses_the_highest_one_on_the_bottin(): void
-    {
-        $tree = $this->tree();
-        $tree['local1']->update(['responsable_email' => 'multi@example.com']);
-        $tree['region2']->update(['responsable_email' => 'multi@example.com']);
-        $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
-        $this->addRole($tree['provincial'], 'Membre Provincial', 'p1@example.com');
-
-        // acting as the local organization, but the same person is also in charge
-        // of a regional one — the bottin should use the regional (higher) scope
-        $response = $this->actingAs($tree['local1']->fresh())->get('/bottin');
-
-        $response->assertOk();
-        $response->assertSee('Membre Local 3');
-        $response->assertDontSee('Membre Provincial');
     }
 
     public function test_the_bottin_only_shows_currently_permitted_roles(): void
@@ -264,7 +247,7 @@ class QueryScopeTest extends TestCase
         $unrestricted = Member::create(['name' => 'Membre Non Restreint', 'email' => 'nonrestreint@example.com']);
         $tree['local3']->memberRoles()->create(['member_id' => $unrestricted->id, 'role' => 'Rôle quelconque']);
 
-        $response = $this->actingAs($tree['provincial'])->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin');
 
         $response->assertOk();
         $response->assertSee('Membre Permis');
@@ -292,7 +275,7 @@ class QueryScopeTest extends TestCase
         $region1President = Member::create(['name' => 'Région1 Président', 'email' => 'r1p@example.com']);
         $tree['region1']->memberRoles()->create(['member_id' => $region1President->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($tree['provincial'])->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin');
 
         $response->assertOk();
         $response->assertDontSee('Local1 Président');
@@ -306,7 +289,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
-        $response = $this->actingAs($tree['provincial'])->get('/bottin/exporter?local_id='.$tree['local1']->id);
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin/exporter?local_id='.$tree['local1']->id);
 
         $response->assertOk();
         $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');

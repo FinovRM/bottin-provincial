@@ -20,7 +20,7 @@ class AllowedRoleTest extends TestCase
             'group' => 'organisation',
         ]);
 
-        $response->assertRedirect(route('profile'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseHas('allowed_roles', [
             'organization_id' => $provincial->id,
             'name' => 'Bénévole',
@@ -63,7 +63,7 @@ class AllowedRoleTest extends TestCase
 
         $response = $this->actingAs($provincial)->delete("/profil/roles-permis/{$allowedRole->id}");
 
-        $response->assertRedirect(route('profile'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseMissing('allowed_roles', ['id' => $allowedRole->id]);
     }
 
@@ -89,7 +89,7 @@ class AllowedRoleTest extends TestCase
 
         $response = $this->actingAs($provincial)->delete("/profil/roles-permis/{$allowedRole->id}");
 
-        $response->assertRedirect(route('profile'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseMissing('allowed_roles', ['id' => $allowedRole->id]);
         $this->assertDatabaseMissing('member_roles', ['organization_id' => $regional->id, 'role' => 'Bénévole']);
         $this->assertDatabaseMissing('members', ['id' => $member->id]);
@@ -107,31 +107,31 @@ class AllowedRoleTest extends TestCase
             'name' => 'Bénévole occasionnel',
         ]);
 
-        $response->assertRedirect(route('profile'));
+        $response->assertRedirect(route('dashboard.properties'));
         $this->assertDatabaseHas('allowed_roles', ['id' => $allowedRole->id, 'name' => 'Bénévole occasionnel']);
         $this->assertDatabaseHas('member_roles', ['organization_id' => $regional->id, 'role' => 'Bénévole occasionnel']);
         $this->assertDatabaseMissing('member_roles', ['organization_id' => $regional->id, 'role' => 'Bénévole']);
     }
 
-    public function test_the_profile_page_shows_allowed_roles_only_for_a_parent_organization(): void
+    public function test_the_properties_page_shows_allowed_roles_only_for_a_parent_organization(): void
     {
         $provincial = Organization::factory()->provincial()->create();
         $provincial->allowedRoles()->create(['name' => 'Bénévole']);
 
-        $response = $this->actingAs($provincial)->get('/profil');
+        $response = $this->actingAs($provincial)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertSee('Rôles permis');
         $response->assertSee('Bénévole');
     }
 
-    public function test_the_profile_page_hides_allowed_roles_for_a_local_organization(): void
+    public function test_the_properties_page_hides_allowed_roles_for_a_local_organization(): void
     {
         $provincial = Organization::factory()->provincial()->create();
         $regional = Organization::factory()->regional($provincial)->create();
         $local = Organization::factory()->local($regional)->create();
 
-        $response = $this->actingAs($local)->get('/profil');
+        $response = $this->actingAs($local)->get('/tableau-de-bord/proprietes');
 
         $response->assertOk();
         $response->assertDontSee('Rôles permis');

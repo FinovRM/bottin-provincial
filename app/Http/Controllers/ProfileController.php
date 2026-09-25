@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\OrganizationGroup;
 use App\Enums\OrganizationLevel;
-use App\Models\AllowedRole;
 use App\Models\Member;
 use App\Models\MemberRole;
-use App\Models\MinimumRole;
 use App\Models\Organization;
 use App\Models\PersonalFilter;
 use App\Support\ViewerScope;
@@ -20,56 +17,18 @@ class ProfileController extends Controller
 {
     public function index(): View
     {
-        $rolesByGroup = [];
+        // Only members reach this page: responsables stay on their organization's properties.
+        /** @var Member $member */
+        $member = Auth::guard('member')->user();
+        $primaryRole = $member->primaryRole();
 
-        if (Auth::guard('member')->check()) {
-            /** @var Member $member */
-            $member = Auth::guard('member')->user();
-            $primaryRole = $member->primaryRole();
-
-            $coordinates = [
-                'name' => $member->name,
-                'role' => $primaryRole?->role ?? '—',
-                'organization' => $primaryRole?->organization->name ?? '—',
-                'email' => $member->email,
-                'cell_phone' => $member->cell_phone,
-            ];
-        } else {
-            /** @var Organization $organization */
-            $organization = Auth::guard('web')->user();
-
-            $coordinates = [
-                'name' => $organization->responsable_name,
-                'role' => 'Responsable de bottin',
-                'organization' => $organization->name,
-                'email' => $organization->responsable_email,
-                'cell_phone' => $organization->responsable_cell_phone,
-            ];
-
-            if ($organization->canCreateChildren()) {
-                foreach (OrganizationGroup::cases() as $group) {
-                    $childMemberCountsByRole = MemberRole::whereIn(
-                        'organization_id',
-                        $organization->children()->where('group', $group)->pluck('id')
-                    )
-                        ->selectRaw('role, count(*) as aggregate')
-                        ->groupBy('role')
-                        ->pluck('aggregate', 'role');
-
-                    $minimumRoles = $organization->minimumRoles()->where('group', $group)->orderBy('name')->get();
-                    $allowedRoles = $organization->allowedRoles()->where('group', $group)->orderBy('name')->get();
-
-                    $minimumRoles->each(fn (MinimumRole $role) => $role->member_count = $childMemberCountsByRole->get($role->name, 0));
-                    $allowedRoles->each(fn (AllowedRole $role) => $role->member_count = $childMemberCountsByRole->get($role->name, 0));
-
-                    $rolesByGroup[$group->value] = [
-                        'group' => $group,
-                        'minimumRoles' => $minimumRoles,
-                        'allowedRoles' => $allowedRoles,
-                    ];
-                }
-            }
-        }
+        $coordinates = [
+            'name' => $member->name,
+            'role' => $primaryRole?->role ?? '—',
+            'organization' => $primaryRole?->organization->name ?? '—',
+            'email' => $member->email,
+            'cell_phone' => $member->cell_phone,
+        ];
 
         [$scopedOrganizations] = ViewerScope::resolve();
 
@@ -93,7 +52,6 @@ class ProfileController extends Controller
             'locals' => $locals,
             'roles' => $roles,
             'personalFilters' => ViewerScope::principal()->personalFilters()->orderBy('name')->get(),
-            'rolesByGroup' => $rolesByGroup,
             'identity' => ViewerScope::identity(),
         ]);
     }
