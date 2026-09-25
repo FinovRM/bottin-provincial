@@ -27,7 +27,7 @@
             <select id="parent_id" name="parent_id" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
                 <option value="">— Aucune (provincial) —</option>
                 @foreach ($organizations as $parent)
-                    <option value="{{ $parent->id }}" @selected((int) old('parent_id', $organization->parent_id) === $parent->id)>
+                    <option value="{{ $parent->id }}" data-level="{{ $parent->level->value }}" @selected((int) old('parent_id', $organization->parent_id) === $parent->id)>
                         {{ $parent->name }} ({{ $parent->level->label() }})
                     </option>
                 @endforeach
@@ -68,4 +68,6 @@
             Enregistrer
         </button>
     </form>
+
+    @include('partials.parent-level-filter')
 @endsection
