@@ -7,6 +7,7 @@ use App\Models\Member;
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AdminTest extends TestCase
@@ -540,5 +541,76 @@ class AdminTest extends TestCase
 
         $this->assertDatabaseHas('members', ['email' => 'avec-poste@example.com', 'cell_phone' => '8195620044', 'extension' => '221']);
         $this->assertDatabaseHas('members', ['email' => 'poste-colle@example.com', 'cell_phone' => '8195620044', 'extension' => '234']);
+    }
+
+    public function test_the_admin_menu_leads_to_the_properties_page(): void
+    {
+        $admin = Admin::factory()->create(['name' => 'Anne Admin']);
+
+        $this->actingAs($admin, 'admin')->get('/admin/tableau-de-bord')
+            ->assertSee(route('admin.properties'), false);
+
+        $this->actingAs($admin, 'admin')->get('/admin/proprietes')
+            ->assertOk()
+            ->assertSee("Nom de l'administrateur", false)
+            ->assertSee('Anne Admin');
+    }
+
+    public function test_an_admin_can_change_their_name(): void
+    {
+        $admin = Admin::factory()->create(['name' => 'Ancien nom']);
+
+        $this->actingAs($admin, 'admin')->put('/admin/proprietes/nom', ['name' => 'Nouveau nom'])
+            ->assertRedirect(route('admin.properties'));
+
+        $this->assertSame('Nouveau nom', $admin->fresh()->name);
+    }
+
+    public function test_an_admin_can_change_their_password_with_the_current_one(): void
+    {
+        $admin = Admin::factory()->create(['password' => 'ancien-secret']);
+
+        $this->actingAs($admin, 'admin')->put('/admin/proprietes/mot-de-passe', [
+            'current_password' => 'mauvais',
+            'password' => 'nouveau-secret',
+            'password_confirmation' => 'nouveau-secret',
+        ])->assertSessionHasErrors('current_password');
+
+        $this->actingAs($admin, 'admin')->put('/admin/proprietes/mot-de-passe', [
+            'current_password' => 'ancien-secret',
+            'password' => 'nouveau-secret',
+            'password_confirmation' => 'nouveau-secret',
+        ])->assertRedirect(route('admin.properties'));
+
+        $this->assertTrue(Hash::check('nouveau-secret', $admin->fresh()->password));
+    }
+
+    public function test_an_admin_can_add_another_admin(): void
+    {
+        $admin = Admin::factory()->create(['email' => 'moi@example.com']);
+
+        $this->actingAs($admin, 'admin')->post('/admin/proprietes/administrateurs', [
+            'new_admin_name' => 'Bruno Admin',
+            'new_admin_email' => 'bruno@example.com',
+            'new_admin_password' => 'secret-bruno',
+            'new_admin_password_confirmation' => 'secret-bruno',
+        ])->assertRedirect(route('admin.properties'));
+
+        $added = Admin::where('email', 'bruno@example.com')->first();
+        $this->assertSame('Bruno Admin', $added->name);
+        $this->assertTrue(Hash::check('secret-bruno', $added->password));
+
+        $this->actingAs($admin, 'admin')->post('/admin/proprietes/administrateurs', [
+            'new_admin_name' => 'Doublon',
+            'new_admin_email' => 'moi@example.com',
+            'new_admin_password' => 'secret-doublon',
+            'new_admin_password_confirmation' => 'secret-doublon',
+        ])->assertSessionHasErrors('new_admin_email');
+    }
+
+    public function test_a_guest_cannot_reach_the_admin_properties_page(): void
+    {
+        $this->get('/admin/proprietes')->assertRedirect(route('admin.login'));
+        $this->post('/admin/proprietes/administrateurs', [])->assertRedirect(route('admin.login'));
     }
 }

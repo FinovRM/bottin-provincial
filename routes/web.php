@@ -6,11 +6,12 @@ use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\MemberImportController as AdminMemberImportController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Admin\OrganizationImportController;
+use App\Http\Controllers\Admin\PropertiesController as AdminPropertiesController;
+use App\Http\Controllers\AllowedRoleController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\BottinLoginController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginLinkController;
-use App\Http\Controllers\AllowedRoleController;
 use App\Http\Controllers\Bottin\DashboardController as BottinDashboardController;
 use App\Http\Controllers\Bottin\OrganizationDirectoryController as BottinOrganizationDirectoryController;
 use App\Http\Controllers\Bottin\OrganizationMembersController as BottinOrganizationMembersController;
@@ -113,6 +114,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/deconnexion', [AdminAuthenticatedSessionController::class, 'destroy'])->name('logout');
 
         Route::get('/tableau-de-bord', AdminDashboardController::class)->name('dashboard');
+
+        Route::get('/proprietes', [AdminPropertiesController::class, 'show'])->name('properties');
+        Route::put('/proprietes/nom', [AdminPropertiesController::class, 'updateName'])->name('properties.name');
+        Route::put('/proprietes/mot-de-passe', [AdminPropertiesController::class, 'updatePassword'])->name('properties.password');
+        Route::post('/proprietes/administrateurs', [AdminPropertiesController::class, 'storeAdmin'])->name('properties.admins.store');
 
         Route::get('/organisations', [AdminOrganizationController::class, 'index'])->name('organizations.index');
         Route::get('/organisations/creer', [AdminOrganizationController::class, 'create'])->name('organizations.create');
