@@ -52,6 +52,31 @@ class AdminTest extends TestCase
         $response->assertSee('Local X');
     }
 
+    public function test_an_admin_can_filter_organizations_by_level_parent_and_organization(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create(['name' => 'Provincial X']);
+        $regionA = Organization::factory()->regional($provincial)->create(['name' => 'Région A']);
+        $regionB = Organization::factory()->regional($provincial)->create(['name' => 'Région B']);
+        Organization::factory()->local($regionA)->create(['name' => 'Local A']);
+        Organization::factory()->local($regionB)->create(['name' => 'Local B']);
+
+        $admin = $this->actingAs($admin, 'admin');
+
+        $admin->get('/admin/organisations?level=regional')
+            ->assertSeeInOrder(['Région A', 'Région B'])
+            ->assertDontSee('font-medium">Local A</td>', false)
+            ->assertDontSee('font-medium">Provincial X</td>', false);
+
+        $admin->get("/admin/organisations?parent_id={$regionA->id}")
+            ->assertSee('font-medium">Local A</td>', false)
+            ->assertDontSee('font-medium">Local B</td>', false);
+
+        $admin->get("/admin/organisations?organization_id={$regionB->id}")
+            ->assertSee('font-medium">Région B</td>', false)
+            ->assertDontSee('font-medium">Région A</td>', false);
+    }
+
     public function test_an_admin_can_create_a_provincial_organization(): void
     {
         $admin = Admin::factory()->create();

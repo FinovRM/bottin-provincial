@@ -15,12 +15,30 @@ class OrganizationController extends Controller
     public function index(Request $request): View
     {
         $query = $request->string('q')->trim()->toString();
+        $level = $request->string('level')->trim()->toString();
+        $parentId = $request->string('parent_id')->trim()->toString();
+        $organizationId = $request->string('organization_id')->trim()->toString();
+
+        $allOrganizations = Organization::orderBy('name')->get();
+
+        $parents = $allOrganizations
+            ->whereIn('id', $allOrganizations->pluck('parent_id')->filter()->unique())
+            ->when(OrganizationLevel::tryFrom($level), fn ($parents, $level) => $parents->filter(
+                fn ($parent) => $parent->level->childLevel() === $level
+            ));
+
+        $organizationOptions = $allOrganizations
+            ->when($level !== '', fn ($organizations) => $organizations->filter(fn ($organization) => $organization->level->value === $level))
+            ->when($parentId !== '', fn ($organizations) => $organizations->where('parent_id', (int) $parentId));
 
         $organizations = Organization::with('parent')
             ->when($query !== '', fn ($organizations) => $organizations->where(function ($organizations) use ($query) {
                 $organizations->where('name', 'like', "%{$query}%")
                     ->orWhere('responsable_email', 'like', "%{$query}%");
             }))
+            ->when($level !== '', fn ($organizations) => $organizations->where('level', $level))
+            ->when($parentId !== '', fn ($organizations) => $organizations->where('parent_id', $parentId))
+            ->when($organizationId !== '', fn ($organizations) => $organizations->whereKey($organizationId))
             ->orderBy('level')
             ->orderBy('name')
             ->get();
@@ -28,6 +46,12 @@ class OrganizationController extends Controller
         return view('admin.organizations.index', [
             'organizations' => $organizations,
             'query' => $query,
+            'levels' => OrganizationLevel::cases(),
+            'level' => $level,
+            'parents' => $parents,
+            'parentId' => $parentId,
+            'organizationOptions' => $organizationOptions,
+            'organizationId' => $organizationId,
         ]);
     }
 
