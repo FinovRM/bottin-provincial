@@ -37,6 +37,28 @@ class Organization extends Authenticatable
     ];
 
     /**
+     * A responsable is one person, identified by email: when their name or cell
+     * phone changes on one organization, every organization they're in charge of
+     * follows. Changing the email itself only moves this organization to the
+     * new responsable (whose other organizations then take these coordinates).
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (Organization $organization) {
+            if (! $organization->wasChanged(['responsable_name', 'responsable_email', 'responsable_cell_phone'])) {
+                return;
+            }
+
+            Organization::where('responsable_email', $organization->responsable_email)
+                ->whereKeyNot($organization->id)
+                ->update(array_intersect_key(
+                    $organization->getAttributes(),
+                    array_flip(['responsable_name', 'responsable_cell_phone'])
+                ));
+        });
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

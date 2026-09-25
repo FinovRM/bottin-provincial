@@ -121,13 +121,16 @@ class OrganizationImportController extends Controller
             throw new \RuntimeException('cette organisation existe déjà ("'.$data['name'].'").');
         }
 
+        // A responsable already on file keeps the coordinates they have there.
+        $existingResponsable = Organization::where('responsable_email', $data['responsable_email'])->first();
+
         Organization::create([
             'level' => $level,
             'parent_id' => $parent?->id,
             'name' => $data['name'],
-            'responsable_name' => $data['responsable_name'],
+            'responsable_name' => $existingResponsable->responsable_name ?? $data['responsable_name'],
             'responsable_email' => $data['responsable_email'],
-            'responsable_cell_phone' => $data['responsable_cell_phone'],
+            'responsable_cell_phone' => $existingResponsable ? $existingResponsable->getAttributes()['responsable_cell_phone'] : $data['responsable_cell_phone'],
         ]);
     }
 }
