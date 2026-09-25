@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrganizationLevel;
 use App\Support\CellPhone;
 use Database\Factories\MemberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -72,6 +73,12 @@ class Member extends Authenticatable
      */
     public function visibleOrganizations(): Collection
     {
+        // Several roles and none chosen: every visitor with several roles holds at
+        // least a local member's access, so they start there, tied to no organization.
+        if ($this->hasNoChosenRole()) {
+            return Organization::where('level', OrganizationLevel::Local)->get();
+        }
+
         $organizations = $this->consideredRoles()
             ->flatMap(fn (MemberRole $role) => $role->organization->visibleToMembers())
             ->unique('id')
@@ -90,6 +97,10 @@ class Member extends Authenticatable
      */
     public function directionOrganizations(): Collection
     {
+        if ($this->hasNoChosenRole()) {
+            return new Collection;
+        }
+
         $organizations = $this->consideredRoles()
             ->map(fn (MemberRole $role) => $role->organization->parent)
             ->filter()
@@ -98,6 +109,15 @@ class Member extends Authenticatable
             ->all();
 
         return new Collection($organizations);
+    }
+
+    /**
+     * A visitor with several roles who hasn't picked one yet: logged in as a
+     * plain member at the local level, not tied to any organization.
+     */
+    public function hasNoChosenRole(): bool
+    {
+        return session('without_chosen_role') === true;
     }
 
     /**

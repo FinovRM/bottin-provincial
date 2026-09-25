@@ -26,6 +26,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertiesController;
 use App\Http\Controllers\ResponsableController;
 use App\Http\Controllers\RoleSwitchController;
+use App\Http\Middleware\EnsureRoleChosen;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', BottinController::class)->name('bottin');
@@ -49,13 +50,16 @@ Route::post('/connexion/verifier', [BottinLoginController::class, 'store'])
 Route::middleware('auth:member,web')->group(function () {
     Route::get('/bottin', BottinDashboardController::class)->name('bottin.index');
     Route::get('/bottin/exporter', [BottinDashboardController::class, 'export'])->name('bottin.export');
-    Route::get('/bottin/organisations', BottinOrganizationDirectoryController::class)->name('bottin.organizations');
     Route::get('/bottin/organisations/{organization}/membres', BottinOrganizationMembersController::class)->name('bottin.organization-members');
     Route::post('/role', [RoleSwitchController::class, 'store'])->name('role.switch');
-    Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
-    Route::post('/profil/filtres', [ProfileController::class, 'storeFilter'])->name('profile.filters.store');
-    Route::put('/profil/filtres/{personalFilter}', [ProfileController::class, 'updateFilter'])->name('profile.filters.update');
-    Route::delete('/profil/filtres/{personalFilter}', [ProfileController::class, 'destroyFilter'])->name('profile.filters.destroy');
+
+    Route::middleware(EnsureRoleChosen::class)->group(function () {
+        Route::get('/bottin/organisations', BottinOrganizationDirectoryController::class)->name('bottin.organizations');
+        Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
+        Route::post('/profil/filtres', [ProfileController::class, 'storeFilter'])->name('profile.filters.store');
+        Route::put('/profil/filtres/{personalFilter}', [ProfileController::class, 'updateFilter'])->name('profile.filters.update');
+        Route::delete('/profil/filtres/{personalFilter}', [ProfileController::class, 'destroyFilter'])->name('profile.filters.destroy');
+    });
 });
 
 Route::post('/membre/deconnexion', [AuthenticatedSessionController::class, 'destroyMember'])

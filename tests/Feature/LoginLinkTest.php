@@ -95,7 +95,7 @@ class LoginLinkTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_multiple_roles_log_in_as_a_plain_member_then_a_role_can_be_chosen_from_the_menu(): void
+    public function test_multiple_roles_log_in_without_a_chosen_role_then_a_role_can_be_chosen_from_the_menu(): void
     {
         $member = Member::create(['name' => 'Test', 'email' => 'membre@example.com']);
         $provincial = Organization::factory()->provincial()->create(['name' => 'Provincial X']);
@@ -108,9 +108,10 @@ class LoginLinkTest extends TestCase
         $this->post($url, ['confirmed' => '1'])->assertRedirect(route('bottin'));
         $this->assertAuthenticatedAs($member, 'member');
         $this->assertNull(session('active_member_role_id'));
+        $this->assertTrue(session('without_chosen_role'));
 
         $home = $this->get('/');
-        $home->assertSee('membre (aucun rôle choisi)');
+        $home->assertSee('membre de niveau local (aucun rôle choisi)');
         $home->assertSee('Direction — Provincial X');
         $home->assertSee('Bénévole — Régional Y');
 
@@ -120,6 +121,7 @@ class LoginLinkTest extends TestCase
 
         $this->post('/role', ['identity' => 'member'])->assertRedirect(route('bottin'));
         $this->assertNull(session('active_member_role_id'));
+        $this->assertTrue(session('without_chosen_role'));
     }
 
     public function test_a_member_who_is_also_a_responsable_can_switch_to_the_responsable_role(): void

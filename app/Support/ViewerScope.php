@@ -71,11 +71,11 @@ class ViewerScope
             /** @var Member $authMember */
             $authMember = Auth::guard('member')->user();
 
-            // Several roles and none chosen yet: a plain member, not tied to one organization.
-            if (! $authMember->activeRole() && $authMember->roles->count() > 1) {
+            // Several roles and none chosen yet: a plain local-level member, not tied to one organization.
+            if ($authMember->hasNoChosenRole()) {
                 return [
                     'name' => $authMember->name,
-                    'role' => 'membre (aucun rôle choisi)',
+                    'role' => 'membre de niveau local (aucun rôle choisi)',
                     'organization' => null,
                     'responsable' => '—',
                 ];

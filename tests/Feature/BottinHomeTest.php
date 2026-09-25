@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Member;
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class BottinHomeTest extends TestCase
@@ -76,5 +77,75 @@ class BottinHomeTest extends TestCase
         $provincial = Organization::factory()->provincial()->create();
 
         $this->get(route('bottin.organization-members', $provincial))->assertRedirect(route('login'));
+    }
+
+    public function test_a_visitor_with_several_roles_starts_at_the_local_level_tied_to_no_organization(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create();
+        $otherRegional = Organization::factory()->regional($provincial)->create();
+        $local = Organization::factory()->local($regional)->create();
+        $otherLocal = Organization::factory()->local($otherRegional)->create();
+
+        $member = Member::create(['name' => 'Multi', 'email' => 'multi@example.com']);
+        $member->roles()->create(['organization_id' => $provincial->id, 'role' => 'Direction']);
+        $member->roles()->create(['organization_id' => $regional->id, 'role' => 'Bénévole']);
+
+        $this->loginAs('multi@example.com');
+
+        $home = $this->get('/');
+        $home->assertSee('membre de niveau local (aucun rôle choisi)');
+        // Every local organization, but nothing above — not even the parents of their roles.
+        $home->assertSee(route('bottin.organization-members', $local), false);
+        $home->assertSee(route('bottin.organization-members', $otherLocal), false);
+        $home->assertDontSee(route('bottin.organization-members', $regional), false);
+        $home->assertDontSee(route('bottin.organization-members', $provincial), false);
+    }
+
+    public function test_organisations_and_properties_need_a_chosen_role(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create();
+        $member = Member::create(['name' => 'Multi', 'email' => 'multi@example.com']);
+        $roleAtRegional = $member->roles()->create(['organization_id' => $regional->id, 'role' => 'Bénévole']);
+        $member->roles()->create(['organization_id' => $provincial->id, 'role' => 'Direction']);
+
+        $this->loginAs('multi@example.com');
+
+        $home = $this->get('/');
+        $home->assertSee('aria-label="Accueil"', false);
+        $home->assertDontSee('href="'.route('bottin.organizations').'"', false);
+        $home->assertDontSee('href="'.route('profile').'"', false);
+        $this->get('/bottin/organisations')->assertRedirect(route('bottin'));
+        $this->get('/profil')->assertRedirect(route('bottin'));
+
+        $this->post('/role', ['identity' => "member_role:{$roleAtRegional->id}"]);
+
+        $home = $this->get('/');
+        $home->assertSee('href="'.route('bottin.organizations').'"', false);
+        $home->assertSee('href="'.route('profile').'"', false);
+        $home->assertSee(route('bottin.organization-members', $provincial), false);
+        $this->get('/bottin/organisations')->assertOk();
+        $this->get('/profil')->assertOk();
+    }
+
+    public function test_a_visitor_with_a_single_role_keeps_organisations_and_properties(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $member = Member::create(['name' => 'Solo', 'email' => 'solo@example.com']);
+        $member->roles()->create(['organization_id' => $provincial->id, 'role' => 'Direction']);
+
+        $this->loginAs('solo@example.com');
+
+        $home = $this->get('/');
+        $home->assertSee('href="'.route('bottin.organizations').'"', false);
+        $home->assertSee('href="'.route('profile').'"', false);
+        $home->assertDontSee('id="role-menu"', false);
+    }
+
+    private function loginAs(string $email): void
+    {
+        $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => $email]);
+        $this->post($url, ['confirmed' => '1']);
     }
 }

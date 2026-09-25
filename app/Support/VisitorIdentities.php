@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Auth;
  */
 class VisitorIdentities
 {
-    /** The identity of a member with several roles who hasn't picked one: sees what all their roles allow. */
-    public const ALL_MEMBER_ROLES = 'member';
+    /** A visitor with several roles who hasn't picked one: a plain member at the local level, tied to no organization. */
+    public const NO_CHOSEN_ROLE = 'member';
 
     /**
      * @return Collection<int, array{key: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}>
@@ -53,8 +53,8 @@ class VisitorIdentities
     }
 
     /**
-     * What the role menu offers: every identity, plus "Membre (tous mes rôles)"
-     * first when the visitor is a member and has more than one identity.
+     * What the role menu offers: every identity, plus "Aucun rôle choisi" first
+     * when the visitor is a member and has more than one identity.
      *
      * @return Collection<int, array{key: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}>
      */
@@ -65,9 +65,9 @@ class VisitorIdentities
 
         if ($member && $identities->count() > 1) {
             $identities->prepend([
-                'key' => self::ALL_MEMBER_ROLES,
+                'key' => self::NO_CHOSEN_ROLE,
                 'organization' => null,
-                'role' => 'Membre (tous mes rôles)',
+                'role' => 'Aucun rôle choisi (niveau local)',
                 'guard' => 'member',
                 'model' => $member,
                 'roleId' => null,
@@ -79,7 +79,7 @@ class VisitorIdentities
 
     /**
      * The identity to log in with once the declaration is confirmed: the only
-     * one if there's just one; otherwise a plain member (all roles) when the
+     * one if there's just one; otherwise a plain member (local level) when the
      * visitor is a member, or else the most senior organization they're in
      * charge of.
      *
@@ -89,7 +89,7 @@ class VisitorIdentities
     {
         $choices = static::choicesForEmail($email);
 
-        return $choices->firstWhere('key', self::ALL_MEMBER_ROLES)
+        return $choices->firstWhere('key', self::NO_CHOSEN_ROLE)
             ?? $choices->sortBy(fn (array $identity) => $identity['model'] instanceof Organization ? $identity['model']->level->rank() : 0)->first();
     }
 
@@ -102,7 +102,7 @@ class VisitorIdentities
     {
         if ($identity['guard'] === 'web') {
             Auth::guard('member')->logout();
-            session()->forget('active_member_role_id');
+            session()->forget(['active_member_role_id', 'without_chosen_role']);
             Auth::guard('web')->login($identity['model']);
 
             return;
@@ -110,7 +110,10 @@ class VisitorIdentities
 
         Auth::guard('web')->logout();
         Auth::guard('member')->login($identity['model']);
-        session(['active_member_role_id' => $identity['roleId']]);
+        session([
+            'active_member_role_id' => $identity['roleId'],
+            'without_chosen_role' => $identity['key'] === self::NO_CHOSEN_ROLE,
+        ]);
     }
 
     /**
@@ -131,15 +134,15 @@ class VisitorIdentities
     public static function currentKey(): ?string
     {
         if (Auth::guard('member')->check()) {
-            $roleId = session('active_member_role_id');
+            $member = Auth::guard('member')->user();
 
-            if ($roleId) {
-                return "member_role:{$roleId}";
+            if ($member->hasNoChosenRole()) {
+                return self::NO_CHOSEN_ROLE;
             }
 
-            $roles = Auth::guard('member')->user()->roles;
+            $roleId = session('active_member_role_id') ?? $member->roles->first()?->id;
 
-            return $roles->count() === 1 ? "member_role:{$roles->first()->id}" : self::ALL_MEMBER_ROLES;
+            return $roleId ? "member_role:{$roleId}" : null;
         }
 
         $organization = Auth::guard('web')->user();
