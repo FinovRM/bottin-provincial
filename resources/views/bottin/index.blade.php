@@ -70,7 +70,7 @@
     @endforelse
 
     @if ($viewableOrganizationIds)
-        <dialog id="members-dialog" class="w-full max-w-2xl rounded-lg p-0 shadow-xl backdrop:bg-black/50">
+        <dialog id="members-dialog" class="w-full max-w-4xl rounded-lg p-0 shadow-xl backdrop:bg-black/50">
             <div class="flex justify-end px-4 pt-3">
                 <button type="button" data-close-dialog aria-label="Fermer" class="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
