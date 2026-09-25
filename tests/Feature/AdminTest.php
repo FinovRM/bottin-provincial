@@ -613,4 +613,18 @@ class AdminTest extends TestCase
         $this->get('/admin/proprietes')->assertRedirect(route('admin.login'));
         $this->post('/admin/proprietes/administrateurs', [])->assertRedirect(route('admin.login'));
     }
+
+    public function test_an_admin_can_remove_another_admin_but_not_themselves(): void
+    {
+        $admin = Admin::factory()->create();
+        $other = Admin::factory()->create();
+
+        $this->actingAs($admin, 'admin')->delete("/admin/proprietes/administrateurs/{$admin->id}")
+            ->assertForbidden();
+        $this->assertModelExists($admin);
+
+        $this->actingAs($admin, 'admin')->delete("/admin/proprietes/administrateurs/{$other->id}")
+            ->assertRedirect(route('admin.properties'));
+        $this->assertModelMissing($other);
+    }
 }

@@ -119,6 +119,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/proprietes/nom', [AdminPropertiesController::class, 'updateName'])->name('properties.name');
         Route::put('/proprietes/mot-de-passe', [AdminPropertiesController::class, 'updatePassword'])->name('properties.password');
         Route::post('/proprietes/administrateurs', [AdminPropertiesController::class, 'storeAdmin'])->name('properties.admins.store');
+        Route::delete('/proprietes/administrateurs/{admin}', [AdminPropertiesController::class, 'destroyAdmin'])->name('properties.admins.destroy');
 
         Route::get('/organisations', [AdminOrganizationController::class, 'index'])->name('organizations.index');
         Route::get('/organisations/creer', [AdminOrganizationController::class, 'create'])->name('organizations.create');

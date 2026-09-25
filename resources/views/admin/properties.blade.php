@@ -73,6 +73,7 @@
                 <tr>
                     <th class="px-4 py-2">Nom</th>
                     <th class="px-4 py-2">Courriel</th>
+                    <th class="px-4 py-2"></th>
                 </tr>
             </thead>
             <tbody>
@@ -80,6 +81,16 @@
                     <tr class="border-b border-gray-100 last:border-0">
                         <td class="px-4 py-2 font-medium">{{ $other->name }}@if ($other->is($admin)) <span class="text-gray-400">(vous)</span>@endif</td>
                         <td class="px-4 py-2">{{ $other->email }}</td>
+                        <td class="px-4 py-2 text-right">
+                            @unless ($other->is($admin))
+                                <form method="POST" action="{{ route('admin.properties.admins.destroy', $other) }}"
+                                    onsubmit="return confirm('Retirer cet administrateur ?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-sm text-red-600 hover:underline">Retirer</button>
+                                </form>
+                            @endunless
+                        </td>
                     </tr>
                 @endforeach
             </tbody>

@@ -71,4 +71,14 @@ class PropertiesController extends Controller
 
         return redirect()->route('admin.properties')->with('status', 'Administrateur ajouté.');
     }
+
+    public function destroyAdmin(Admin $admin): RedirectResponse
+    {
+        // Removing oneself would lock the last admin out.
+        abort_if($admin->is(Auth::guard('admin')->user()), 403);
+
+        $admin->delete();
+
+        return redirect()->route('admin.properties')->with('status', 'Administrateur retiré.');
+    }
 }
