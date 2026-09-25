@@ -196,6 +196,25 @@ class OrganizationGroupTest extends TestCase
         $response->assertSee('Ligue Locale');
     }
 
+    public function test_the_organizations_directory_can_be_filtered_by_parent_and_child(): void
+    {
+        $tree = $this->tree();
+        $otherRegional = Organization::factory()->regional($tree['provincial'])->create(['name' => 'Autre Régional']);
+        Organization::factory()->local($otherRegional)->create(['name' => 'Autre Local']);
+
+        $card = fn (string $name) => 'text-gray-900">'.$name.'</p>';
+
+        $this->actingAs($tree['regional'])->get("/bottin/organisations?parent_id={$tree['regional']->id}")
+            ->assertSee($card('AHM Local'), false)
+            ->assertSee($card('Ligue Locale'), false)
+            ->assertDontSee($card('Autre Local'), false);
+
+        $this->actingAs($tree['regional'])->get("/bottin/organisations?child_id={$tree['localLeague']->id}")
+            ->assertSee($card('Ligue Locale'), false)
+            ->assertDontSee($card('AHM Local'), false)
+            ->assertSee('Réinitialiser');
+    }
+
     public function test_the_organizations_nav_link_is_visible_to_a_local_organization_and_a_member(): void
     {
         $tree = $this->tree();
