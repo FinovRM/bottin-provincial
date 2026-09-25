@@ -61,18 +61,14 @@
                             <td class="px-4 py-2 font-medium">{{ $personalFilter->name }}</td>
                             <td class="px-4 py-2 text-gray-500">{{ $personalFilter->description ?: '—' }}</td>
                             <td class="px-4 py-2 text-right whitespace-nowrap">
-                                <button type="button" data-show-filter
+                                <button type="button" data-edit-filter
+                                    data-name="{{ $personalFilter->name }}"
+                                    data-update-url="{{ route('profile.filters.update', $personalFilter) }}"
                                     data-region-ids="{{ json_encode($personalFilter->region_ids ?? []) }}"
                                     data-local-ids="{{ json_encode($personalFilter->local_ids ?? []) }}"
                                     data-roles="{{ json_encode($personalFilter->roles ?? []) }}"
                                     class="text-sm text-gray-700 hover:underline">
-                                    Montrer
-                                </button>
-                                <button type="submit" form="personal-filter-form"
-                                    formaction="{{ route('profile.filters.update', $personalFilter) }}?_method=PUT"
-                                    formmethod="post" formnovalidate
-                                    class="ml-3 text-sm text-gray-700 hover:underline">
-                                    Modifier
+                                    Montrer / Modifier
                                 </button>
                                 <form method="POST" action="{{ route('profile.filters.destroy', $personalFilter) }}"
                                     onsubmit="return confirm('Supprimer ce filtre ?');" class="ml-3 inline">
@@ -91,84 +87,97 @@
             </table>
         </div>
 
-        <form id="personal-filter-form" method="POST" action="{{ route('profile.filters.store') }}">
-            @csrf
+        <button type="button" data-add-filter class="text-sm font-medium text-gray-900 hover:underline">
+            + Ajouter un filtre
+        </button>
 
-            <div class="mb-6 flex gap-3">
-                <button type="button" onclick="document.getElementById('add-filter-dialog').showModal()"
-                    class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
-                    Ajouter un filtre
-                </button>
-                <button type="button" data-reset-filters
-                    class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    Réinitialiser
-                </button>
-            </div>
+        {{-- Choice area: hidden until a filter is added or shown/modified. --}}
+        <div id="filter-editor" hidden class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <form id="personal-filter-form" method="POST" action="{{ route('profile.filters.store') }}">
+                @csrf
+                <input type="hidden" name="_method" value="PUT" disabled data-method-put>
 
-            <div class="grid gap-6 sm:grid-cols-3">
-                <div>
-                    <p class="mb-2 text-sm font-medium">Régional</p>
-                    <div class="flex flex-col gap-1" data-column="region">
-                        @if ($regions->isNotEmpty())
-                            <button type="button" data-select-all
-                                class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-left text-sm hover:bg-gray-50">
-                                Tous
-                            </button>
-                        @endif
-                        @forelse ($regions as $region)
-                            <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
-                                <input type="checkbox" name="region_ids[]" value="{{ $region->id }}" class="hidden">
-                                {{ $region->name }}
-                            </label>
-                        @empty
-                            <p class="text-sm text-gray-500">Aucune organisation régionale.</p>
-                        @endforelse
-                    </div>
+                <p data-editor-title class="mb-3 text-sm font-semibold text-gray-900"></p>
+
+                <div class="mb-6 flex flex-wrap gap-3">
+                    <button type="button" data-accept-filter
+                        class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
+                        Accepter le filtre
+                    </button>
+                    <button type="button" data-reset-filters
+                        class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Réinitialiser
+                    </button>
+                    <button type="button" data-quit-filter
+                        class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Quitter
+                    </button>
                 </div>
 
-                <div>
-                    <p class="mb-2 text-sm font-medium">Local</p>
-                    <div class="flex flex-col gap-1" data-column="local">
-                        @if ($locals->isNotEmpty())
-                            <button type="button" data-select-all
-                                class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-left text-sm hover:bg-gray-50">
-                                Tous
-                            </button>
-                        @endif
-                        @forelse ($locals as $local)
-                            <label data-region-id="{{ $local->parent_id }}"
-                                class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
-                                <input type="checkbox" name="local_ids[]" value="{{ $local->id }}" class="hidden">
-                                {{ $local->name }}
-                            </label>
-                        @empty
-                            <p class="text-sm text-gray-500">Aucune organisation locale.</p>
-                        @endforelse
+                <div class="grid gap-6 sm:grid-cols-3">
+                    <div>
+                        <p class="mb-2 text-sm font-medium">Régional</p>
+                        <div class="flex flex-col gap-1" data-column="region">
+                            @if ($regions->isNotEmpty())
+                                <button type="button" data-select-all
+                                    class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-left text-sm hover:bg-gray-50">
+                                    Tous
+                                </button>
+                            @endif
+                            @forelse ($regions as $region)
+                                <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
+                                    <input type="checkbox" name="region_ids[]" value="{{ $region->id }}" class="hidden">
+                                    {{ $region->name }}
+                                </label>
+                            @empty
+                                <p class="text-sm text-gray-500">Aucune organisation régionale.</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="mb-2 text-sm font-medium">Local</p>
+                        <div class="flex flex-col gap-1" data-column="local">
+                            @if ($locals->isNotEmpty())
+                                <button type="button" data-select-all
+                                    class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-left text-sm hover:bg-gray-50">
+                                    Tous
+                                </button>
+                            @endif
+                            @forelse ($locals as $local)
+                                <label data-region-id="{{ $local->parent_id }}"
+                                    class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
+                                    <input type="checkbox" name="local_ids[]" value="{{ $local->id }}" class="hidden">
+                                    {{ $local->name }}
+                                </label>
+                            @empty
+                                <p class="text-sm text-gray-500">Aucune organisation locale.</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="mb-2 text-sm font-medium">Rôle</p>
+                        <div class="flex flex-col gap-1" data-column="role">
+                            @if ($roles->isNotEmpty())
+                                <button type="button" data-select-all
+                                    class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-left text-sm hover:bg-gray-50">
+                                    Tous
+                                </button>
+                            @endif
+                            @forelse ($roles as $roleOption)
+                                <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
+                                    <input type="checkbox" name="roles[]" value="{{ $roleOption }}" class="hidden">
+                                    {{ $roleOption }}
+                                </label>
+                            @empty
+                                <p class="text-sm text-gray-500">Aucun rôle.</p>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
-
-                <div>
-                    <p class="mb-2 text-sm font-medium">Rôle</p>
-                    <div class="flex flex-col gap-1" data-column="role">
-                        @if ($roles->isNotEmpty())
-                            <button type="button" data-select-all
-                                class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-left text-sm hover:bg-gray-50">
-                                Tous
-                            </button>
-                        @endif
-                        @forelse ($roles as $roleOption)
-                            <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
-                                <input type="checkbox" name="roles[]" value="{{ $roleOption }}" class="hidden">
-                                {{ $roleOption }}
-                            </label>
-                        @empty
-                            <p class="text-sm text-gray-500">Aucun rôle.</p>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
-        </form>
+            </form>
+        </div>
 
         <dialog id="add-filter-dialog" class="w-full max-w-sm rounded-lg border border-gray-200 p-6 backdrop:bg-black/30">
             <h3 class="mb-4 text-lg font-semibold">Ajouter un filtre</h3>
@@ -227,19 +236,54 @@
                     });
                 });
 
-                form.querySelector('[data-reset-filters]').addEventListener('click', () => {
+                const editor = document.getElementById('filter-editor');
+                const title = form.querySelector('[data-editor-title]');
+                const acceptButton = form.querySelector('[data-accept-filter]');
+                const methodPut = form.querySelector('[data-method-put]');
+                const storeUrl = form.action;
+                let editing = false;
+
+                function clearChoices() {
                     form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => checkbox.checked = false);
                     localLabels.forEach((label) => label.hidden = false);
+                }
+
+                function openEditor() {
+                    editor.hidden = false;
+                    editor.scrollIntoView({behavior: 'smooth', block: 'start'});
+                }
+
+                form.querySelector('[data-reset-filters]').addEventListener('click', clearChoices);
+
+                form.querySelector('[data-quit-filter]').addEventListener('click', () => {
+                    clearChoices();
+                    editor.hidden = true;
                 });
 
-                document.querySelectorAll('[data-show-filter]').forEach((button) => {
+                // New filter: empty choices; accepting asks for its name.
+                document.querySelector('[data-add-filter]').addEventListener('click', () => {
+                    editing = false;
+                    clearChoices();
+                    form.action = storeUrl;
+                    methodPut.disabled = true;
+                    title.textContent = 'Nouveau filtre';
+                    acceptButton.textContent = 'Accepter le filtre';
+                    openEditor();
+                });
+
+                // Existing filter: its choices are shown and can be changed.
+                document.querySelectorAll('[data-edit-filter]').forEach((button) => {
                     button.addEventListener('click', () => {
                         const regionIds = JSON.parse(button.dataset.regionIds || '[]').map(String);
                         const localIds = JSON.parse(button.dataset.localIds || '[]').map(String);
                         const roles = JSON.parse(button.dataset.roles || '[]');
 
-                        form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => checkbox.checked = false);
-                        localLabels.forEach((label) => label.hidden = false);
+                        editing = true;
+                        clearChoices();
+                        form.action = button.dataset.updateUrl;
+                        methodPut.disabled = false;
+                        title.textContent = `Filtre « ${button.dataset.name} »`;
+                        acceptButton.textContent = 'Accepter la modification';
 
                         regionCheckboxes.forEach((checkbox) => {
                             checkbox.checked = regionIds.includes(checkbox.value);
@@ -254,8 +298,19 @@
                             checkbox.checked = roles.includes(checkbox.value);
                         });
 
-                        form.scrollIntoView({behavior: 'smooth', block: 'start'});
+                        openEditor();
                     });
+                });
+
+                acceptButton.addEventListener('click', () => {
+                    if (editing) {
+                        // The name and description (in the add dialog) aren't needed to modify.
+                        form.noValidate = true;
+                        form.submit();
+                    } else {
+                        form.noValidate = false;
+                        document.getElementById('add-filter-dialog').showModal();
+                    }
                 });
             })();
         </script>

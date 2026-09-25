@@ -38,4 +38,24 @@ class ProfileTest extends TestCase
         $response->assertSee('Provincial Inc.');
         $response->assertSee('benevole@example.com');
     }
+
+    public function test_the_profile_page_offers_to_add_or_show_and_modify_personal_filters(): void
+    {
+        $organization = Organization::factory()->provincial()->create();
+        $member = $this->viewerOf($organization);
+        $member->personalFilters()->create(['name' => 'Mes trésoriers', 'roles' => ['Trésorier']]);
+
+        $response = $this->actingAs($member, 'member')->get('/profil');
+
+        $response->assertOk();
+        $response->assertSee('Mes trésoriers');
+        $response->assertSee('Montrer / Modifier');
+        $response->assertSee('+ Ajouter un filtre');
+        // The choice area and its buttons, hidden until a filter is added or shown.
+        $response->assertSee('id="filter-editor" hidden', false);
+        $response->assertSee('Accepter le filtre');
+        $response->assertSee('Réinitialiser');
+        $response->assertSee('Quitter');
+        $response->assertSee(route('profile.filters.update', $member->personalFilters()->first()), false);
+    }
 }
