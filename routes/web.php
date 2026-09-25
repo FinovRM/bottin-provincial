@@ -49,8 +49,9 @@ Route::middleware('auth:member,web')->group(function () {
 
     // Members only: a responsable stays on their organization's properties.
     Route::middleware(KeepResponsablesOnProperties::class)->group(function () {
-        Route::get('/bottin', BottinDashboardController::class)->name('bottin.index');
-        Route::get('/bottin/exporter', [BottinDashboardController::class, 'export'])->name('bottin.export');
+        Route::get('/bottin/membres', BottinDashboardController::class)->name('bottin.members');
+        Route::permanentRedirect('/bottin', '/bottin/membres');
+        Route::get('/bottin/membres/exporter', [BottinDashboardController::class, 'export'])->name('bottin.members.export');
         Route::get('/bottin/organisations/{organization}/membres', BottinOrganizationMembersController::class)->name('bottin.organization-members');
 
         Route::middleware(EnsureRoleChosen::class)->group(function () {

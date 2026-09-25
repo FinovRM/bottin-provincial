@@ -74,12 +74,12 @@ class OrganizationGroupTest extends TestCase
         $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
         $this->addRole($tree['localLeague'], 'Membre Ligue', 'ligue@example.com');
 
-        $asOrg = $this->actingAs($this->viewerOf($tree['localOrg']), 'member')->get('/bottin');
+        $asOrg = $this->actingAs($this->viewerOf($tree['localOrg']), 'member')->get('/bottin/membres');
         $asOrg->assertOk();
         $asOrg->assertSee('Membre Organisation');
         $asOrg->assertSee('Membre Ligue');
 
-        $asLeague = $this->actingAs($this->viewerOf($tree['localLeague']), 'member')->get('/bottin');
+        $asLeague = $this->actingAs($this->viewerOf($tree['localLeague']), 'member')->get('/bottin/membres');
         $asLeague->assertOk();
         $asLeague->assertSee('Membre Ligue');
         $asLeague->assertSee('Membre Organisation');
@@ -91,7 +91,7 @@ class OrganizationGroupTest extends TestCase
         $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
         $this->addRole($tree['localLeague'], 'Membre Ligue', 'ligue@example.com');
 
-        $response = $this->actingAs($this->viewerOf($tree['regional']), 'member')->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['regional']), 'member')->get('/bottin/membres');
 
         $response->assertOk();
         $response->assertSee('Membre Organisation');
@@ -223,7 +223,7 @@ class OrganizationGroupTest extends TestCase
 
         $this->loginAsMember($viewer->email);
 
-        foreach (['/bottin', '/bottin/organisations', '/profil'] as $url) {
+        foreach (['/bottin/membres', '/bottin/organisations', '/profil'] as $url) {
             $this->get($url)->assertOk()->assertSee('Visiteur :')->assertSee('Membre Organisation');
         }
 
@@ -247,7 +247,7 @@ class OrganizationGroupTest extends TestCase
         $viewer = $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
 
         $this->loginAsMember($viewer->email);
-        $asMember = $this->get('/bottin');
+        $asMember = $this->get('/bottin/membres');
         $asMember->assertSee(route('bottin.organizations'), false);
     }
 

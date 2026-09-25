@@ -161,7 +161,7 @@ class LoginLinkTest extends TestCase
         $home->assertDontSee('data-members-url="', false);
         $home->assertDontSee('href="'.route('dashboard.properties').'"', false);
         $this->get('/proprietes')->assertRedirect(route('bottin'));
-        $this->get('/bottin')->assertRedirect(route('bottin'));
+        $this->get('/bottin/membres')->assertRedirect(route('bottin'));
 
         $this->post('/role', ['identity' => "organization:{$regional->id}"])->assertRedirect(route('bottin'));
         $this->assertAuthenticatedAs($regional);
@@ -169,7 +169,7 @@ class LoginLinkTest extends TestCase
         // Once chosen, the properties page is all there is.
         $this->get('/')->assertRedirect(route('dashboard.properties'));
         $this->get('/proprietes')->assertOk()->assertSee('Responsable de bottin de Org B');
-        $this->get('/bottin')->assertRedirect(route('bottin'));
+        $this->get('/bottin/membres')->assertRedirect(route('bottin'));
         $this->get('/bottin/organisations')->assertRedirect(route('bottin'));
         $this->get('/profil')->assertRedirect(route('bottin'));
     }

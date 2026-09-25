@@ -13,14 +13,14 @@
             <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Filtres</p>
 
             @include('partials.member-filters', [
-                'action' => route('bottin.index'),
+                'action' => route('bottin.members'),
                 'myDirectionLabel' => 'Mon parent',
                 'personalFilters' => $personalFilters,
                 'personalFilterId' => $personalFilterId,
             ])
 
             @if ($query !== '' || $regionId !== '' || $localId !== '' || $role !== '' || $myDirection || $personalFilterId !== '')
-                <a href="{{ route('bottin.index') }}"
+                <a href="{{ route('bottin.members') }}"
                     class="mt-4 block rounded-md bg-gray-800 px-3 py-2 text-center text-sm font-medium text-white hover:bg-gray-900">
                     ✕ Réinitialiser
                 </a>
@@ -28,7 +28,7 @@
         </aside>
 
         <div class="flex-1">
-            <form method="GET" action="{{ route('bottin.index') }}" class="mb-6 max-w-sm">
+            <form method="GET" action="{{ route('bottin.members') }}" class="mb-6 max-w-sm">
                 @if ($myDirection)
                     <input type="hidden" name="my_direction" value="1">
                 @endif
@@ -65,7 +65,7 @@
                         Copier les courriels dans le presse-papier
                     </button>
 
-                    <a href="{{ route('bottin.export', request()->query()) }}"
+                    <a href="{{ route('bottin.members.export', request()->query()) }}"
                         class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                         Exporter la sélection en csv
                     </a>

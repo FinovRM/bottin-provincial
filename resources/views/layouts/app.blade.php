@@ -31,7 +31,7 @@
                             @if ($roleChosen)
                                 <a href="{{ route('bottin.organizations') }}" class="text-gray-700 hover:underline">Organisations</a>
                             @endif
-                            <a href="{{ route('bottin.index') }}" class="text-gray-700 hover:underline">Membres</a>
+                            <a href="{{ route('bottin.members') }}" class="text-gray-700 hover:underline">Membres</a>
                             @if ($roleChosen)
                                 <a href="{{ route('profile') }}" title="Propriétés" aria-label="Propriétés" class="text-gray-700 hover:text-gray-900">
                                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

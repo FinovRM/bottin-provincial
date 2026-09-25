@@ -68,7 +68,7 @@ class PersonalFilterTest extends TestCase
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin/membres');
 
         $response->assertOk();
         $response->assertSee('Filtres personnels');
@@ -153,7 +153,7 @@ class PersonalFilterTest extends TestCase
             'region_ids' => [$tree['region1']->id],
         ]);
 
-        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get("/bottin?personal_filter_id={$filter->id}");
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get("/bottin/membres?personal_filter_id={$filter->id}");
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');
@@ -171,7 +171,7 @@ class PersonalFilterTest extends TestCase
             'roles' => ['Trésorier'],
         ]);
 
-        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get("/bottin?personal_filter_id={$filter->id}");
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get("/bottin/membres?personal_filter_id={$filter->id}");
 
         $response->assertOk();
         $response->assertSee('Trésorier Local 1');
@@ -190,7 +190,7 @@ class PersonalFilterTest extends TestCase
 
         // A regional responsable sees every local across the whole tree by default —
         // if someone else's filter were silently applied, Local 3 would disappear.
-        $response = $this->actingAs($this->viewerOf($tree['region2']), 'member')->get("/bottin?personal_filter_id={$filter->id}");
+        $response = $this->actingAs($this->viewerOf($tree['region2']), 'member')->get("/bottin/membres?personal_filter_id={$filter->id}");
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');

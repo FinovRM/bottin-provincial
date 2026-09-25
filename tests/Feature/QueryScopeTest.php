@@ -58,7 +58,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
         $this->addRole($tree['provincial'], 'Membre Provincial', 'p1@example.com');
 
-        $response = $this->actingAs($this->viewerOf($tree['region1']), 'member')->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['region1']), 'member')->get('/bottin/membres');
 
         $response->assertOk();
         // every local organization, anywhere in the tree, is visible
@@ -77,7 +77,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
-        $response = $this->actingAs($this->viewerOf($tree['region1']), 'member')->get('/bottin?region_id='.$tree['region1']->id);
+        $response = $this->actingAs($this->viewerOf($tree['region1']), 'member')->get('/bottin/membres?region_id='.$tree['region1']->id);
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');
@@ -96,7 +96,7 @@ class QueryScopeTest extends TestCase
 
         $this->loginAsMember($memberOfLocal2->email);
 
-        $response = $this->get('/bottin');
+        $response = $this->get('/bottin/membres');
 
         $response->assertOk();
         // every local organization, anywhere in the tree, is visible
@@ -121,11 +121,11 @@ class QueryScopeTest extends TestCase
 
         // region2 is not this member's own direction (that's region1) — the filter
         // should still list it, since it has locals the member can already see.
-        $response = $this->get('/bottin');
+        $response = $this->get('/bottin/membres');
         $response->assertOk();
         $response->assertSee('Région 2');
 
-        $filtered = $this->get('/bottin?region_id='.$tree['region2']->id);
+        $filtered = $this->get('/bottin/membres?region_id='.$tree['region2']->id);
         $filtered->assertOk();
         $filtered->assertSee('Membre Local 3');
         $filtered->assertDontSee('Membre Local 1');
@@ -142,7 +142,7 @@ class QueryScopeTest extends TestCase
 
         $this->loginAsMember($memberOfRegion1->email);
 
-        $response = $this->get('/bottin');
+        $response = $this->get('/bottin/membres');
 
         $response->assertOk();
         // its own region and every other region are visible
@@ -164,7 +164,7 @@ class QueryScopeTest extends TestCase
 
         $this->loginAsMember($memberOfRegion1->email);
 
-        $response = $this->get('/bottin?region_id='.$tree['region1']->id);
+        $response = $this->get('/bottin/membres?region_id='.$tree['region1']->id);
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');
@@ -181,7 +181,7 @@ class QueryScopeTest extends TestCase
 
         $this->loginAsMember($viewer->email);
 
-        $response = $this->get('/bottin?my_direction=1');
+        $response = $this->get('/bottin/membres?my_direction=1');
 
         $response->assertOk();
         $response->assertSee('Membre Région 1');
@@ -196,7 +196,7 @@ class QueryScopeTest extends TestCase
 
         $this->loginAsMember($memberOfProvincial->email);
 
-        $response = $this->get('/bottin');
+        $response = $this->get('/bottin/membres');
 
         $response->assertOk();
         $response->assertDontSee('Mon parent');
@@ -209,7 +209,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['region1'], 'Membre Région 1', 'r1@example.com');
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
 
-        $response = $this->actingAs($this->viewerOf($tree['local1']), 'member')->get('/bottin?my_direction=1');
+        $response = $this->actingAs($this->viewerOf($tree['local1']), 'member')->get('/bottin/membres?my_direction=1');
 
         $response->assertOk();
         $response->assertSee('Membre Région 1');
@@ -224,7 +224,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
 
-        $response = $this->actingAs($this->viewerOf($tree['region1']), 'member')->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['region1']), 'member')->get('/bottin/membres');
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');
@@ -247,7 +247,7 @@ class QueryScopeTest extends TestCase
         $unrestricted = Member::create(['name' => 'Membre Non Restreint', 'email' => 'nonrestreint@example.com']);
         $tree['local3']->memberRoles()->create(['member_id' => $unrestricted->id, 'role' => 'Rôle quelconque']);
 
-        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin/membres');
 
         $response->assertOk();
         $response->assertSee('Membre Permis');
@@ -275,7 +275,7 @@ class QueryScopeTest extends TestCase
         $region1President = Member::create(['name' => 'Région1 Président', 'email' => 'r1p@example.com']);
         $tree['region1']->memberRoles()->create(['member_id' => $region1President->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin');
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin/membres');
 
         $response->assertOk();
         $response->assertDontSee('Local1 Président');
@@ -289,7 +289,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
-        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin/exporter?local_id='.$tree['local1']->id);
+        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/bottin/membres/exporter?local_id='.$tree['local1']->id);
 
         $response->assertOk();
         $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
