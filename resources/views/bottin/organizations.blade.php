@@ -65,9 +65,15 @@
             </form>
 
             @if ($organizations->isNotEmpty())
-                <div class="mb-4">
+                <div class="mb-4 flex flex-wrap gap-3">
+                    <button type="button" id="copy-emails"
+                        data-emails="{{ $organizations->pluck('responsable_email')->filter()->unique()->implode(', ') }}"
+                        class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Copier les courriels dans le presse-papier
+                    </button>
+
                     <a href="{{ route('bottin.organizations.export', request()->query()) }}"
-                        class="inline-block rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                         Exporter la sélection en csv
                     </a>
                 </div>
@@ -129,4 +135,14 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('copy-emails')?.addEventListener('click', function () {
+            navigator.clipboard.writeText(this.dataset.emails).then(() => {
+                const original = this.textContent;
+                this.textContent = 'Courriels copiés !';
+                setTimeout(() => { this.textContent = original; }, 2000);
+            });
+        });
+    </script>
 @endsection

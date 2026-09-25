@@ -125,6 +125,18 @@ class OrganizationHierarchyTest extends TestCase
         $response->assertSee('Association hockey mineur Acton Vale');
     }
 
+    public function test_the_organizations_directory_offers_to_copy_the_responsables_emails(): void
+    {
+        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
+        Organization::factory()->regional($provincial)->create(['responsable_email' => 'region@example.com']);
+
+        $response = $this->actingAs($this->viewerOf($provincial), 'member')->get('/bottin/organisations');
+
+        $response->assertSee('Copier les courriels dans le presse-papier');
+        $response->assertSee('prov@example.com', false);
+        $response->assertSee('region@example.com', false);
+    }
+
     public function test_the_organizations_directory_can_be_exported_to_csv_with_its_filters(): void
     {
         $provincial = Organization::factory()->provincial()->create(['name' => 'Bureau provincial']);
