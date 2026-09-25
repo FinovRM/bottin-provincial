@@ -223,6 +223,27 @@ class AdminTest extends TestCase
         ]);
     }
 
+    public function test_the_organization_import_accepts_level_labels(): void
+    {
+        $admin = Admin::factory()->create();
+
+        $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
+            ."Provincial,,Provincial Importé,Jean Tremblay,prov-importe@example.com,514-555-1234\n"
+            ."Régional,prov-importe@example.com,Région Importée,Marie Roy,region-importee@example.com,514-555-2345\n"
+            ."LOCAL,region-importee@example.com,Local Importé,Luc Gagnon,local-importe@example.com,514-555-3456\n";
+
+        $file = UploadedFile::fake()->createWithContent('organisations.csv', $csv);
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/organisations/importer', [
+            'file' => $file,
+        ]);
+
+        $response->assertSessionHas('import_errors', []);
+        $this->assertDatabaseHas('organizations', ['name' => 'Provincial Importé', 'level' => 'provincial']);
+        $this->assertDatabaseHas('organizations', ['name' => 'Région Importée', 'level' => 'regional']);
+        $this->assertDatabaseHas('organizations', ['name' => 'Local Importé', 'level' => 'local']);
+    }
+
     public function test_an_admin_can_delete_a_childless_organization(): void
     {
         $admin = Admin::factory()->create();
