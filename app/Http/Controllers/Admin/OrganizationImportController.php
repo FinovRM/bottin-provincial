@@ -85,26 +85,40 @@ class OrganizationImportController extends Controller
             throw new \RuntimeException('courriel du responsable invalide ("'.$data['responsable_email'].'").');
         }
 
-        $parent = null;
-
-        if ($data['parent_responsable_email'] !== '') {
-            $parent = Organization::where('responsable_email', $data['parent_responsable_email'])->first();
-
-            if (! $parent) {
-                throw new \RuntimeException('organisation parente introuvable.');
-            }
-        }
-
-        if ($level === OrganizationLevel::Provincial && $parent !== null) {
+        if ($level === OrganizationLevel::Provincial && $data['parent_responsable_email'] !== '') {
             throw new \RuntimeException('une organisation provinciale ne peut pas avoir de parent.');
         }
 
-        if ($level !== OrganizationLevel::Provincial && ($parent === null || $parent->level->childLevel() !== $level)) {
-            throw new \RuntimeException('parent manquant ou incompatible avec le niveau.');
+        $parent = null;
+
+        if ($level !== OrganizationLevel::Provincial) {
+            if ($data['parent_responsable_email'] === '') {
+                throw new \RuntimeException('courriel du responsable parent manquant.');
+            }
+
+            // A responsable may be in charge of several organizations: only look at the level right above.
+            $candidates = Organization::where('responsable_email', $data['parent_responsable_email'])
+                ->get()
+                ->filter(fn (Organization $organization) => $organization->level->childLevel() === $level);
+
+            if ($candidates->isEmpty()) {
+                throw new \RuntimeException('organisation parente introuvable au niveau attendu.');
+            }
+
+            if ($candidates->count() > 1) {
+                throw new \RuntimeException('plusieurs organisations parentes possibles ('.$candidates->pluck('name')->join(', ').').');
+            }
+
+            $parent = $candidates->first();
         }
 
-        if (Organization::where('responsable_email', $data['responsable_email'])->exists()) {
-            throw new \RuntimeException('cette adresse courriel est déjà utilisée.');
+        $duplicate = Organization::where('level', $level)
+            ->where('parent_id', $parent?->id)
+            ->where('name', $data['name'])
+            ->exists();
+
+        if ($duplicate) {
+            throw new \RuntimeException('cette organisation existe déjà ("'.$data['name'].'").');
         }
 
         Organization::create([

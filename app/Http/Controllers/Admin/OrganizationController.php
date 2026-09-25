@@ -88,7 +88,7 @@ class OrganizationController extends Controller
             'parent_id' => ['nullable', 'integer', 'exists:organizations,id'],
             'name' => ['required', 'string', 'max:255'],
             'responsable_name' => ['required', 'string', 'max:255'],
-            'responsable_email' => ['required', 'email', 'max:255', 'unique:organizations,responsable_email,'.$organization->id],
+            'responsable_email' => ['required', 'email', 'max:255'],
             'responsable_cell_phone' => ['required', 'string', 'max:255'],
         ]);
 
@@ -135,7 +135,7 @@ class OrganizationController extends Controller
             'parent_id' => ['nullable', 'integer', 'exists:organizations,id'],
             'name' => ['required', 'string', 'max:255'],
             'responsable_name' => ['required', 'string', 'max:255'],
-            'responsable_email' => ['required', 'email', 'max:255', 'confirmed', 'unique:organizations,responsable_email'],
+            'responsable_email' => ['required', 'email', 'max:255', 'confirmed'],
             'responsable_cell_phone' => ['required', 'string', 'max:255'],
         ]);
 

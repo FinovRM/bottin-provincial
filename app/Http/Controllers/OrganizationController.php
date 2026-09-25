@@ -37,7 +37,7 @@ class OrganizationController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'group' => ['required', Rule::enum(OrganizationGroup::class)],
             'responsable_name' => ['required', 'string', 'max:255'],
-            'responsable_email' => ['required', 'email', 'max:255', 'confirmed', 'unique:organizations,responsable_email'],
+            'responsable_email' => ['required', 'email', 'max:255', 'confirmed'],
         ]);
 
         $parent->children()->create([

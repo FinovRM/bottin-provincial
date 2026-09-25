@@ -287,6 +287,79 @@ class AdminTest extends TestCase
         $this->assertDatabaseMissing('organizations', ['name' => 'Région Décalée']);
     }
 
+    public function test_the_organization_import_allows_one_responsable_for_several_organizations(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
+
+        $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
+            ."regional,prov@example.com,Région A,Marc D,marc@example.com,514-555-1234\n"
+            ."regional,prov@example.com,Région B,Marc D,marc@example.com,514-555-1234\n";
+
+        $file = UploadedFile::fake()->createWithContent('organisations.csv', $csv);
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/organisations/importer', ['file' => $file]);
+
+        $response->assertSessionHas('import_errors', []);
+        $this->assertSame(2, Organization::where('responsable_email', 'marc@example.com')->where('parent_id', $provincial->id)->count());
+    }
+
+    public function test_the_organization_import_skips_an_organization_that_already_exists(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
+        Organization::factory()->regional($provincial)->create(['name' => 'Région A']);
+
+        $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
+            ."regional,prov@example.com,Région A,Marc D,marc@example.com,514-555-1234\n";
+
+        $file = UploadedFile::fake()->createWithContent('organisations.csv', $csv);
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/organisations/importer', ['file' => $file]);
+
+        $response->assertSessionHas('import_errors', fn ($errors) => count($errors) === 1 && str_contains($errors[0], 'existe déjà'));
+        $this->assertSame(1, Organization::where('name', 'Région A')->count());
+    }
+
+    public function test_the_organization_import_finds_the_parent_at_the_expected_level(): void
+    {
+        $admin = Admin::factory()->create();
+        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com']);
+        $regional = Organization::factory()->regional($provincial)->create(['responsable_email' => 'marc@example.com']);
+        $otherProvincial = Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com']);
+
+        $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
+            ."local,marc@example.com,Local A,Jean T,jean@example.com,514-555-1234\n"
+            ."regional,marc@example.com,Région Ambiguë,Jean T,jean@example.com,514-555-1234\n";
+
+        $file = UploadedFile::fake()->createWithContent('organisations.csv', $csv);
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/organisations/importer', ['file' => $file]);
+
+        $this->assertDatabaseHas('organizations', ['name' => 'Local A', 'parent_id' => $regional->id]);
+        $response->assertSessionHas('import_errors', fn ($errors) => count($errors) === 1 && str_contains($errors[0], 'plusieurs organisations parentes'));
+        $this->assertDatabaseMissing('organizations', ['name' => 'Région Ambiguë']);
+    }
+
+    public function test_an_admin_can_create_an_organization_for_a_responsable_already_in_charge_of_another(): void
+    {
+        $admin = Admin::factory()->create();
+        Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com']);
+
+        $response = $this->actingAs($admin, 'admin')->post('/admin/organisations', [
+            'level' => 'provincial',
+            'parent_id' => '',
+            'name' => 'Deuxième provincial',
+            'responsable_name' => 'Marc D',
+            'responsable_email' => 'marc@example.com',
+            'responsable_email_confirmation' => 'marc@example.com',
+            'responsable_cell_phone' => '514-555-1234',
+        ]);
+
+        $response->assertRedirect(route('admin.organizations.index'));
+        $this->assertSame(2, Organization::where('responsable_email', 'marc@example.com')->count());
+    }
+
     public function test_an_admin_can_delete_a_childless_organization(): void
     {
         $admin = Admin::factory()->create();
