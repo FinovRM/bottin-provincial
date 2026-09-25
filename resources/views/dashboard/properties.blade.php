@@ -9,10 +9,6 @@
         'meta' => 'Mise à jour : '.$organization->updated_at->format('Y-m-d à H:i'),
     ])
 
-    <p class="mb-6">
-        <a href="{{ route('dashboard') }}" class="text-sm text-gray-500 hover:underline">← Mon tableau de bord</a>
-    </p>
-
     <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
         <div class="mb-4 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">

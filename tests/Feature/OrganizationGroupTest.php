@@ -91,7 +91,7 @@ class OrganizationGroupTest extends TestCase
         $this->addRole($tree['localOrg'], 'Membre Organisation', 'org@example.com');
         $this->addRole($tree['localLeague'], 'Membre Ligue', 'ligue@example.com');
 
-        $response = $this->actingAs($tree['regional'])->get('/tableau-de-bord/membres');
+        $response = $this->actingAs($tree['regional'])->get('/bottin');
 
         $response->assertOk();
         $response->assertSee('Membre Organisation');
@@ -102,7 +102,7 @@ class OrganizationGroupTest extends TestCase
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($tree['regional'])->get('/tableau-de-bord/organisations');
+        $response = $this->actingAs($tree['regional'])->get('/bottin/organisations');
 
         $response->assertOk();
         $response->assertSee('AHM Local');

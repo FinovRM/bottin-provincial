@@ -50,21 +50,6 @@ class QueryScopeTest extends TestCase
         $this->post($url, ['confirmed' => '1']);
     }
 
-    public function test_a_regional_responsable_only_sees_its_own_subtree_in_the_organization_query(): void
-    {
-        $tree = $this->tree();
-
-        $response = $this->actingAs($tree['region1'])->get('/tableau-de-bord/organisations');
-
-        $response->assertOk();
-        $response->assertSee('Région 1');
-        $response->assertSee('Local 1');
-        $response->assertSee('Local 2');
-        $response->assertDontSee('Local 3');
-        $response->assertDontSee('Région 2');
-        $response->assertDontSee('Provincial');
-    }
-
     public function test_a_regional_responsable_sees_members_of_every_region_and_local_organization_but_not_provincial(): void
     {
         $tree = $this->tree();
@@ -73,7 +58,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
         $this->addRole($tree['provincial'], 'Membre Provincial', 'p1@example.com');
 
-        $response = $this->actingAs($tree['region1'])->get('/tableau-de-bord/membres');
+        $response = $this->actingAs($tree['region1'])->get('/bottin');
 
         $response->assertOk();
         // every local organization, anywhere in the tree, is visible
@@ -92,7 +77,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
         $this->addRole($tree['local3'], 'Membre Local 3', 'l3@example.com');
 
-        $response = $this->actingAs($tree['region1'])->get('/tableau-de-bord/membres?region_id='.$tree['region1']->id);
+        $response = $this->actingAs($tree['region1'])->get('/bottin?region_id='.$tree['region1']->id);
 
         $response->assertOk();
         $response->assertSee('Membre Local 1');
@@ -224,7 +209,7 @@ class QueryScopeTest extends TestCase
         $this->addRole($tree['region1'], 'Membre Région 1', 'r1@example.com');
         $this->addRole($tree['region2'], 'Membre Région 2', 'r2@example.com');
 
-        $response = $this->actingAs($tree['local1'])->get('/tableau-de-bord/membres?my_direction=1');
+        $response = $this->actingAs($tree['local1'])->get('/bottin?my_direction=1');
 
         $response->assertOk();
         $response->assertSee('Membre Région 1');

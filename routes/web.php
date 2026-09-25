@@ -15,12 +15,9 @@ use App\Http\Controllers\Bottin\DashboardController as BottinDashboardController
 use App\Http\Controllers\Bottin\OrganizationDirectoryController as BottinOrganizationDirectoryController;
 use App\Http\Controllers\Bottin\OrganizationMembersController as BottinOrganizationMembersController;
 use App\Http\Controllers\BottinController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
-use App\Http\Controllers\MemberSearchController;
 use App\Http\Controllers\MinimumRoleController;
 use App\Http\Controllers\OrganizationController;
-use App\Http\Controllers\OrganizationSearchController;
 use App\Http\Controllers\OrganizationSwitchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertiesController;
@@ -73,16 +70,10 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/tableau-de-bord/organisations-gerees', [OrganizationSwitchController::class, 'index'])->name('dashboard.switch');
     Route::post('/tableau-de-bord/organisations-gerees/{organization}', [OrganizationSwitchController::class, 'store'])->name('dashboard.switch.store');
 
-    Route::get('/tableau-de-bord', DashboardController::class)->name('dashboard');
-
     Route::get('/tableau-de-bord/proprietes', [PropertiesController::class, 'show'])->name('dashboard.properties');
 
     Route::get('/tableau-de-bord/proprietes/responsable/modifier', [ResponsableController::class, 'edit'])->name('responsable.edit');
     Route::post('/tableau-de-bord/proprietes/responsable/modifier', [ResponsableController::class, 'update'])->name('responsable.update');
-
-    Route::get('/tableau-de-bord/organisations', OrganizationSearchController::class)->name('dashboard.organizations');
-    Route::get('/tableau-de-bord/organisations/exporter', [OrganizationSearchController::class, 'export'])->name('dashboard.organizations.export');
-    Route::get('/tableau-de-bord/membres', MemberSearchController::class)->name('dashboard.members');
 
     Route::get('/tableau-de-bord/proprietes/organisation/modifier', [OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::get('/organisations/ajouter', [OrganizationController::class, 'create'])->name('organizations.create');
