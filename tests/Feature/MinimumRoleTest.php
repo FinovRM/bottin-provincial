@@ -176,7 +176,7 @@ class MinimumRoleTest extends TestCase
         $provincial = Organization::factory()->provincial()->create();
         $provincial->minimumRoles()->create(['name' => 'Président']);
 
-        $response = $this->actingAs($provincial)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($provincial)->get('/proprietes');
 
         $response->assertOk();
         $response->assertSee('Rôles minimum');
@@ -189,7 +189,7 @@ class MinimumRoleTest extends TestCase
         $regional = Organization::factory()->regional($provincial)->create();
         $local = Organization::factory()->local($regional)->create();
 
-        $response = $this->actingAs($local)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($local)->get('/proprietes');
 
         $response->assertOk();
         $response->assertDontSee('Rôles minimum');

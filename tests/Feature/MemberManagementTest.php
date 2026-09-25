@@ -151,7 +151,7 @@ class MemberManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create();
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($organization)->get('/proprietes');
 
         $response->assertOk();
         $response->assertSee('Membres');
@@ -167,7 +167,7 @@ class MemberManagementTest extends TestCase
         $member = Member::create(['name' => 'Filled', 'email' => 'filled@example.com']);
         $regional->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($regional)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($regional)->get('/proprietes');
 
         $response->assertOk();
         $response->assertSee('Trésorier');
@@ -181,7 +181,7 @@ class MemberManagementTest extends TestCase
         $member = Member::create(['name' => 'Filled', 'email' => 'filled@example.com']);
         $regional->memberRoles()->create(['member_id' => $member->id, 'role' => 'Président']);
 
-        $response = $this->actingAs($regional)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($regional)->get('/proprietes');
 
         $response->assertOk();
         $response->assertDontSee('Rôle(s) minimum manquant(s)');
@@ -191,7 +191,7 @@ class MemberManagementTest extends TestCase
     {
         $provincial = Organization::factory()->provincial()->create();
 
-        $response = $this->actingAs($provincial)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($provincial)->get('/proprietes');
 
         $response->assertOk();
         $response->assertDontSee('Rôle(s) minimum manquant(s)');
@@ -288,7 +288,7 @@ class MemberManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create(['updated_at' => now()]);
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($organization)->get('/proprietes');
 
         $response->assertOk();
         $response->assertSee('Mise à jour : '.$organization->updated_at->format('Y-m-d à H:i'));

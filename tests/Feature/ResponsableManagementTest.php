@@ -18,7 +18,7 @@ class ResponsableManagementTest extends TestCase
             'responsable_cell_phone' => '514-555-1234',
         ]);
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($organization)->get('/proprietes');
 
         $response->assertOk();
         $response->assertSee('Responsable du bottin');
@@ -32,7 +32,7 @@ class ResponsableManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create();
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes/responsable/modifier');
+        $response = $this->actingAs($organization)->get('/proprietes/responsable/modifier');
 
         $response->assertOk();
         $response->assertSee('Déclaration du responsable');
@@ -43,7 +43,7 @@ class ResponsableManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create();
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
+        $response = $this->actingAs($organization)->post('/proprietes/responsable/modifier', [
             'responsable_confirmed' => '1',
         ]);
 
@@ -55,7 +55,7 @@ class ResponsableManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create();
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', []);
+        $response = $this->actingAs($organization)->post('/proprietes/responsable/modifier', []);
 
         $response->assertSessionHasErrors(['responsable_name', 'responsable_email', 'responsable_cell_phone']);
     }
@@ -64,7 +64,7 @@ class ResponsableManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create();
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
+        $response = $this->actingAs($organization)->post('/proprietes/responsable/modifier', [
             'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'nouveau@example.com',
             'responsable_email_confirmation' => 'different@example.com',
@@ -78,7 +78,7 @@ class ResponsableManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create(['responsable_email' => 'ancien@example.com']);
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
+        $response = $this->actingAs($organization)->post('/proprietes/responsable/modifier', [
             'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'nouveau@example.com',
             'responsable_email_confirmation' => 'nouveau@example.com',
@@ -95,7 +95,7 @@ class ResponsableManagementTest extends TestCase
     {
         $organization = Organization::factory()->provincial()->create(['responsable_email' => 'ancien@example.com']);
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
+        $response = $this->actingAs($organization)->post('/proprietes/responsable/modifier', [
             'confirmed_change' => '1',
             'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'nouveau@example.com',
@@ -116,7 +116,7 @@ class ResponsableManagementTest extends TestCase
         Organization::factory()->provincial()->create(['responsable_email' => 'deja-pris@example.com']);
         $organization = Organization::factory()->provincial()->create(['responsable_email' => 'moi@example.com']);
 
-        $response = $this->actingAs($organization)->post('/tableau-de-bord/proprietes/responsable/modifier', [
+        $response = $this->actingAs($organization)->post('/proprietes/responsable/modifier', [
             'responsable_name' => 'Nouveau Responsable',
             'responsable_email' => 'deja-pris@example.com',
             'responsable_email_confirmation' => 'deja-pris@example.com',

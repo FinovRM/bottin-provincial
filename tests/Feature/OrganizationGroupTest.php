@@ -62,7 +62,7 @@ class OrganizationGroupTest extends TestCase
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($tree['regional'])->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($tree['regional'])->get('/proprietes');
 
         $response->assertOk();
         $response->assertSeeInOrder(['Organisations enfant', 'AHM Local', 'Ligues enfant', 'Ligue Locale']);
@@ -124,7 +124,7 @@ class OrganizationGroupTest extends TestCase
     {
         $tree = $this->tree();
 
-        $response = $this->actingAs($tree['regional'])->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($tree['regional'])->get('/proprietes');
 
         $response->assertOk();
         $response->assertSeeInOrder(['Organisations enfant', 'Rôles de mes organisations enfant', 'Ligues enfant', 'Rôles de mes ligues enfant']);
@@ -233,7 +233,7 @@ class OrganizationGroupTest extends TestCase
     {
         $tree = $this->tree();
 
-        $this->actingAs($tree['localOrg'])->get('/tableau-de-bord/proprietes')
+        $this->actingAs($tree['localOrg'])->get('/proprietes')
             ->assertOk()
             ->assertSee('Visiteur :')
             ->assertSee('Responsable de bottin de AHM Local')

@@ -75,12 +75,13 @@ Route::middleware('auth:web')->group(function () {
 
 // Responsable of an organization, once one is chosen: its properties and nothing else.
 Route::middleware(['auth:web', EnsureRoleChosen::class])->group(function () {
-    Route::get('/tableau-de-bord/proprietes', [PropertiesController::class, 'show'])->name('dashboard.properties');
+    Route::get('/proprietes', [PropertiesController::class, 'show'])->name('dashboard.properties');
+    Route::permanentRedirect('/tableau-de-bord/proprietes', '/proprietes');
 
-    Route::get('/tableau-de-bord/proprietes/responsable/modifier', [ResponsableController::class, 'edit'])->name('responsable.edit');
-    Route::post('/tableau-de-bord/proprietes/responsable/modifier', [ResponsableController::class, 'update'])->name('responsable.update');
+    Route::get('/proprietes/responsable/modifier', [ResponsableController::class, 'edit'])->name('responsable.edit');
+    Route::post('/proprietes/responsable/modifier', [ResponsableController::class, 'update'])->name('responsable.update');
 
-    Route::get('/tableau-de-bord/proprietes/organisation/modifier', [OrganizationController::class, 'edit'])->name('organizations.edit');
+    Route::get('/proprietes/organisation/modifier', [OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::get('/organisations/ajouter', [OrganizationController::class, 'create'])->name('organizations.create');
     Route::post('/organisations', [OrganizationController::class, 'store'])->name('organizations.store');
     Route::put('/organisations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');

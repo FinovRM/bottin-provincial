@@ -104,7 +104,7 @@ class OrganizationHierarchyTest extends TestCase
             'legal_name' => 'Association hockey mineur Acton Vale',
         ]);
 
-        $response = $this->actingAs($organization)->get('/tableau-de-bord/proprietes');
+        $response = $this->actingAs($organization)->get('/proprietes');
 
         $response->assertOk();
         $response->assertSee('Organisation :');
