@@ -17,6 +17,13 @@
     <div class="mb-8 flex flex-col gap-6 lg:flex-row">
         <aside class="w-full lg:w-48 lg:shrink-0">
             @include('partials.member-filters', ['action' => route('admin.members.index')])
+
+            @if ($query !== '' || $regionId !== '' || $localId !== '' || $role !== '')
+                <a href="{{ route('admin.members.index') }}"
+                    class="mt-4 block rounded-md bg-gray-800 px-3 py-2 text-center text-sm font-medium text-white hover:bg-gray-900">
+                    ✕ Réinitialiser
+                </a>
+            @endif
         </aside>
 
         <div class="flex-1">
