@@ -44,15 +44,17 @@
                 value="{{ old('email_confirmation') }}" required
                 class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
         </div>
-        <div>
-            <label for="member_cell_phone" class="block text-sm font-medium">Cellulaire / Téléphone</label>
-            <input id="member_cell_phone" type="tel" inputmode="numeric" maxlength="14" name="cell_phone" value="{{ old('cell_phone') }}"
-                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-        </div>
-        <div>
-            <label for="member_extension" class="block text-sm font-medium">Poste</label>
-            <input id="member_extension" type="text" inputmode="numeric" maxlength="10" name="extension" value="{{ old('extension') }}"
-                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+        <div class="flex gap-3">
+            <div class="flex-1">
+                <label for="member_cell_phone" class="block text-sm font-medium">Cellulaire / Téléphone</label>
+                <input id="member_cell_phone" type="tel" inputmode="numeric" maxlength="14" name="cell_phone" value="{{ old('cell_phone') }}"
+                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+            </div>
+            <div class="w-28">
+                <label for="member_extension" class="block text-sm font-medium">Poste</label>
+                <input id="member_extension" type="text" inputmode="numeric" maxlength="10" name="extension" value="{{ old('extension') }}"
+                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+            </div>
         </div>
 
         <div class="flex gap-3">
