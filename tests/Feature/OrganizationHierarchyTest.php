@@ -137,6 +137,29 @@ class OrganizationHierarchyTest extends TestCase
         $response->assertSee('region@example.com', false);
     }
 
+    public function test_the_organizations_directory_can_filter_on_several_local_organizations(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+        $regional = Organization::factory()->regional($provincial)->create();
+        $first = Organization::factory()->local($regional)->create(['name' => 'Local choisi 1']);
+        $second = Organization::factory()->local($regional)->create(['name' => 'Local choisi 2']);
+        Organization::factory()->local($regional)->create(['name' => 'Local écarté']);
+
+        $query = http_build_query(['local_ids' => [$first->id, $second->id]]);
+        $response = $this->actingAs($this->viewerOf($provincial), 'member')->get("/bottin/organisations?{$query}");
+
+        $response->assertOk();
+        $response->assertSee('Local choisi 1');
+        $response->assertSee('Local choisi 2');
+        $response->assertDontSee('mailto:'.Organization::where('name', 'Local écarté')->value('responsable_email'), false);
+
+        $csv = $this->actingAs($this->viewerOf($provincial), 'member')->get("/bottin/organisations/exporter?{$query}")->streamedContent();
+
+        $this->assertStringContainsString('Local choisi 1', $csv);
+        $this->assertStringContainsString('Local choisi 2', $csv);
+        $this->assertStringNotContainsString('Local écarté', $csv);
+    }
+
     public function test_the_organizations_directory_can_be_exported_to_csv_with_its_filters(): void
     {
         $provincial = Organization::factory()->provincial()->create(['name' => 'Bureau provincial']);

@@ -18,6 +18,28 @@
                 @endif
 
                 @foreach ($levelFilters as $filter)
+                    @if ($filter['multiple'] ?? false)
+                        {{-- Many organizations to choose from: checkboxes, applied together. --}}
+                        <fieldset class="mb-4">
+                            <legend class="block text-sm font-medium">{{ $filter['label'] }}</legend>
+                            <input type="search" placeholder="Filtrer la liste…" data-filter-list="filter_{{ $filter['name'] }}"
+                                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm">
+                            <div id="filter_{{ $filter['name'] }}" class="mt-1 max-h-64 overflow-y-auto rounded-md border border-gray-300 bg-white px-2 py-1">
+                                {{-- Checked organizations first, so they stay in view. --}}
+                                @foreach ($filter['options']->sortByDesc(fn ($option) => in_array((string) $option->id, $filter['value'], true)) as $option)
+                                    <label class="flex items-start gap-2 py-0.5 text-sm" data-filter-item="{{ mb_strtolower($option->name) }}">
+                                        <input type="checkbox" name="{{ $filter['name'] }}[]" value="{{ $option->id }}" class="mt-0.5"
+                                            @checked(in_array((string) $option->id, $filter['value'], true))>
+                                        <span>{{ $option->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <button type="submit" class="mt-2 w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                Appliquer
+                            </button>
+                        </fieldset>
+                        @continue
+                    @endif
                     <div class="mb-4">
                         <label for="filter_{{ $filter['name'] }}" class="block text-sm font-medium">{{ $filter['label'] }}</label>
                         <select id="filter_{{ $filter['name'] }}" name="{{ $filter['name'] }}" onchange="this.form.submit()"
@@ -39,7 +61,7 @@
                 </noscript>
             </form>
 
-            @if ($query !== '' || collect($levelFilters)->contains(fn ($filter) => $filter['value'] !== ''))
+            @if ($query !== '' || collect($levelFilters)->contains(fn ($filter) => filled($filter['value'])))
                 <a href="{{ route('bottin.organizations') }}"
                     class="mt-4 block rounded-md bg-gray-800 px-3 py-2 text-center text-sm font-medium text-white hover:bg-gray-900">
                     ✕ Réinitialiser
@@ -50,7 +72,11 @@
         <div class="flex-1">
             <form method="GET" action="{{ route('bottin.organizations') }}" class="mb-6 max-w-sm">
                 @foreach ($levelFilters as $filter)
-                    @if ($filter['value'] !== '')
+                    @if ($filter['multiple'] ?? false)
+                        @foreach ($filter['value'] as $value)
+                            <input type="hidden" name="{{ $filter['name'] }}[]" value="{{ $value }}">
+                        @endforeach
+                    @elseif ($filter['value'] !== '')
                         <input type="hidden" name="{{ $filter['name'] }}" value="{{ $filter['value'] }}">
                     @endif
                 @endforeach
@@ -137,6 +163,15 @@
     </div>
 
     <script>
+        document.querySelectorAll('[data-filter-list]').forEach((input) => {
+            input.addEventListener('input', () => {
+                const needle = input.value.trim().toLowerCase();
+                document.getElementById(input.dataset.filterList).querySelectorAll('[data-filter-item]').forEach((item) => {
+                    item.hidden = needle !== '' && !item.dataset.filterItem.includes(needle);
+                });
+            });
+        });
+
         document.getElementById('copy-emails')?.addEventListener('click', function () {
             navigator.clipboard.writeText(this.dataset.emails).then(() => {
                 const original = this.textContent;

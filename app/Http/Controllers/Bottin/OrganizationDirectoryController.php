@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Support\ViewerScope;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -61,7 +62,12 @@ class OrganizationDirectoryController extends Controller
         $query = $request->string('q')->trim()->toString();
         $provincialId = $request->string('provincial_id')->trim()->toString();
         $regionalId = $request->string('regional_id')->trim()->toString();
-        $localId = $request->string('local_id')->trim()->toString();
+        // Several local organizations can be picked; a single local_id is still understood.
+        $localIds = collect(Arr::wrap($request->input('local_ids')))
+            ->push($request->input('local_id'))
+            ->map(fn ($id) => trim((string) $id))
+            ->filter(fn ($id) => $id !== '')
+            ->unique();
 
         [$scopedOrganizations] = ViewerScope::resolve();
 
@@ -96,7 +102,8 @@ class OrganizationDirectoryController extends Controller
         $regionalId = $regionals->contains('id', (int) $regionalId) ? $regionalId : '';
 
         $locals = $optionsFor(OrganizationLevel::Local, ['provincial' => $provincialId, 'regional' => $regionalId]);
-        $localId = $locals->contains('id', (int) $localId) ? $localId : '';
+        $localIds = $localIds->filter(fn ($id) => $locals->contains('id', (int) $id))->values();
+        $localIdInts = $localIds->map(fn ($id) => (int) $id)->all();
 
         $organizations = $scopedOrganizations
             ->when($query !== '', fn ($organizations) => $organizations->filter(
@@ -104,7 +111,7 @@ class OrganizationDirectoryController extends Controller
             ))
             ->filter(fn ($organization) => $matches($lineages[$organization->id], OrganizationLevel::Provincial, $provincialId)
                 && $matches($lineages[$organization->id], OrganizationLevel::Regional, $regionalId)
-                && $matches($lineages[$organization->id], OrganizationLevel::Local, $localId))
+                && ($localIdInts === [] || in_array($lineages[$organization->id][OrganizationLevel::Local->value] ?? null, $localIdInts, true)))
             ->sortBy('name');
 
         return [
@@ -113,7 +120,7 @@ class OrganizationDirectoryController extends Controller
             'levelFilters' => [
                 ['name' => 'provincial_id', 'label' => 'Provincial', 'options' => $provincials, 'value' => $provincialId],
                 ['name' => 'regional_id', 'label' => 'Régional', 'options' => $regionals, 'value' => $regionalId],
-                ['name' => 'local_id', 'label' => 'Local', 'options' => $locals, 'value' => $localId],
+                ['name' => 'local_ids', 'label' => 'Local', 'options' => $locals, 'value' => $localIds->all(), 'multiple' => true],
             ],
         ];
     }
