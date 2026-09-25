@@ -112,6 +112,46 @@ class OrganizationHierarchyTest extends TestCase
         $response->assertSee('Association hockey mineur Acton Vale');
     }
 
+    public function test_the_organizations_directory_shows_the_legal_name(): void
+    {
+        $provincial = Organization::factory()->provincial()->create([
+            'name' => 'AHM Acton Vale',
+            'legal_name' => 'Association hockey mineur Acton Vale',
+        ]);
+
+        $response = $this->actingAs($provincial)->get('/bottin/organisations');
+
+        $response->assertOk();
+        $response->assertSee('Association hockey mineur Acton Vale');
+    }
+
+    public function test_the_organizations_directory_can_be_exported_to_csv_with_its_filters(): void
+    {
+        $provincial = Organization::factory()->provincial()->create(['name' => 'Bureau provincial']);
+        $regional = Organization::factory()->regional($provincial)->create([
+            'name' => 'Région 1',
+            'legal_name' => 'Association régionale 1',
+        ]);
+        $otherRegional = Organization::factory()->regional($provincial)->create(['name' => 'Région 2']);
+        Organization::factory()->local($regional)->create(['name' => 'Local de la région 1']);
+        Organization::factory()->local($otherRegional)->create(['name' => 'Local de la région 2']);
+
+        $response = $this->actingAs($provincial)->get('/bottin/organisations');
+        $response->assertSee(route('bottin.organizations.export'), false);
+
+        $response = $this->actingAs($provincial)->get('/bottin/organisations/exporter');
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('Bureau provincial', $content);
+        $this->assertStringContainsString('Association régionale 1', $content);
+
+        $filtered = $this->actingAs($provincial)->get("/bottin/organisations/exporter?regional_id={$regional->id}")->streamedContent();
+        $this->assertStringContainsString('Local de la région 1', $filtered);
+        $this->assertStringNotContainsString('Local de la région 2', $filtered);
+    }
+
     public function test_the_organizations_directory_shows_the_full_postal_address(): void
     {
         $provincial = Organization::factory()->provincial()->create([

@@ -51,7 +51,8 @@ Route::middleware('auth:member,web')->group(function () {
     Route::post('/role', [RoleSwitchController::class, 'store'])->name('role.switch');
 
     Route::middleware(EnsureRoleChosen::class)->group(function () {
-        Route::get('/bottin/organisations', BottinOrganizationDirectoryController::class)->name('bottin.organizations');
+        Route::get('/bottin/organisations', [BottinOrganizationDirectoryController::class, 'index'])->name('bottin.organizations');
+        Route::get('/bottin/organisations/exporter', [BottinOrganizationDirectoryController::class, 'export'])->name('bottin.organizations.export');
         Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
         Route::post('/profil/filtres', [ProfileController::class, 'storeFilter'])->name('profile.filters.store');
         Route::put('/profil/filtres/{personalFilter}', [ProfileController::class, 'updateFilter'])->name('profile.filters.update');

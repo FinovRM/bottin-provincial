@@ -8,10 +8,55 @@ use App\Models\Organization;
 use App\Support\ViewerScope;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrganizationDirectoryController extends Controller
 {
-    public function __invoke(Request $request): View
+    public function index(Request $request): View
+    {
+        return view('bottin.organizations', [
+            ...$this->filtered($request),
+            'identity' => ViewerScope::identity(),
+        ]);
+    }
+
+    /**
+     * The organizations currently shown (same search and filters), as a CSV file.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $organizations = $this->filtered($request)['organizations'];
+
+        return response()->streamDownload(function () use ($organizations) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, ['Organisation', 'Niveau', 'Groupe', 'Nom légal', 'Adresse', "N° d'entreprise", 'Site web', 'Responsable', 'Courriel']);
+
+            foreach ($organizations as $organization) {
+                fputcsv($handle, [
+                    $organization->name,
+                    $organization->level->label(),
+                    $organization->group->label(),
+                    $organization->legal_name ?: '',
+                    $organization->fullPostalAddress() ?? '',
+                    $organization->business_number ?: '',
+                    $organization->website ?: '',
+                    $organization->responsable_name,
+                    $organization->responsable_email,
+                ]);
+            }
+
+            fclose($handle);
+        }, 'organisations.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    /**
+     * The visible organizations matching the search and the provincial /
+     * regional / local filters, along with those filters' state.
+     *
+     * @return array<string, mixed>
+     */
+    private function filtered(Request $request): array
     {
         $query = $request->string('q')->trim()->toString();
         $provincialId = $request->string('provincial_id')->trim()->toString();
@@ -62,15 +107,14 @@ class OrganizationDirectoryController extends Controller
                 && $matches($lineages[$organization->id], OrganizationLevel::Local, $localId))
             ->sortBy('name');
 
-        return view('bottin.organizations', [
+        return [
             'organizations' => $organizations,
             'query' => $query,
-            'identity' => ViewerScope::identity(),
             'levelFilters' => [
                 ['name' => 'provincial_id', 'label' => 'Provincial', 'options' => $provincials, 'value' => $provincialId],
                 ['name' => 'regional_id', 'label' => 'Régional', 'options' => $regionals, 'value' => $regionalId],
                 ['name' => 'local_id', 'label' => 'Local', 'options' => $locals, 'value' => $localId],
             ],
-        ]);
+        ];
     }
 }

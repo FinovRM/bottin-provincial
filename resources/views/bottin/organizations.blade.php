@@ -64,6 +64,15 @@
                 </div>
             </form>
 
+            @if ($organizations->isNotEmpty())
+                <div class="mb-4">
+                    <a href="{{ route('bottin.organizations.export', request()->query()) }}"
+                        class="inline-block rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Exporter la sélection en csv
+                    </a>
+                </div>
+            @endif
+
             <div class="space-y-3">
                 @forelse ($organizations as $organization)
                     @php
@@ -90,6 +99,9 @@
                                         </span>
                                     </div>
                                     <p class="mt-1 font-semibold text-gray-900">{{ $organization->name }}</p>
+                                    @if ($organization->legal_name && $organization->legal_name !== $organization->name)
+                                        <p class="text-xs text-gray-400">{{ $organization->legal_name }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
