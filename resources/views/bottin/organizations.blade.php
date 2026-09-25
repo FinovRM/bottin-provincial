@@ -13,7 +13,7 @@
     </p>
 
     <div class="flex flex-col gap-6 lg:flex-row">
-        <aside class="w-full lg:w-56 lg:shrink-0">
+        <aside class="w-full lg:w-56 lg:shrink-0 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
             <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Filtres</p>
 
             <form method="GET" action="{{ route('bottin.organizations') }}">
@@ -21,31 +21,20 @@
                     <input type="hidden" name="q" value="{{ $query }}">
                 @endif
 
-                <div class="mb-4">
-                    <label for="filter_parent_id" class="block text-sm font-medium">Parent</label>
-                    <select id="filter_parent_id" name="parent_id" onchange="this.form.submit()"
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                        <option value="">Tous</option>
-                        @foreach ($parents as $parent)
-                            <option value="{{ $parent->id }}" @selected($parentId === (string) $parent->id)>
-                                {{ $parent->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label for="filter_child_id" class="block text-sm font-medium">Enfant</label>
-                    <select id="filter_child_id" name="child_id" onchange="this.form.submit()"
-                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-                        <option value="">Tous</option>
-                        @foreach ($children as $child)
-                            <option value="{{ $child->id }}" @selected($childId === (string) $child->id)>
-                                {{ $child->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                @foreach ($levelFilters as $filter)
+                    <div class="mb-4">
+                        <label for="filter_{{ $filter['name'] }}" class="block text-sm font-medium">{{ $filter['label'] }}</label>
+                        <select id="filter_{{ $filter['name'] }}" name="{{ $filter['name'] }}" onchange="this.form.submit()"
+                            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                            <option value="">Tous</option>
+                            @foreach ($filter['options'] as $option)
+                                <option value="{{ $option->id }}" @selected($filter['value'] === (string) $option->id)>
+                                    {{ $option->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endforeach
 
                 <noscript>
                     <button type="submit" class="mt-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -54,7 +43,7 @@
                 </noscript>
             </form>
 
-            @if ($query !== '' || $parentId !== '' || $childId !== '')
+            @if ($query !== '' || collect($levelFilters)->contains(fn ($filter) => $filter['value'] !== ''))
                 <a href="{{ route('bottin.organizations') }}"
                     class="mt-4 block rounded-md bg-gray-800 px-3 py-2 text-center text-sm font-medium text-white hover:bg-gray-900">
                     ✕ Réinitialiser
@@ -64,12 +53,11 @@
 
         <div class="flex-1">
             <form method="GET" action="{{ route('bottin.organizations') }}" class="mb-6 max-w-sm">
-                @if ($parentId !== '')
-                    <input type="hidden" name="parent_id" value="{{ $parentId }}">
-                @endif
-                @if ($childId !== '')
-                    <input type="hidden" name="child_id" value="{{ $childId }}">
-                @endif
+                @foreach ($levelFilters as $filter)
+                    @if ($filter['value'] !== '')
+                        <input type="hidden" name="{{ $filter['name'] }}" value="{{ $filter['value'] }}">
+                    @endif
+                @endforeach
                 <label for="q" class="block text-sm font-medium text-gray-500">Recherche par nom</label>
                 <div class="relative mt-1">
                     <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
