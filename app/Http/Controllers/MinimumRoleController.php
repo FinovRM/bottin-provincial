@@ -34,7 +34,11 @@ class MinimumRoleController extends Controller
 
         $organization->minimumRoles()->create($validated);
 
-        return redirect()->route('dashboard.properties')->with('status', 'Rôle minimum ajouté.');
+        // Reopen the same dialog, ready for another entry.
+        return redirect()->route('dashboard.properties')
+            ->with('status', 'Rôle minimum ajouté.')
+            ->with('reopen_dialog', "add-minimum-role-{$validated['group']}-dialog")
+            ->with('added_role', $validated['name']);
     }
 
     public function update(Request $request, MinimumRole $minimumRole): RedirectResponse

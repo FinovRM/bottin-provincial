@@ -34,7 +34,11 @@ class AllowedRoleController extends Controller
 
         $organization->allowedRoles()->create($validated);
 
-        return redirect()->route('dashboard.properties')->with('status', 'Rôle permis ajouté.');
+        // Reopen the same dialog, ready for another entry.
+        return redirect()->route('dashboard.properties')
+            ->with('status', 'Rôle permis ajouté.')
+            ->with('reopen_dialog', "add-allowed-role-{$validated['group']}-dialog")
+            ->with('added_role', $validated['name']);
     }
 
     public function update(Request $request, AllowedRole $allowedRole): RedirectResponse

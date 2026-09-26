@@ -28,6 +28,25 @@ class AllowedRoleTest extends TestCase
         ]);
     }
 
+    public function test_the_add_dialog_reopens_after_an_entry_until_terminer(): void
+    {
+        $provincial = Organization::factory()->provincial()->create();
+
+        $page = $this->actingAs($provincial)->followingRedirects()->post('/profil/roles-permis', [
+            'name' => 'Bénévole',
+            'group' => 'organisation',
+        ]);
+
+        $page->assertSee('« Bénévole » ajouté.', false);
+        $page->assertSee("document.getElementById('add-allowed-role-organisation-dialog').showModal();", false);
+        $page->assertDontSee("document.getElementById('add-minimum-role-organisation-dialog').showModal();", false);
+        $page->assertSee('Terminer');
+
+        // Once closed, a later visit shows the page without the dialog open.
+        $this->actingAs($provincial)->get('/proprietes')
+            ->assertDontSee("document.getElementById('add-allowed-role-organisation-dialog').showModal();", false);
+    }
+
     public function test_a_local_organization_cannot_add_an_allowed_role(): void
     {
         $provincial = Organization::factory()->provincial()->create();

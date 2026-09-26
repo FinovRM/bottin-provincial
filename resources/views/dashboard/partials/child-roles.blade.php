@@ -98,7 +98,11 @@
 
     @foreach ($roleTables as $table)
         <dialog id="{{ $table['addDialog'] }}" class="w-full max-w-sm rounded-lg border border-gray-200 p-6 backdrop:bg-black/30">
+            @php $reopened = session('reopen_dialog') === $table['addDialog']; @endphp
             <h3 class="mb-4 text-lg font-semibold">{{ $table['addTitle'] }}</h3>
+            @if ($reopened)
+                <p class="mb-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">« {{ session('added_role') }} » ajouté. Ajoutez-en un autre ou terminez.</p>
+            @endif
 
             <form method="POST" action="{{ $table['addRoute'] }}">
                 @csrf
@@ -113,7 +117,7 @@
                 <div class="flex gap-3">
                     <button type="button" onclick="document.getElementById('{{ $table['addDialog'] }}').close()"
                         class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        Annuler
+                        Terminer
                     </button>
                     <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">
                         Ajouter
@@ -122,7 +126,7 @@
             </form>
         </dialog>
 
-        @if ($errors->{$table['addBag']}->any())
+        @if ($errors->{$table['addBag']}->any() || session('reopen_dialog') === $table['addDialog'])
             <script>document.getElementById('{{ $table['addDialog'] }}').showModal();</script>
         @endif
 
