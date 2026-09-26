@@ -44,6 +44,25 @@ class ViewerScope
     }
 
     /**
+     * The organization of the role the viewer is using — none while no role is chosen.
+     */
+    public static function ownOrganization(): ?Organization
+    {
+        if (VisitorIdentities::hasNoChosenRole()) {
+            return null;
+        }
+
+        if (Auth::guard('member')->check()) {
+            /** @var Member $authMember */
+            $authMember = Auth::guard('member')->user();
+
+            return $authMember->primaryRole()?->organization;
+        }
+
+        return Auth::guard('web')->user();
+    }
+
+    /**
      * Every organization whose members the current viewer may look at: the
      * usual scope plus the organization(s) immediately above them.
      *

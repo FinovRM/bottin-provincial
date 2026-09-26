@@ -19,7 +19,7 @@
                 'personalFilterId' => $personalFilterId,
             ])
 
-            @if ($query !== '' || $regionId !== '' || $localId !== '' || $role !== '' || $myDirection || $personalFilterId !== '')
+            @if ($query !== '' || $regionId !== '' || $localId !== '' || $role !== '' || $myDirection || $myOrganization || $personalFilterId !== '')
                 <a href="{{ route('bottin.members') }}"
                     class="mt-4 block rounded-md bg-gray-800 px-3 py-2 text-center text-sm font-medium text-white hover:bg-gray-900">
                     ✕ Réinitialiser
@@ -31,6 +31,9 @@
             <form method="GET" action="{{ route('bottin.members') }}" class="mb-6 max-w-sm">
                 @if ($myDirection)
                     <input type="hidden" name="my_direction" value="1">
+                @endif
+                @if ($myOrganization)
+                    <input type="hidden" name="my_organization" value="1">
                 @endif
                 @if ($regionId !== '')
                     <input type="hidden" name="region_id" value="{{ $regionId }}">

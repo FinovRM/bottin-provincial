@@ -13,6 +13,16 @@
         </div>
     @endif
 
+    @if ($showMyOrganizationFilter ?? false)
+        <div class="mb-4">
+            <label class="flex items-center gap-2 text-sm font-medium">
+                <input type="checkbox" name="my_organization" value="1" onchange="this.form.submit()"
+                    @checked($myOrganization ?? false)>
+                Mon organisation
+            </label>
+        </div>
+    @endif
+
     @if ($showLevelFilter ?? false)
         <div class="mb-4">
             <label for="filter_level" class="block text-sm font-medium">Niveau</label>

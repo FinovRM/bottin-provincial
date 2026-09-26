@@ -23,6 +23,7 @@ class DashboardController extends Controller
         $localId = $request->string('local_id')->trim()->toString();
         $role = $request->string('role')->trim()->toString();
         $myDirection = $request->boolean('my_direction');
+        $myOrganization = $request->boolean('my_organization');
         $personalFilterId = $request->string('personal_filter_id')->trim()->toString();
 
         [$scopedOrganizations, $directionOrganizations] = $this->scope();
@@ -30,7 +31,7 @@ class DashboardController extends Controller
         $personalFilter = $personalFilterId !== '' ? $this->ownPersonalFilter($personalFilterId) : null;
 
         $memberRoles = $this->filteredMemberRoles(
-            $query, $regionId, $localId, $role, $myDirection, $scopedOrganizations, $directionOrganizations, $personalFilter
+            $query, $regionId, $localId, $role, $myDirection, $myOrganization, $scopedOrganizations, $directionOrganizations, $personalFilter
         );
 
         $allLocals = $scopedOrganizations->where('level', OrganizationLevel::Local);
@@ -59,12 +60,14 @@ class DashboardController extends Controller
             'showRegionFilter' => $regions->count() > 1,
             'showLocalFilter' => $allLocals->count() > 1 || $regions->count() > 0,
             'showMyDirectionFilter' => $directionOrganizations->isNotEmpty(),
+            'showMyOrganizationFilter' => ViewerScope::ownOrganization() !== null,
             'personalFilters' => $this->ownPersonalFilters(),
             'query' => $query,
             'regionId' => $regionId,
             'localId' => $localId,
             'role' => $role,
             'myDirection' => $myDirection,
+            'myOrganization' => $myOrganization,
             'personalFilterId' => $personalFilterId,
             'identity' => ViewerScope::identity(),
         ]);
@@ -77,6 +80,7 @@ class DashboardController extends Controller
         $localId = $request->string('local_id')->trim()->toString();
         $role = $request->string('role')->trim()->toString();
         $myDirection = $request->boolean('my_direction');
+        $myOrganization = $request->boolean('my_organization');
         $personalFilterId = $request->string('personal_filter_id')->trim()->toString();
 
         [$scopedOrganizations, $directionOrganizations] = $this->scope();
@@ -84,7 +88,7 @@ class DashboardController extends Controller
         $personalFilter = $personalFilterId !== '' ? $this->ownPersonalFilter($personalFilterId) : null;
 
         $memberRoles = $this->filteredMemberRoles(
-            $query, $regionId, $localId, $role, $myDirection, $scopedOrganizations, $directionOrganizations, $personalFilter
+            $query, $regionId, $localId, $role, $myDirection, $myOrganization, $scopedOrganizations, $directionOrganizations, $personalFilter
         );
 
         return response()->streamDownload(function () use ($memberRoles) {
@@ -116,6 +120,7 @@ class DashboardController extends Controller
         string $localId,
         string $role,
         bool $myDirection,
+        bool $myOrganization,
         Collection $scopedOrganizations,
         Collection $directionOrganizations,
         ?PersonalFilter $personalFilter = null,
@@ -134,10 +139,13 @@ class DashboardController extends Controller
             if (! empty($personalFilter->roles)) {
                 $memberRoles->whereIn('role', $personalFilter->roles);
             }
-        } elseif ($myDirection) {
-            // "Ma direction" replaces the usual scope entirely: only the organization(s)
-            // immediately above, never same-level-or-below organizations.
-            $memberRoles->whereIn('organization_id', $directionOrganizations->pluck('id'));
+        } elseif ($myDirection || $myOrganization) {
+            // "Mon parent" and "Mon organisation" replace the usual scope entirely:
+            // only the organization(s) immediately above and/or the viewer's own.
+            $memberRoles->whereIn('organization_id', collect()
+                ->when($myDirection, fn ($ids) => $ids->merge($directionOrganizations->pluck('id')))
+                ->when($myOrganization, fn ($ids) => $ids->push(ViewerScope::ownOrganization()?->id))
+                ->filter());
         } else {
             $memberRoles->whereIn('organization_id', $scopedOrganizations->pluck('id'));
 

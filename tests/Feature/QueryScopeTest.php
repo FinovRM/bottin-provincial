@@ -189,6 +189,32 @@ class QueryScopeTest extends TestCase
         $response->assertDontSee('Membre Région 2');
     }
 
+    public function test_the_my_organization_filter_isolates_a_members_own_organization(): void
+    {
+        $tree = $this->tree();
+        $viewer = $this->addRole($tree['local2'], 'Viewer Local 2', 'l2@example.com');
+        $this->addRole($tree['local2'], 'Collègue Local 2', 'c2@example.com');
+        $this->addRole($tree['local1'], 'Membre Local 1', 'l1@example.com');
+        $this->addRole($tree['region1'], 'Membre Région 1', 'r1@example.com');
+
+        $this->loginAsMember($viewer->email);
+
+        $this->get('/bottin/membres')->assertSee('Mon organisation');
+
+        $response = $this->get('/bottin/membres?my_organization=1');
+
+        $response->assertOk();
+        $response->assertSee('Collègue Local 2');
+        $response->assertDontSee('Membre Local 1');
+        $response->assertDontSee('Membre Région 1');
+
+        $both = $this->get('/bottin/membres?my_organization=1&my_direction=1');
+
+        $both->assertSee('Collègue Local 2');
+        $both->assertSee('Membre Région 1');
+        $both->assertDontSee('Membre Local 1');
+    }
+
     public function test_the_my_direction_filter_is_hidden_for_a_provincial_member(): void
     {
         $tree = $this->tree();
