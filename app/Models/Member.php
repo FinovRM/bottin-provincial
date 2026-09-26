@@ -12,14 +12,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection as SupportCollection;
 
 #[Fillable(['name', 'email', 'cell_phone', 'extension'])]
 class Member extends Authenticatable
 {
     /** @use HasFactory<MemberFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
 
     /**
      * Stored as digits only, presented as "(xxx) xxx-xxxx".
@@ -162,10 +161,5 @@ class Member extends Authenticatable
     public function primaryRole(): ?MemberRole
     {
         return $this->consideredRoles()->sortBy(fn (MemberRole $role) => $role->organization->level->rank())->first();
-    }
-
-    public function routeNotificationForMail(): string
-    {
-        return $this->email;
     }
 }

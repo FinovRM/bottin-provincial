@@ -6,6 +6,7 @@ use App\Enums\OrganizationGroup;
 use App\Enums\OrganizationLevel;
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use WeakMap;
 
 /**
  * @extends Factory<Organization>
@@ -27,35 +28,42 @@ class OrganizationFactory extends Factory
     }
 
     /**
-     * Every organization gets one responsable. Tests may still pass the old
-     * responsable_name / responsable_email / responsable_cell_phone attributes:
-     * they're set on that responsable instead.
+     * The former organization columns tests may still pass, and the
+     * responsable field each one now fills.
+     */
+    private const RESPONSABLE_FIELDS = [
+        'responsable_name' => 'name',
+        'responsable_email' => 'email',
+        'responsable_cell_phone' => 'cell_phone',
+    ];
+
+    /**
+     * Every organization gets one responsable, taking any responsable_* attribute
+     * given to the organization.
      */
     public function configure(): static
     {
-        $pending = new \WeakMap;
-        $fields = ['responsable_name' => 'name', 'responsable_email' => 'email', 'responsable_cell_phone' => 'cell_phone'];
+        /** @var WeakMap<Organization, array<string, mixed>> $given */
+        $given = new WeakMap;
 
         return $this
-            ->afterMaking(function (Organization $organization) use ($pending, $fields) {
-                $responsable = [];
+            ->afterMaking(function (Organization $organization) use ($given) {
+                $attributes = array_intersect_key($organization->getAttributes(), self::RESPONSABLE_FIELDS);
 
-                foreach ($fields as $attribute => $field) {
-                    if (array_key_exists($attribute, $organization->getAttributes())) {
-                        $responsable[$field] = $organization->getAttributes()[$attribute];
-                        unset($organization->{$attribute});
-                    }
+                foreach (array_keys($attributes) as $attribute) {
+                    unset($organization->{$attribute});
                 }
 
-                $pending[$organization] = $responsable;
+                $given[$organization] = array_combine(
+                    array_map(fn ($attribute) => self::RESPONSABLE_FIELDS[$attribute], array_keys($attributes)),
+                    $attributes,
+                );
             })
-            ->afterCreating(function (Organization $organization) use ($pending) {
-                $organization->responsables()->create([
-                    'name' => fake()->name(),
-                    'email' => fake()->unique()->safeEmail(),
-                    ...($pending[$organization] ?? []),
-                ]);
-            });
+            ->afterCreating(fn (Organization $organization) => $organization->responsables()->create([
+                'name' => fake()->name(),
+                'email' => fake()->unique()->safeEmail(),
+                ...$given[$organization],
+            ]));
     }
 
     public function provincial(): static

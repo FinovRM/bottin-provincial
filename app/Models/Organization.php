@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
     'name', 'legal_name',
@@ -21,7 +20,7 @@ use Illuminate\Notifications\Notifiable;
 class Organization extends Authenticatable
 {
     /** @use HasFactory<OrganizationFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
 
     /**
      * Matches the migration's column default. Without this, a newly created
@@ -332,13 +331,5 @@ class Organization extends Authenticatable
         return $this->responsables->map(fn (Responsable $responsable) => "{$responsable->name} ({$responsable->email})")
             ->whenEmpty(fn ($summary) => $summary->push('—'))
             ->implode(', ');
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public function routeNotificationForMail(): array
-    {
-        return $this->responsables->pluck('email')->all();
     }
 }
