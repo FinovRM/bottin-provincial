@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\MemberRole;
 use App\Models\Organization;
+use App\Models\Responsable;
 use App\Support\CellPhone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -75,10 +76,14 @@ class MemberImportController extends Controller
      */
     private function createFromRow(array $data): void
     {
-        $organization = Organization::where('responsable_email', $data['organization_responsable_email'])->first();
+        $organization = Organization::whereHas('responsables', fn ($responsables) => $responsables->where('email', $data['organization_responsable_email']))->first();
 
         if (! $organization) {
             throw new \RuntimeException('organisation introuvable.');
+        }
+
+        if (Responsable::isReservedRole($data['role'])) {
+            throw new \RuntimeException('le rôle « '.Responsable::ROLE.' » est réservé à la section des responsables.');
         }
 
         $phone = CellPhone::normalize($data['cell_phone']);

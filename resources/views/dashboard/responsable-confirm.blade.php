@@ -7,7 +7,7 @@
         <h1 class="mb-4 text-xl font-semibold">Valider la modification</h1>
 
         <p class="mb-6 text-sm text-gray-700">
-            Un nouveau responsable sera dorénavant en vigueur.
+            Vos coordonnées seront mises à jour dans toutes les organisations dont vous êtes responsable.
         </p>
 
         <dl class="mb-6 space-y-1 text-sm text-gray-700">
@@ -20,8 +20,8 @@
                 <dd class="inline">{{ $pending['responsable_email'] }}</dd>
             </div>
             <div>
-                <dt class="inline font-medium">Cellulaire :</dt>
-                <dd class="inline">{{ \App\Support\CellPhone::format($pending['responsable_cell_phone']) }}</dd>
+                <dt class="inline font-medium">Cellulaire / Téléphone :</dt>
+                <dd class="inline">{{ \App\Support\CellPhone::format($pending['responsable_cell_phone']) }}@if ($pending['responsable_extension']) poste {{ $pending['responsable_extension'] }}@endif</dd>
             </div>
         </dl>
 
@@ -30,6 +30,8 @@
             <input type="hidden" name="confirmed_change" value="1">
             <input type="hidden" name="responsable_name" value="{{ $pending['responsable_name'] }}">
             <input type="hidden" name="responsable_email" value="{{ $pending['responsable_email'] }}">
+            <input type="hidden" name="responsable_email_confirmation" value="{{ $pending['responsable_email'] }}">
+            <input type="hidden" name="responsable_extension" value="{{ $pending['responsable_extension'] }}">
             <input type="hidden" name="responsable_cell_phone" value="{{ $pending['responsable_cell_phone'] }}">
 
             <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">

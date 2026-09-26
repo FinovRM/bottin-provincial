@@ -23,9 +23,39 @@ class OrganizationFactory extends Factory
             'parent_id' => null,
             'level' => OrganizationLevel::Provincial,
             'name' => fake()->company(),
-            'responsable_name' => fake()->name(),
-            'responsable_email' => fake()->unique()->safeEmail(),
         ];
+    }
+
+    /**
+     * Every organization gets one responsable. Tests may still pass the old
+     * responsable_name / responsable_email / responsable_cell_phone attributes:
+     * they're set on that responsable instead.
+     */
+    public function configure(): static
+    {
+        $pending = new \WeakMap;
+        $fields = ['responsable_name' => 'name', 'responsable_email' => 'email', 'responsable_cell_phone' => 'cell_phone'];
+
+        return $this
+            ->afterMaking(function (Organization $organization) use ($pending, $fields) {
+                $responsable = [];
+
+                foreach ($fields as $attribute => $field) {
+                    if (array_key_exists($attribute, $organization->getAttributes())) {
+                        $responsable[$field] = $organization->getAttributes()[$attribute];
+                        unset($organization->{$attribute});
+                    }
+                }
+
+                $pending[$organization] = $responsable;
+            })
+            ->afterCreating(function (Organization $organization) use ($pending) {
+                $organization->responsables()->create([
+                    'name' => fake()->name(),
+                    'email' => fake()->unique()->safeEmail(),
+                    ...($pending[$organization] ?? []),
+                ]);
+            });
     }
 
     public function provincial(): static

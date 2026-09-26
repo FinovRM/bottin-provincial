@@ -93,10 +93,12 @@ class AdminTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.organizations.index'));
-        $this->assertDatabaseHas('organizations', [
-            'name' => 'Nouveau provincial',
-            'parent_id' => null,
-            'responsable_cell_phone' => '5145551234',
+        $organization = Organization::where('name', 'Nouveau provincial')->whereNull('parent_id')->firstOrFail();
+        $this->assertDatabaseHas('responsables', [
+            'organization_id' => $organization->id,
+            'name' => 'A B',
+            'email' => 'nouveau-provincial@example.com',
+            'cell_phone' => '5145551234',
         ]);
     }
 
@@ -166,9 +168,6 @@ class AdminTest extends TestCase
             'level' => 'regional',
             'parent_id' => $otherProvincial->id,
             'name' => $regional->name,
-            'responsable_name' => $regional->responsable_name,
-            'responsable_email' => $regional->responsable_email,
-            'responsable_cell_phone' => '514-555-1234',
         ]);
 
         $response->assertRedirect(route('admin.organizations.index'));
@@ -186,27 +185,30 @@ class AdminTest extends TestCase
             'level' => 'regional',
             'parent_id' => $otherRegional->id,
             'name' => $regional->name,
-            'responsable_name' => $regional->responsable_name,
-            'responsable_email' => $regional->responsable_email,
-            'responsable_cell_phone' => '514-555-1234',
         ]);
 
         $response->assertSessionHasErrors('parent_id');
     }
 
-    public function test_updating_an_organization_requires_the_cell_phone(): void
+    public function test_an_admin_can_add_and_remove_responsables_but_keeps_at_least_one(): void
     {
         $admin = Admin::factory()->create();
-        $organization = Organization::factory()->provincial()->create();
+        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'premier@example.com']);
+        $first = $organization->responsables()->first();
 
-        $response = $this->actingAs($admin, 'admin')->put("/admin/organisations/{$organization->id}", [
-            'level' => 'provincial',
-            'name' => $organization->name,
-            'responsable_name' => $organization->responsable_name,
-            'responsable_email' => $organization->responsable_email,
-        ]);
+        $this->actingAs($admin, 'admin')->post("/admin/organisations/{$organization->id}/responsables", [
+            'responsable_name' => 'Deuxième',
+            'responsable_email' => 'deuxieme@example.com',
+            'responsable_cell_phone' => '514-555-0000',
+        ])->assertRedirect(route('admin.organizations.edit', $organization));
 
-        $response->assertSessionHasErrors('responsable_cell_phone');
+        $second = $organization->responsables()->where('email', 'deuxieme@example.com')->firstOrFail();
+
+        $this->actingAs($admin, 'admin')->delete("/admin/responsables/{$first->id}");
+        $this->assertModelMissing($first);
+
+        $this->actingAs($admin, 'admin')->delete("/admin/responsables/{$second->id}");
+        $this->assertModelExists($second);
     }
 
     public function test_an_admin_cannot_change_the_level_of_an_organization_with_children(): void
@@ -219,9 +221,6 @@ class AdminTest extends TestCase
             'level' => 'regional',
             'parent_id' => Organization::factory()->provincial()->create()->id,
             'name' => $provincial->name,
-            'responsable_name' => $provincial->responsable_name,
-            'responsable_email' => $provincial->responsable_email,
-            'responsable_cell_phone' => '514-555-1234',
         ]);
 
         $response->assertSessionHasErrors('level');
@@ -302,7 +301,8 @@ class AdminTest extends TestCase
         $response = $this->actingAs($admin, 'admin')->post('/admin/organisations/importer', ['file' => $file]);
 
         $response->assertSessionHas('import_errors', []);
-        $this->assertSame(2, Organization::where('responsable_email', 'marc@example.com')->where('parent_id', $provincial->id)->count());
+        $this->assertSame(2, Organization::whereHas('responsables', fn ($responsables) => $responsables->where('email', 'marc@example.com'))
+            ->where('parent_id', $provincial->id)->count());
     }
 
     public function test_the_organization_import_skips_an_organization_that_already_exists(): void
@@ -358,46 +358,38 @@ class AdminTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.organizations.index'));
-        $this->assertSame(2, Organization::where('responsable_email', 'marc@example.com')->count());
+        $this->assertSame(2, Organization::whereHas('responsables', fn ($responsables) => $responsables->where('email', 'marc@example.com'))->count());
     }
 
     public function test_updating_a_responsables_coordinates_updates_all_their_organizations(): void
     {
-        $admin = Admin::factory()->create();
         $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com', 'responsable_name' => 'Prénom Nom']);
-        $regional = Organization::factory()->regional($provincial)->create(['responsable_email' => 'marc@example.com', 'responsable_name' => 'Prénom Nom']);
+        $regional = Organization::factory()->regional($provincial)->create(['responsable_email' => 'marc@example.com']);
         $other = Organization::factory()->regional($provincial)->create(['responsable_email' => 'autre@example.com', 'responsable_name' => 'Autre']);
 
-        $this->actingAs($admin, 'admin')->put("/admin/organisations/{$provincial->id}", [
-            'level' => 'provincial',
-            'parent_id' => '',
-            'name' => $provincial->name,
-            'responsable_name' => 'Marc Desilets',
-            'responsable_email' => 'marc@example.com',
-            'responsable_cell_phone' => '514-555-1234',
+        $provincial->responsables()->first()->update([
+            'name' => 'Marc Desilets',
+            'email' => 'marc.d@example.com',
+            'cell_phone' => '514-555-1234',
         ]);
 
-        $this->assertDatabaseHas('organizations', ['id' => $regional->id, 'responsable_name' => 'Marc Desilets', 'responsable_cell_phone' => '5145551234']);
-        $this->assertDatabaseHas('organizations', ['id' => $other->id, 'responsable_name' => 'Autre']);
+        $this->assertDatabaseHas('responsables', [
+            'organization_id' => $regional->id,
+            'name' => 'Marc Desilets',
+            'email' => 'marc.d@example.com',
+            'cell_phone' => '5145551234',
+        ]);
+        $this->assertDatabaseHas('responsables', ['organization_id' => $other->id, 'name' => 'Autre']);
     }
 
-    public function test_changing_a_responsables_email_only_affects_that_organization(): void
+    public function test_a_responsable_added_elsewhere_keeps_the_coordinates_on_file(): void
     {
-        $admin = Admin::factory()->create();
         $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com', 'responsable_name' => 'Marc']);
-        $regional = Organization::factory()->regional($provincial)->create(['responsable_email' => 'marc@example.com', 'responsable_name' => 'Marc']);
+        $regional = Organization::factory()->regional($provincial)->create();
 
-        $this->actingAs($admin, 'admin')->put("/admin/organisations/{$provincial->id}", [
-            'level' => 'provincial',
-            'parent_id' => '',
-            'name' => $provincial->name,
-            'responsable_name' => 'Julie',
-            'responsable_email' => 'julie@example.com',
-            'responsable_cell_phone' => '514-555-1234',
-        ]);
+        $regional->responsables()->create(['name' => 'Autre orthographe', 'email' => 'marc@example.com']);
 
-        $this->assertDatabaseHas('organizations', ['id' => $provincial->id, 'responsable_email' => 'julie@example.com']);
-        $this->assertDatabaseHas('organizations', ['id' => $regional->id, 'responsable_email' => 'marc@example.com', 'responsable_name' => 'Marc']);
+        $this->assertDatabaseHas('responsables', ['organization_id' => $regional->id, 'email' => 'marc@example.com', 'name' => 'Marc']);
     }
 
     public function test_the_organization_import_keeps_the_coordinates_of_a_known_responsable(): void
@@ -416,10 +408,10 @@ class AdminTest extends TestCase
 
         $this->actingAs($admin, 'admin')->post('/admin/organisations/importer', ['file' => $file]);
 
-        $this->assertDatabaseHas('organizations', [
-            'name' => 'Région A',
-            'responsable_name' => 'Alain Dufour',
-            'responsable_cell_phone' => '4185550000',
+        $this->assertDatabaseHas('responsables', [
+            'organization_id' => Organization::where('name', 'Région A')->value('id'),
+            'name' => 'Alain Dufour',
+            'cell_phone' => '4185550000',
         ]);
     }
 

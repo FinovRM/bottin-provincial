@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\MemberRole;
 use App\Models\Organization;
+use App\Rules\NotReservedRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -75,7 +76,7 @@ class MemberController extends Controller
     {
         $validated = $request->validate([
             'organization_id' => ['required', 'integer', 'exists:organizations,id'],
-            'role' => ['required', 'string', 'max:255'],
+            'role' => ['required', 'string', 'max:255', new NotReservedRole],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'cell_phone' => ['nullable', 'string', 'max:255'],

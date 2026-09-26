@@ -151,7 +151,7 @@ class OrganizationHierarchyTest extends TestCase
         $response->assertOk();
         $response->assertSee('Local choisi 1');
         $response->assertSee('Local choisi 2');
-        $response->assertDontSee('mailto:'.Organization::where('name', 'Local écarté')->value('responsable_email'), false);
+        $response->assertDontSee('mailto:'.Organization::where('name', 'Local écarté')->first()->responsables->first()->email, false);
 
         $csv = $this->actingAs($this->viewerOf($provincial), 'member')->get("/bottin/organisations/exporter?{$query}")->streamedContent();
 

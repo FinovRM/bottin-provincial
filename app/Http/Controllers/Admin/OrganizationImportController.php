@@ -97,7 +97,7 @@ class OrganizationImportController extends Controller
             }
 
             // A responsable may be in charge of several organizations: only look at the level right above.
-            $candidates = Organization::where('responsable_email', $data['parent_responsable_email'])
+            $candidates = Organization::whereHas('responsables', fn ($responsables) => $responsables->where('email', $data['parent_responsable_email']))
                 ->get()
                 ->filter(fn (Organization $organization) => $organization->level->childLevel() === $level);
 
@@ -121,16 +121,17 @@ class OrganizationImportController extends Controller
             throw new \RuntimeException('cette organisation existe déjà ("'.$data['name'].'").');
         }
 
-        // A responsable already on file keeps the coordinates they have there.
-        $existingResponsable = Organization::where('responsable_email', $data['responsable_email'])->first();
-
-        Organization::create([
+        $organization = Organization::create([
             'level' => $level,
             'parent_id' => $parent?->id,
             'name' => $data['name'],
-            'responsable_name' => $existingResponsable->responsable_name ?? $data['responsable_name'],
-            'responsable_email' => $data['responsable_email'],
-            'responsable_cell_phone' => $existingResponsable ? $existingResponsable->getAttributes()['responsable_cell_phone'] : $data['responsable_cell_phone'],
+        ]);
+
+        // A responsable already on file keeps the coordinates they have there (see Responsable).
+        $organization->responsables()->create([
+            'name' => $data['responsable_name'],
+            'email' => $data['responsable_email'],
+            'cell_phone' => $data['responsable_cell_phone'] !== '' ? $data['responsable_cell_phone'] : null,
         ]);
     }
 }

@@ -93,7 +93,7 @@
             @if ($organizations->isNotEmpty())
                 <div class="mb-4 flex flex-wrap gap-3">
                     <button type="button" id="copy-emails"
-                        data-emails="{{ $organizations->pluck('responsable_email')->filter()->unique()->implode(', ') }}"
+                        data-emails="{{ $organizations->pluck('responsables')->flatten()->pluck('email')->unique()->implode(', ') }}"
                         class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                         Copier les courriels dans le presse-papier
                     </button>
@@ -144,12 +144,14 @@
                                 <dd class="text-gray-700">{{ $organization->fullPostalAddress() ?? '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs uppercase tracking-wide text-gray-400">Responsable</dt>
-                                <dd class="text-gray-700">
-                                    {{ $organization->responsable_name }}
-                                    <span class="text-gray-300">·</span>
-                                    <a href="mailto:{{ $organization->responsable_email }}" class="hover:underline">{{ $organization->responsable_email }}</a>
-                                </dd>
+                                <dt class="text-xs uppercase tracking-wide text-gray-400">Responsable(s)</dt>
+                                @foreach ($organization->responsables as $responsable)
+                                    <dd class="text-gray-700">
+                                        {{ $responsable->name }}
+                                        <span class="text-gray-300">·</span>
+                                        <a href="mailto:{{ $responsable->email }}" class="hover:underline">{{ $responsable->email }}</a>
+                                    </dd>
+                                @endforeach
                             </div>
                         </dl>
                     </div>

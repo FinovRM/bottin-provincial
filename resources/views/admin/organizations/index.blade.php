@@ -110,8 +110,9 @@
                                 <td class="px-4 py-2 text-gray-500">{{ $organization->level->label() }}</td>
                                 <td class="px-4 py-2 text-gray-500">{{ $organization->parent?->name ?? '—' }}</td>
                                 <td class="px-4 py-2">
-                                    {{ $organization->responsable_name }}
-                                    <br><span class="text-gray-500">{{ $organization->responsable_email }}</span>
+                                    @foreach ($organization->responsables as $responsable)
+                                        <div>{{ $responsable->name }} <span class="text-gray-500">{{ $responsable->email }}</span></div>
+                                    @endforeach
                                 </td>
                                 <td class="px-4 py-2 text-right whitespace-nowrap">
                                     <a href="{{ route('admin.organizations.edit', $organization) }}" class="text-sm text-gray-700 hover:underline">Modifier</a>

@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Modifier le responsable')
+@section('title', 'Modifier mes coordonnées')
 
 @section('content')
     <p class="mb-2">
         <a href="{{ route('dashboard.properties') }}" class="text-sm text-gray-500 hover:underline">← Mes propriétés</a>
     </p>
-    <h1 class="mb-6 text-2xl font-semibold">Modifier le responsable du bottin</h1>
+    <h1 class="mb-6 text-2xl font-semibold">Modifier mes coordonnées</h1>
 
     <form method="POST" action="{{ route('responsable.update') }}" class="max-w-sm space-y-4">
         @csrf
@@ -14,14 +14,14 @@
         <div>
             <label for="responsable_name" class="block text-sm font-medium">Nom</label>
             <input id="responsable_name" type="text" name="responsable_name"
-                value="{{ old('responsable_name', $organization->responsable_name) }}" required
+                value="{{ old('responsable_name', $responsable->name) }}" required
                 class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             @error('responsable_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
         </div>
 
         <div>
             <label for="responsable_email" class="block text-sm font-medium">Adresse courriel</label>
-            <input id="responsable_email" type="email" name="responsable_email" value="{{ old('responsable_email') }}"
+            <input id="responsable_email" type="email" name="responsable_email" value="{{ old('responsable_email', $responsable->email) }}"
                 required class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             @error('responsable_email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
         </div>
@@ -32,16 +32,25 @@
                 value="{{ old('responsable_email_confirmation') }}" required
                 class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
             <p class="mt-1 text-xs text-gray-500">
-                Modifier ce courriel transfère l'accès à cette fiche à la nouvelle adresse.
+                Vos coordonnées changent dans toutes les organisations dont vous êtes responsable, et vous vous
+                connecterez ensuite avec ce courriel.
             </p>
         </div>
 
-        <div>
-            <label for="responsable_cell_phone" class="block text-sm font-medium">Cellulaire</label>
-            <input id="responsable_cell_phone" type="tel" inputmode="numeric" maxlength="14" name="responsable_cell_phone"
-                value="{{ old('responsable_cell_phone', $organization->responsable_cell_phone) }}" required
-                class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-            @error('responsable_cell_phone')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        <div class="flex gap-3">
+            <div class="flex-1">
+                <label for="responsable_cell_phone" class="block text-sm font-medium">Cellulaire / Téléphone</label>
+                <input id="responsable_cell_phone" type="tel" inputmode="numeric" maxlength="14" name="responsable_cell_phone"
+                    value="{{ old('responsable_cell_phone', $responsable->cell_phone) }}" required
+                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                @error('responsable_cell_phone')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+            <div class="w-28">
+                <label for="responsable_extension" class="block text-sm font-medium">Poste</label>
+                <input id="responsable_extension" type="text" inputmode="numeric" maxlength="10" name="responsable_extension"
+                    value="{{ old('responsable_extension', $responsable->extension) }}"
+                    class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+            </div>
         </div>
 
         <div class="flex gap-3">

@@ -22,15 +22,16 @@ class VisitorIdentities
     public const NO_CHOSEN_ORGANIZATION = 'organization';
 
     /**
-     * @return Collection<int, array{key: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}>
+     * @return Collection<int, array{key: string, email: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}>
      */
     public static function forEmail(string $email): Collection
     {
         $identities = new Collection;
 
-        Organization::where('responsable_email', $email)->orderBy('name')->get()->each(function (Organization $organization) use ($identities) {
+        Organization::whereHas('responsables', fn ($responsables) => $responsables->where('email', $email))->orderBy('name')->get()->each(function (Organization $organization) use ($identities, $email) {
             $identities->push([
                 'key' => "organization:{$organization->id}",
+                'email' => $email,
                 'organization' => $organization->name,
                 'role' => 'Responsable de bottin',
                 'guard' => 'web',
@@ -41,9 +42,10 @@ class VisitorIdentities
 
         $member = Member::where('email', $email)->first();
 
-        $member?->roles->sortBy('organization.name')->each(function (MemberRole $role) use ($identities, $member) {
+        $member?->roles->sortBy('organization.name')->each(function (MemberRole $role) use ($identities, $member, $email) {
             $identities->push([
                 'key' => "member_role:{$role->id}",
+                'email' => $email,
                 'organization' => $role->organization->name,
                 'role' => $role->role,
                 'guard' => 'member',
@@ -60,7 +62,7 @@ class VisitorIdentities
      * "Aucun rôle choisi" first for a member, or "Choisir une organisation"
      * first for someone who is only a responsable.
      *
-     * @return Collection<int, array{key: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}>
+     * @return Collection<int, array{key: string, email: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}>
      */
     public static function choicesForEmail(string $email): Collection
     {
@@ -74,6 +76,7 @@ class VisitorIdentities
         if ($member) {
             $identities->prepend([
                 'key' => self::NO_CHOSEN_ROLE,
+                'email' => $email,
                 'organization' => null,
                 'role' => 'Aucun rôle choisi (niveau local)',
                 'guard' => 'member',
@@ -83,6 +86,7 @@ class VisitorIdentities
         } else {
             $identities->prepend([
                 'key' => self::NO_CHOSEN_ORGANIZATION,
+                'email' => $email,
                 'organization' => null,
                 'role' => 'Choisir une organisation',
                 'guard' => 'web',
@@ -98,7 +102,7 @@ class VisitorIdentities
      * The identity to log in with once the declaration is confirmed: the only
      * one if there's just one; otherwise no chosen role yet (see choicesForEmail()).
      *
-     * @return ?array{key: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}
+     * @return ?array{key: string, email: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}
      */
     public static function defaultForEmail(string $email): ?array
     {
@@ -117,14 +121,18 @@ class VisitorIdentities
     /**
      * Log in as this identity, leaving whichever other guard was in use.
      *
-     * @param  array{key: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}  $identity
+     * @param  array{key: string, email: string, organization: ?string, role: string, guard: string, model: Organization|Member, roleId: ?int}  $identity
      */
     public static function login(array $identity): void
     {
         if ($identity['guard'] === 'web') {
             Auth::guard('member')->logout();
             session()->forget('active_member_role_id');
-            session(['without_chosen_role' => $identity['key'] === self::NO_CHOSEN_ORGANIZATION]);
+            session([
+                'without_chosen_role' => $identity['key'] === self::NO_CHOSEN_ORGANIZATION,
+                // Which of the organization's responsables is using it.
+                'responsable_email' => $identity['email'],
+            ]);
             Auth::guard('web')->login($identity['model']);
 
             return;
@@ -147,7 +155,7 @@ class VisitorIdentities
             return Auth::guard('member')->user()->email;
         }
 
-        return Auth::guard('web')->user()?->responsable_email;
+        return session('responsable_email') ?? Auth::guard('web')->user()?->currentResponsable()?->email;
     }
 
     /**

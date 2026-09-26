@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Member;
-use App\Models\Organization;
+use App\Models\Responsable;
 use App\Notifications\BottinLoginLinkNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class LoginLinkController extends Controller
                 'required',
                 'email',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    $isEligible = Organization::where('responsable_email', $value)->exists()
+                    $isEligible = Responsable::where('email', $value)->exists()
                         || Member::where('email', $value)->exists();
 
                     if (! $isEligible) {

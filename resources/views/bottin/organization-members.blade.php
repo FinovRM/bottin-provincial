@@ -5,16 +5,18 @@
     </span>
     <h2 class="mt-1 text-lg font-semibold text-gray-900">{{ $organization->name }}</h2>
 
-    <p class="mt-2 text-sm text-gray-500">
-        <span class="text-gray-400">Responsable :</span>
-        {{ $organization->responsable_name }}
-        <span class="text-gray-300">·</span>
-        <a href="mailto:{{ $organization->responsable_email }}" class="hover:underline">{{ $organization->responsable_email }}</a>
-        @if ($organization->responsable_cell_phone)
+    @foreach ($organization->responsables as $responsable)
+        <p @class(['text-sm text-gray-500', 'mt-2' => $loop->first, 'mt-0.5' => ! $loop->first])>
+            <span class="text-gray-400">Responsable :</span>
+            {{ $responsable->name }}
             <span class="text-gray-300">·</span>
-            <a href="tel:{{ $organization->responsable_cell_phone }}" class="hover:underline">{{ $organization->responsable_cell_phone }}</a>
-        @endif
-    </p>
+            <a href="mailto:{{ $responsable->email }}" class="hover:underline">{{ $responsable->email }}</a>
+            @if ($responsable->cell_phone)
+                <span class="text-gray-300">·</span>
+                <x-member-phone :member="$responsable" />
+            @endif
+        </p>
+    @endforeach
 
     @if ($memberRoles->isNotEmpty())
         {{-- A table so emails and phones each start on a common column, whatever their length. --}}

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\OrganizationGroup;
 use App\Models\MinimumRole;
 use App\Models\Organization;
+use App\Rules\NotReservedRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,7 @@ class MinimumRoleController extends Controller
         $validated = $request->validateWithBag($bag, [
             'group' => ['required', Rule::enum(OrganizationGroup::class)],
             'name' => [
-                'required', 'string', 'max:255',
+                'required', 'string', 'max:255', new NotReservedRole,
                 Rule::unique('minimum_roles')->where(
                     fn ($query) => $query->where('organization_id', $organization->id)->where('group', $request->input('group'))
                 ),
@@ -45,7 +46,7 @@ class MinimumRoleController extends Controller
 
         $validated = $request->validateWithBag("minimum-role-{$minimumRole->id}", [
             'name' => [
-                'required', 'string', 'max:255',
+                'required', 'string', 'max:255', new NotReservedRole,
                 Rule::unique('minimum_roles')
                     ->where(fn ($query) => $query->where('organization_id', $organization->id)->where('group', $minimumRole->group->value))
                     ->ignore($minimumRole),

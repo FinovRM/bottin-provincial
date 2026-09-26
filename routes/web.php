@@ -83,6 +83,11 @@ Route::middleware(['auth:web', EnsureRoleChosen::class])->group(function () {
     Route::get('/proprietes/responsable/modifier', [ResponsableController::class, 'edit'])->name('responsable.edit');
     Route::post('/proprietes/responsable/modifier', [ResponsableController::class, 'update'])->name('responsable.update');
 
+    Route::get('/proprietes/responsables/ajouter', [ResponsableController::class, 'create'])->name('responsables.create');
+    Route::post('/proprietes/responsables/ajouter', [ResponsableController::class, 'createConfirmed']);
+    Route::post('/proprietes/responsables', [ResponsableController::class, 'store'])->name('responsables.store');
+    Route::delete('/proprietes/responsables/{responsable}', [ResponsableController::class, 'destroy'])->name('responsables.destroy');
+
     Route::get('/proprietes/organisation/modifier', [OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::get('/organisations/ajouter', [OrganizationController::class, 'create'])->name('organizations.create');
     Route::post('/organisations', [OrganizationController::class, 'store'])->name('organizations.store');
@@ -127,6 +132,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/organisations/{organization}/modifier', [AdminOrganizationController::class, 'edit'])->name('organizations.edit');
         Route::put('/organisations/{organization}', [AdminOrganizationController::class, 'update'])->name('organizations.update');
         Route::delete('/organisations/{organization}', [AdminOrganizationController::class, 'destroy'])->name('organizations.destroy');
+        Route::post('/organisations/{organization}/responsables', [AdminOrganizationController::class, 'storeResponsable'])->name('organizations.responsables.store');
+        Route::delete('/responsables/{responsable}', [AdminOrganizationController::class, 'destroyResponsable'])->name('responsables.destroy');
 
         Route::get('/organisations/importer', [OrganizationImportController::class, 'create'])->name('organizations.import.create');
         Route::post('/organisations/importer', [OrganizationImportController::class, 'store'])->name('organizations.import.store');

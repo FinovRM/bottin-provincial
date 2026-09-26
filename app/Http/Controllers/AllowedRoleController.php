@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\OrganizationGroup;
 use App\Models\AllowedRole;
 use App\Models\Organization;
+use App\Rules\NotReservedRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,7 @@ class AllowedRoleController extends Controller
         $validated = $request->validateWithBag($bag, [
             'group' => ['required', Rule::enum(OrganizationGroup::class)],
             'name' => [
-                'required', 'string', 'max:255',
+                'required', 'string', 'max:255', new NotReservedRole,
                 Rule::unique('allowed_roles')->where(
                     fn ($query) => $query->where('organization_id', $organization->id)->where('group', $request->input('group'))
                 ),
@@ -45,7 +46,7 @@ class AllowedRoleController extends Controller
 
         $validated = $request->validateWithBag("allowed-role-{$allowedRole->id}", [
             'name' => [
-                'required', 'string', 'max:255',
+                'required', 'string', 'max:255', new NotReservedRole,
                 Rule::unique('allowed_roles')
                     ->where(fn ($query) => $query->where('organization_id', $organization->id)->where('group', $allowedRole->group->value))
                     ->ignore($allowedRole),

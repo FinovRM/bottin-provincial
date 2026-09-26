@@ -31,7 +31,7 @@ class ViewerScope
         // Only a responsable, of several organizations, none picked yet.
         if (VisitorIdentities::hasNoChosenRole()) {
             return [
-                'name' => $authOrganization->responsable_name,
+                'name' => $authOrganization->currentResponsable()?->name ?? '—',
                 'role' => 'responsable de bottin (aucune organisation choisie)',
                 'organization' => null,
                 'responsable' => '—',
@@ -98,9 +98,7 @@ class ViewerScope
                 'name' => $authMember->name,
                 'role' => $primaryRole?->role ?? '—',
                 'organization' => $primaryRole?->organization->name ?? '—',
-                'responsable' => $primaryRole
-                    ? "{$primaryRole->organization->responsable_name} ({$primaryRole->organization->responsable_email})"
-                    : '—',
+                'responsable' => $primaryRole?->organization->responsablesSummary() ?? '—',
             ];
         }
 
@@ -110,7 +108,7 @@ class ViewerScope
         // Only a responsable, of several organizations, none picked yet.
         if (VisitorIdentities::hasNoChosenRole()) {
             return [
-                'name' => $authOrganization->responsable_name,
+                'name' => $authOrganization->currentResponsable()?->name ?? '—',
                 'role' => 'responsable de bottin (aucune organisation choisie)',
                 'organization' => null,
                 'responsable' => '—',

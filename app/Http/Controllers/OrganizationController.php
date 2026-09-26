@@ -40,9 +40,15 @@ class OrganizationController extends Controller
             'responsable_email' => ['required', 'email', 'max:255', 'confirmed'],
         ]);
 
-        $parent->children()->create([
-            ...$validated,
+        $child = $parent->children()->create([
+            'name' => $validated['name'],
+            'group' => $validated['group'],
             'level' => $parent->level->childLevel(),
+        ]);
+
+        $child->responsables()->create([
+            'name' => $validated['responsable_name'],
+            'email' => $validated['responsable_email'],
         ]);
 
         return redirect()->route('dashboard.properties');

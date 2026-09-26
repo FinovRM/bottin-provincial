@@ -16,7 +16,7 @@ class PropertiesController extends Controller
     public function show(): View
     {
         /** @var Organization $organization */
-        $organization = Auth::user()->load('children', 'memberRoles.member', 'parent.minimumRoles');
+        $organization = Auth::user()->load('children.responsables', 'memberRoles.member', 'parent.minimumRoles', 'responsables');
 
         $missingRoles = $organization->parent
             ? $organization->parent->minimumRoles->where('group', $organization->group)->pluck('name')
@@ -27,6 +27,7 @@ class PropertiesController extends Controller
 
         return view('dashboard.properties', [
             'organization' => $organization,
+            'currentResponsable' => $organization->currentResponsable(),
             'missingRoles' => $missingRoles,
             'groups' => OrganizationGroup::cases(),
             'rolesByGroup' => $organization->canCreateChildren() ? $this->rolesByGroup($organization) : [],

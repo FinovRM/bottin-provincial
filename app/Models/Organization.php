@@ -4,10 +4,8 @@ namespace App\Models;
 
 use App\Enums\OrganizationGroup;
 use App\Enums\OrganizationLevel;
-use App\Support\CellPhone;
 use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +15,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
-    'name', 'legal_name', 'responsable_name', 'responsable_email', 'responsable_cell_phone',
+    'name', 'legal_name',
     'address', 'city', 'province', 'postal_code', 'business_number', 'website', 'level', 'group', 'parent_id',
 ])]
 class Organization extends Authenticatable
@@ -35,28 +33,6 @@ class Organization extends Authenticatable
     protected $attributes = [
         'group' => 'organisation',
     ];
-
-    /**
-     * A responsable is one person, identified by email: when their name or cell
-     * phone changes on one organization, every organization they're in charge of
-     * follows. Changing the email itself only moves this organization to the
-     * new responsable (whose other organizations then take these coordinates).
-     */
-    protected static function booted(): void
-    {
-        static::updated(function (Organization $organization) {
-            if (! $organization->wasChanged(['responsable_name', 'responsable_email', 'responsable_cell_phone'])) {
-                return;
-            }
-
-            Organization::where('responsable_email', $organization->responsable_email)
-                ->whereKeyNot($organization->id)
-                ->update(array_intersect_key(
-                    $organization->getAttributes(),
-                    array_flip(['responsable_name', 'responsable_cell_phone'])
-                ));
-        });
-    }
 
     /**
      * Get the attributes that should be cast.
@@ -87,14 +63,23 @@ class Organization extends Authenticatable
     }
 
     /**
-     * Stored as digits only, presented as "(xxx) xxx-xxxx".
+     * The people in charge of this organization's bottin.
+     *
+     * @return HasMany<Responsable, $this>
      */
-    protected function responsableCellPhone(): Attribute
+    public function responsables(): HasMany
     {
-        return Attribute::make(
-            get: fn (?string $value) => CellPhone::format($value),
-            set: fn (?string $value) => CellPhone::normalize($value),
-        );
+        return $this->hasMany(Responsable::class)->orderBy('name');
+    }
+
+    /**
+     * The responsable using the bottin right now as this organization — the
+     * courriel they logged in with — or, when none is known, the first one.
+     */
+    public function currentResponsable(): ?Responsable
+    {
+        return $this->responsables->firstWhere('email', session('responsable_email'))
+            ?? $this->responsables->first();
     }
 
     /**
@@ -284,14 +269,17 @@ class Organization extends Authenticatable
     }
 
     /**
-     * Every organization this same person (by responsable email) is in charge of —
+     * Every organization the current responsable (by courriel) is in charge of —
      * "les bottins dont il a la charge". Usually just this one.
      *
      * @return Collection<int, Organization>
      */
     public function organizationsManagedBySameResponsable(): Collection
     {
-        return Organization::where('responsable_email', $this->responsable_email)->get();
+        $email = $this->currentResponsable()?->email;
+
+        return Organization::whereHas('responsables', fn ($responsables) => $responsables->where('email', $email))->get()
+            ->whenEmpty(fn () => Collection::make([$this]));
     }
 
     /**
@@ -316,15 +304,28 @@ class Organization extends Authenticatable
     public function identity(): array
     {
         return [
-            'name' => $this->responsable_name,
+            'name' => $this->currentResponsable()?->name ?? '—',
             'role' => 'Responsable de bottin',
             'organization' => $this->name,
-            'responsable' => "{$this->responsable_name} ({$this->responsable_email})",
+            'responsable' => $this->responsablesSummary(),
         ];
     }
 
-    public function routeNotificationForMail(): string
+    /**
+     * Every responsable as "Name (courriel)", for the identity banner.
+     */
+    public function responsablesSummary(): string
     {
-        return $this->responsable_email;
+        return $this->responsables->map(fn (Responsable $responsable) => "{$responsable->name} ({$responsable->email})")
+            ->whenEmpty(fn ($summary) => $summary->push('—'))
+            ->implode(', ');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function routeNotificationForMail(): array
+    {
+        return $this->responsables->pluck('email')->all();
     }
 }

@@ -5,7 +5,7 @@
 @section('content')
     @include('partials.hero-banner', [
         'title' => $organization->name,
-        'description' => 'Gérez le responsable, les coordonnées et les membres de votre organisation.',
+        'description' => 'Gérez les responsables, les coordonnées et les membres de votre organisation.',
         'meta' => 'Mise à jour : '.$organization->updated_at->format('Y-m-d à H:i'),
     ])
 
@@ -17,21 +17,62 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                     </svg>
                 </span>
-                <h2 class="text-lg font-semibold">Responsable du bottin</h2>
+                <h2 class="text-lg font-semibold">
+                    Responsable(s) du bottin
+                    <span class="ml-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                        {{ $organization->responsables->count() }}
+                    </span>
+                </h2>
             </div>
-            <a href="{{ route('responsable.edit') }}" class="shrink-0 text-sm text-gray-700 hover:underline">Modifier</a>
+            <a href="{{ route('responsables.create') }}"
+                class="inline-flex shrink-0 items-center gap-1 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-black">
+                + Ajouter
+            </a>
         </div>
 
-        <dl class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm text-gray-700">
-            <dt class="text-right font-medium">Nom :</dt>
-            <dd>{{ $organization->responsable_name }}</dd>
-
-            <dt class="text-right font-medium">Courriel :</dt>
-            <dd><a href="mailto:{{ $organization->responsable_email }}" class="hover:underline">{{ $organization->responsable_email }}</a></dd>
-
-            <dt class="text-right font-medium">Cellulaire :</dt>
-            <dd>{{ $organization->responsable_cell_phone ?: '—' }}</dd>
-        </dl>
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="w-full text-left text-sm">
+                <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+                    <tr>
+                        <th class="px-4 py-2">Nom</th>
+                        <th class="px-4 py-2">Courriel</th>
+                        <th class="px-4 py-2">Cellulaire / Téléphone</th>
+                        <th class="px-4 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($organization->responsables as $responsable)
+                        @php
+                            $isMe = $responsable->is($currentResponsable);
+                        @endphp
+                        <tr class="border-b border-gray-100 last:border-0">
+                            <td class="px-4 py-2 font-medium">
+                                {{ $responsable->name }}
+                                @if ($isMe)
+                                    <span class="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-500">vous</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-2"><a href="mailto:{{ $responsable->email }}" class="hover:underline">{{ $responsable->email }}</a></td>
+                            <td class="px-4 py-2">
+                                <x-member-phone :member="$responsable" fallback="—" />
+                            </td>
+                            <td class="px-4 py-2 text-right">
+                                @if ($isMe)
+                                    <a href="{{ route('responsable.edit') }}" class="text-sm text-gray-700 hover:underline">Modifier</a>
+                                @else
+                                    <form method="POST" action="{{ route('responsables.destroy', $responsable) }}"
+                                        onsubmit="return confirm('Retirer ce responsable ?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-sm text-red-600 hover:underline">Retirer</button>
+                                    </form>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </section>
 
     <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
@@ -203,8 +244,12 @@
                                     </div>
                                     <div class="min-w-0">
                                         <p class="truncate font-medium text-gray-900">{{ $child->name }}</p>
-                                        <p class="truncate text-sm text-gray-500">{{ $child->responsable_name }}</p>
-                                        <a href="mailto:{{ $child->responsable_email }}" class="truncate text-sm text-gray-500 hover:underline">{{ $child->responsable_email }}</a>
+                                        @foreach ($child->responsables as $childResponsable)
+                                            <p class="truncate text-sm text-gray-500">
+                                                {{ $childResponsable->name }} ·
+                                                <a href="mailto:{{ $childResponsable->email }}" class="hover:underline">{{ $childResponsable->email }}</a>
+                                            </p>
+                                        @endforeach
                                     </div>
                                 </div>
                                 <form method="POST" action="{{ route('organizations.destroy', $child) }}"

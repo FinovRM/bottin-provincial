@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Member;
 use App\Models\MemberRole;
 use App\Models\Organization;
+use App\Rules\NotReservedRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,7 +49,7 @@ class MemberController extends Controller
         $roleOptions = $organization->usableRoleNames();
 
         $validated = $request->validate([
-            'role' => ['required', 'string', 'max:255', ...($roleOptions ? [Rule::in($roleOptions)] : [])],
+            'role' => ['required', 'string', 'max:255', new NotReservedRole, ...($roleOptions ? [Rule::in($roleOptions)] : [])],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'confirmed'],
             'cell_phone' => ['nullable', 'string', 'max:255'],

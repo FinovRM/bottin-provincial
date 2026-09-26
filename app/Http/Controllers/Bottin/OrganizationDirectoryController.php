@@ -31,7 +31,7 @@ class OrganizationDirectoryController extends Controller
         return response()->streamDownload(function () use ($organizations) {
             $handle = fopen('php://output', 'w');
 
-            fputcsv($handle, ['Organisation', 'Niveau', 'Groupe', 'Nom légal', 'Adresse', "N° d'entreprise", 'Site web', 'Responsable', 'Courriel']);
+            fputcsv($handle, ['Organisation', 'Niveau', 'Groupe', 'Nom légal', 'Adresse', "N° d'entreprise", 'Site web', 'Responsable(s)', 'Courriel(s)']);
 
             foreach ($organizations as $organization) {
                 fputcsv($handle, [
@@ -42,8 +42,8 @@ class OrganizationDirectoryController extends Controller
                     $organization->fullPostalAddress() ?? '',
                     $organization->business_number ?: '',
                     $organization->website ?: '',
-                    $organization->responsable_name,
-                    $organization->responsable_email,
+                    $organization->responsables->pluck('name')->implode(' ; '),
+                    $organization->responsables->pluck('email')->implode(' ; '),
                 ]);
             }
 
@@ -112,7 +112,8 @@ class OrganizationDirectoryController extends Controller
             ->filter(fn ($organization) => $matches($lineages[$organization->id], OrganizationLevel::Provincial, $provincialId)
                 && $matches($lineages[$organization->id], OrganizationLevel::Regional, $regionalId)
                 && ($localIdInts === [] || in_array($lineages[$organization->id][OrganizationLevel::Local->value] ?? null, $localIdInts, true)))
-            ->sortBy('name');
+            ->sortBy('name')
+            ->load('responsables');
 
         return [
             'organizations' => $organizations,
