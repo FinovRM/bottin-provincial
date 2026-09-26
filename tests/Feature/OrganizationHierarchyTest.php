@@ -127,8 +127,8 @@ class OrganizationHierarchyTest extends TestCase
 
     public function test_the_organizations_directory_offers_to_copy_the_responsables_emails(): void
     {
-        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
-        Organization::factory()->regional($provincial)->create(['responsable_email' => 'region@example.com']);
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'prov@example.com'])->create();
+        Organization::factory()->regional($provincial)->withResponsable(['email' => 'region@example.com'])->create();
 
         $response = $this->actingAs($this->viewerOf($provincial), 'member')->get('/bottin/organisations');
 
@@ -162,9 +162,9 @@ class OrganizationHierarchyTest extends TestCase
 
     public function test_the_organizations_directory_can_isolate_my_parent_and_my_organization(): void
     {
-        $provincial = Organization::factory()->provincial()->create(['name' => 'Bureau provincial', 'responsable_email' => 'prov@example.com']);
-        $regional = Organization::factory()->regional($provincial)->create(['name' => 'Ma région', 'responsable_email' => 'moi@example.com']);
-        Organization::factory()->regional($provincial)->create(['name' => 'Autre région', 'responsable_email' => 'autre@example.com']);
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'prov@example.com'])->create(['name' => 'Bureau provincial']);
+        $regional = Organization::factory()->regional($provincial)->withResponsable(['email' => 'moi@example.com'])->create(['name' => 'Ma région']);
+        Organization::factory()->regional($provincial)->withResponsable(['email' => 'autre@example.com'])->create(['name' => 'Autre région']);
         $viewer = $this->viewerOf($regional);
 
         $page = $this->actingAs($viewer, 'member')->get('/bottin/organisations');

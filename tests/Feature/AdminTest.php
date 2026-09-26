@@ -193,7 +193,7 @@ class AdminTest extends TestCase
     public function test_an_admin_can_add_and_remove_responsables_but_keeps_at_least_one(): void
     {
         $admin = Admin::factory()->create();
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'premier@example.com']);
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'premier@example.com'])->create();
         $first = $organization->responsables()->first();
 
         $this->actingAs($admin, 'admin')->post("/admin/organisations/{$organization->id}/responsables", [
@@ -230,7 +230,7 @@ class AdminTest extends TestCase
     public function test_an_admin_can_import_organizations_from_a_csv(): void
     {
         $admin = Admin::factory()->create();
-        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'prov@example.com'])->create();
 
         $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
             ."regional,prov@example.com,Région Importée,Jean Tremblay,region-importee@example.com,514-555-1234\n";
@@ -272,7 +272,7 @@ class AdminTest extends TestCase
     public function test_the_organization_import_rejects_a_row_without_a_valid_responsable_email(): void
     {
         $admin = Admin::factory()->create();
-        Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
+        Organization::factory()->provincial()->withResponsable(['email' => 'prov@example.com'])->create();
 
         $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
             ."regional,prov@example.com,Région Décalée,jean@example.com,,514-555-1234\n";
@@ -290,7 +290,7 @@ class AdminTest extends TestCase
     public function test_the_organization_import_allows_one_responsable_for_several_organizations(): void
     {
         $admin = Admin::factory()->create();
-        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'prov@example.com'])->create();
 
         $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
             ."regional,prov@example.com,Région A,Marc D,marc@example.com,514-555-1234\n"
@@ -308,7 +308,7 @@ class AdminTest extends TestCase
     public function test_the_organization_import_skips_an_organization_that_already_exists(): void
     {
         $admin = Admin::factory()->create();
-        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'prov@example.com']);
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'prov@example.com'])->create();
         Organization::factory()->regional($provincial)->create(['name' => 'Région A']);
 
         $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
@@ -325,9 +325,9 @@ class AdminTest extends TestCase
     public function test_the_organization_import_finds_the_parent_at_the_expected_level(): void
     {
         $admin = Admin::factory()->create();
-        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com']);
-        $regional = Organization::factory()->regional($provincial)->create(['responsable_email' => 'marc@example.com']);
-        $otherProvincial = Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com']);
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'marc@example.com'])->create();
+        $regional = Organization::factory()->regional($provincial)->withResponsable(['email' => 'marc@example.com'])->create();
+        $otherProvincial = Organization::factory()->provincial()->withResponsable(['email' => 'marc@example.com'])->create();
 
         $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
             ."local,marc@example.com,Local A,Jean T,jean@example.com,514-555-1234\n"
@@ -345,7 +345,7 @@ class AdminTest extends TestCase
     public function test_an_admin_can_create_an_organization_for_a_responsable_already_in_charge_of_another(): void
     {
         $admin = Admin::factory()->create();
-        Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com']);
+        Organization::factory()->provincial()->withResponsable(['email' => 'marc@example.com'])->create();
 
         $response = $this->actingAs($admin, 'admin')->post('/admin/organisations', [
             'level' => 'provincial',
@@ -363,9 +363,9 @@ class AdminTest extends TestCase
 
     public function test_updating_a_responsables_coordinates_updates_all_their_organizations(): void
     {
-        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com', 'responsable_name' => 'Prénom Nom']);
-        $regional = Organization::factory()->regional($provincial)->create(['responsable_email' => 'marc@example.com']);
-        $other = Organization::factory()->regional($provincial)->create(['responsable_email' => 'autre@example.com', 'responsable_name' => 'Autre']);
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'marc@example.com', 'name' => 'Prénom Nom'])->create();
+        $regional = Organization::factory()->regional($provincial)->withResponsable(['email' => 'marc@example.com'])->create();
+        $other = Organization::factory()->regional($provincial)->withResponsable(['email' => 'autre@example.com', 'name' => 'Autre'])->create();
 
         $provincial->responsables()->first()->update([
             'name' => 'Marc Desilets',
@@ -384,7 +384,7 @@ class AdminTest extends TestCase
 
     public function test_a_responsable_added_elsewhere_keeps_the_coordinates_on_file(): void
     {
-        $provincial = Organization::factory()->provincial()->create(['responsable_email' => 'marc@example.com', 'responsable_name' => 'Marc']);
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'marc@example.com', 'name' => 'Marc'])->create();
         $regional = Organization::factory()->regional($provincial)->create();
 
         $regional->responsables()->create(['name' => 'Autre orthographe', 'email' => 'marc@example.com']);
@@ -395,11 +395,11 @@ class AdminTest extends TestCase
     public function test_the_organization_import_keeps_the_coordinates_of_a_known_responsable(): void
     {
         $admin = Admin::factory()->create();
-        Organization::factory()->provincial()->create([
-            'responsable_email' => 'prov@example.com',
-            'responsable_name' => 'Alain Dufour',
-            'responsable_cell_phone' => '418-555-0000',
-        ]);
+        Organization::factory()->provincial()->withResponsable([
+            'email' => 'prov@example.com',
+            'name' => 'Alain Dufour',
+            'cell_phone' => '418-555-0000',
+        ])->create();
 
         $csv = "level,parent_responsable_email,name,responsable_name,responsable_email,responsable_cell_phone\n"
             ."regional,prov@example.com,Région A,Prenom Nom,prov@example.com,\n";
@@ -502,7 +502,7 @@ class AdminTest extends TestCase
     public function test_an_admin_can_import_members_from_a_csv(): void
     {
         $admin = Admin::factory()->create();
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'org@example.com']);
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'org@example.com'])->create();
 
         $csv = "organization_responsable_email,role,name,email,cell_phone\n"
             ."org@example.com,Bénévole,Membre Importé,membre-importe@example.com,514-555-9999\n";
@@ -521,7 +521,7 @@ class AdminTest extends TestCase
     public function test_a_member_import_reads_the_extension_column_or_splits_it_from_the_phone(): void
     {
         $admin = Admin::factory()->create();
-        Organization::factory()->provincial()->create(['responsable_email' => 'org@example.com']);
+        Organization::factory()->provincial()->withResponsable(['email' => 'org@example.com'])->create();
 
         $csv = "organization_responsable_email,role,name,email,cell_phone,extension\n"
             ."org@example.com,Bénévole,Avec Poste,avec-poste@example.com,819-562-0044,221\n"

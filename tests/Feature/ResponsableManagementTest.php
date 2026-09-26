@@ -12,11 +12,11 @@ class ResponsableManagementTest extends TestCase
 
     public function test_properties_page_lists_the_responsable_in_a_table_with_a_modifier_link(): void
     {
-        $organization = Organization::factory()->provincial()->create([
-            'responsable_name' => 'Jeanne Tremblay',
-            'responsable_email' => 'jeanne@example.com',
-            'responsable_cell_phone' => '514-555-1234',
-        ]);
+        $organization = Organization::factory()->provincial()->withResponsable([
+            'name' => 'Jeanne Tremblay',
+            'email' => 'jeanne@example.com',
+            'cell_phone' => '514-555-1234',
+        ])->create();
 
         $response = $this->actingAs($organization)->get('/proprietes');
 
@@ -76,7 +76,7 @@ class ResponsableManagementTest extends TestCase
 
     public function test_a_matching_email_confirmation_reaches_the_validation_step_without_saving_yet(): void
     {
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'ancien@example.com']);
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'ancien@example.com'])->create();
 
         $response = $this->actingAs($organization)->post('/proprietes/responsable/modifier', [
             'responsable_name' => 'Nouveau Responsable',
@@ -93,7 +93,7 @@ class ResponsableManagementTest extends TestCase
 
     public function test_authorizing_the_change_saves_the_responsables_own_coordinates(): void
     {
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'ancien@example.com']);
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'ancien@example.com'])->create();
 
         $response = $this->actingAs($organization)->post('/proprietes/responsable/modifier', [
             'confirmed_change' => '1',
@@ -117,8 +117,8 @@ class ResponsableManagementTest extends TestCase
 
     public function test_the_email_cannot_already_be_used_by_another_responsable(): void
     {
-        Organization::factory()->provincial()->create(['responsable_email' => 'deja-pris@example.com']);
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'moi@example.com']);
+        Organization::factory()->provincial()->withResponsable(['email' => 'deja-pris@example.com'])->create();
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'moi@example.com'])->create();
 
         $response = $this->actingAs($organization)->post('/proprietes/responsable/modifier', [
             'responsable_name' => 'Nouveau Responsable',
@@ -157,7 +157,7 @@ class ResponsableManagementTest extends TestCase
 
     public function test_a_responsable_cannot_be_added_twice_to_the_same_organization(): void
     {
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'moi@example.com']);
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'moi@example.com'])->create();
 
         $this->actingAs($organization)->post('/proprietes/responsables', [
             'name' => 'Moi encore',
@@ -168,7 +168,7 @@ class ResponsableManagementTest extends TestCase
 
     public function test_a_responsable_can_remove_another_responsable_but_not_themselves(): void
     {
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'moi@example.com']);
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'moi@example.com'])->create();
         $me = $organization->responsables()->first();
         $other = $organization->responsables()->create(['name' => 'Autre', 'email' => 'autre@example.com']);
 

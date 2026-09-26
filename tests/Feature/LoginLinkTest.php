@@ -18,7 +18,7 @@ class LoginLinkTest extends TestCase
     {
         Notification::fake();
 
-        Organization::factory()->provincial()->create(['responsable_email' => 'responsable@example.com']);
+        Organization::factory()->provincial()->withResponsable(['email' => 'responsable@example.com'])->create();
 
         $response = $this->post('/connexion/bottin', ['email' => 'responsable@example.com']);
 
@@ -76,7 +76,7 @@ class LoginLinkTest extends TestCase
 
     public function test_confirming_the_declaration_with_a_single_matching_organization_logs_in_and_returns_home(): void
     {
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'resp@example.com']);
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'resp@example.com'])->create();
 
         $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => 'resp@example.com']);
 
@@ -126,7 +126,7 @@ class LoginLinkTest extends TestCase
 
     public function test_a_member_who_is_also_a_responsable_can_switch_to_the_responsable_role(): void
     {
-        $organization = Organization::factory()->provincial()->create(['name' => 'Org A', 'responsable_email' => 'multi@example.com']);
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'multi@example.com'])->create(['name' => 'Org A']);
         $member = Member::create(['name' => 'Test', 'email' => 'multi@example.com']);
         $member->roles()->create(['organization_id' => $organization->id, 'role' => 'Bénévole']);
 
@@ -146,8 +146,8 @@ class LoginLinkTest extends TestCase
 
     public function test_a_responsable_of_several_organizations_first_chooses_an_organization(): void
     {
-        $provincial = Organization::factory()->provincial()->create(['name' => 'Org A', 'responsable_email' => 'multi@example.com']);
-        $regional = Organization::factory()->regional($provincial)->create(['name' => 'Org B', 'responsable_email' => 'multi@example.com']);
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'multi@example.com'])->create(['name' => 'Org A']);
+        $regional = Organization::factory()->regional($provincial)->withResponsable(['email' => 'multi@example.com'])->create(['name' => 'Org B']);
 
         $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => 'multi@example.com']);
 
@@ -176,7 +176,7 @@ class LoginLinkTest extends TestCase
 
     public function test_a_single_organization_responsable_goes_straight_to_its_properties(): void
     {
-        $organization = Organization::factory()->provincial()->create(['responsable_email' => 'resp@example.com']);
+        $organization = Organization::factory()->provincial()->withResponsable(['email' => 'resp@example.com'])->create();
 
         $url = URL::temporarySignedRoute('bottin-login.verify', now()->addMinutes(15), ['email' => 'resp@example.com']);
 
@@ -195,7 +195,7 @@ class LoginLinkTest extends TestCase
         $member = Member::create(['name' => 'Test', 'email' => 'membre@example.com']);
         $organization = Organization::factory()->provincial()->create();
         $member->roles()->create(['organization_id' => $organization->id, 'role' => 'Bénévole']);
-        $other = Organization::factory()->provincial()->create(['responsable_email' => 'autre@example.com']);
+        $other = Organization::factory()->provincial()->withResponsable(['email' => 'autre@example.com'])->create();
 
         $this->actingAs($member, 'member')->post('/role', ['identity' => "organization:{$other->id}"])->assertNotFound();
         $this->assertGuest('web');

@@ -13,48 +13,48 @@ class OrganizationSeeder extends Seeder
      */
     public function run(): void
     {
-        $provincial = Organization::factory()->provincial()->create([
+        $provincial = Organization::factory()->provincial()->withResponsable([
+            'name' => 'Prov. 1',
+            'email' => 'provincial@example.com',
+        ])->create([
             'name' => 'Bureau provincial',
-            'responsable_name' => 'Prov. 1',
-            'responsable_email' => 'provincial@example.com',
             'address' => '1 rue du Parlement, Québec',
             'business_number' => '1000000001',
             'website' => 'https://provincial.example.com',
         ]);
 
-        $region1 = Organization::factory()->regional($provincial)->create([
+        $region1 = Organization::factory()->regional($provincial)->withResponsable([
+            'name' => 'Reg. 1',
+            'email' => 'regional1@example.com',
+        ])->create([
             'name' => 'Région 1',
-            'responsable_name' => 'Reg. 1',
-            'responsable_email' => 'regional1@example.com',
             'address' => '10 rue Principale, Région 1',
             'business_number' => '1000000011',
             'website' => 'https://region1.example.com',
         ]);
 
-        $region2 = Organization::factory()->regional($provincial)->create([
-            'name' => 'Région 2',
-            'responsable_name' => 'Reg. 2',
-            'responsable_email' => 'regional2@example.com',
-        ]);
+        $region2 = Organization::factory()->regional($provincial)->withResponsable([
+            'name' => 'Reg. 2',
+            'email' => 'regional2@example.com',
+        ])->create(['name' => 'Région 2']);
 
-        Organization::factory()->regional($provincial)->create([
-            'name' => 'Région 3',
-            'responsable_name' => 'Reg. 3',
-            'responsable_email' => 'regional3@example.com',
-        ]);
+        Organization::factory()->regional($provincial)->withResponsable([
+            'name' => 'Reg. 3',
+            'email' => 'regional3@example.com',
+        ])->create(['name' => 'Région 3']);
 
-        $locals = collect(range(1, 3))->map(fn ($i) => Organization::factory()->local($region1)->create([
+        $locals = collect(range(1, 3))->map(fn ($i) => Organization::factory()->local($region1)->withResponsable([
+            'name' => "Loc. {$i}",
+            'email' => "local{$i}@example.com",
+        ])->create([
             'name' => "Organisme local {$i}",
-            'responsable_name' => "Loc. {$i}",
-            'responsable_email' => "local{$i}@example.com",
             'address' => "{$i} rue des Érables, Région 1",
         ]));
 
-        $localInRegion2 = Organization::factory()->local($region2)->create([
-            'name' => 'Organisme local (Région 2) 1',
-            'responsable_name' => 'Loc. R2',
-            'responsable_email' => 'local-r2-1@example.com',
-        ]);
+        $localInRegion2 = Organization::factory()->local($region2)->withResponsable([
+            'name' => 'Loc. R2',
+            'email' => 'local-r2-1@example.com',
+        ])->create(['name' => 'Organisme local (Région 2) 1']);
 
         $alice = Member::create(['name' => 'Alice Provincial', 'email' => 'alice.provincial@example.com', 'cell_phone' => '514-555-0001']);
         $provincial->memberRoles()->create(['member_id' => $alice->id, 'role' => 'Direction générale']);

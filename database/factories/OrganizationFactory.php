@@ -5,8 +5,8 @@ namespace Database\Factories;
 use App\Enums\OrganizationGroup;
 use App\Enums\OrganizationLevel;
 use App\Models\Organization;
+use App\Models\Responsable;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use WeakMap;
 
 /**
  * @extends Factory<Organization>
@@ -28,42 +28,25 @@ class OrganizationFactory extends Factory
     }
 
     /**
-     * The former organization columns tests may still pass, and the
-     * responsable field each one now fills.
-     */
-    private const RESPONSABLE_FIELDS = [
-        'responsable_name' => 'name',
-        'responsable_email' => 'email',
-        'responsable_cell_phone' => 'cell_phone',
-    ];
-
-    /**
-     * Every organization gets one responsable, taking any responsable_* attribute
-     * given to the organization.
+     * Every organization gets one responsable, unless one was given with withResponsable().
      */
     public function configure(): static
     {
-        /** @var WeakMap<Organization, array<string, mixed>> $given */
-        $given = new WeakMap;
+        return $this->afterCreating(function (Organization $organization) {
+            if ($organization->responsables()->doesntExist()) {
+                Responsable::factory()->for($organization)->create();
+            }
+        });
+    }
 
-        return $this
-            ->afterMaking(function (Organization $organization) use ($given) {
-                $attributes = array_intersect_key($organization->getAttributes(), self::RESPONSABLE_FIELDS);
-
-                foreach (array_keys($attributes) as $attribute) {
-                    unset($organization->{$attribute});
-                }
-
-                $given[$organization] = array_combine(
-                    array_map(fn ($attribute) => self::RESPONSABLE_FIELDS[$attribute], array_keys($attributes)),
-                    $attributes,
-                );
-            })
-            ->afterCreating(fn (Organization $organization) => $organization->responsables()->create([
-                'name' => fake()->name(),
-                'email' => fake()->unique()->safeEmail(),
-                ...$given[$organization],
-            ]));
+    /**
+     * Its responsable, with these attributes (name, email, cell_phone…).
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function withResponsable(array $attributes): static
+    {
+        return $this->has(Responsable::factory()->state($attributes));
     }
 
     public function provincial(): static
