@@ -102,21 +102,26 @@
                             @endif
                         </div>
 
-                        <ul class="mt-3 divide-y divide-gray-100 border-t border-gray-100">
-                            @foreach ($organizationRoles as $memberRole)
-                                <li class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-2 text-sm">
-                                    <p>
-                                        <span class="font-medium text-gray-900">{{ $memberRole->role }}</span>
-                                        <span class="text-gray-300">·</span>
-                                        <span class="text-gray-700">{{ $memberRole->member->name }}</span>
-                                    </p>
-                                    <p class="flex flex-wrap gap-x-3 text-gray-500">
-                                        <a href="mailto:{{ $memberRole->member->email }}" class="hover:underline">{{ $memberRole->member->email }}</a>
-                                        <x-member-phone :member="$memberRole->member" />
-                                    </p>
-                                </li>
-                            @endforeach
-                        </ul>
+                        {{-- A table so emails and phones each start on a common column, whatever their length. --}}
+                        <table class="mt-3 w-full border-t border-gray-100 text-sm">
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach ($organizationRoles as $memberRole)
+                                    <tr class="align-baseline">
+                                        <td class="py-2 pr-4">
+                                            <span class="font-medium text-gray-900">{{ $memberRole->role }}</span>
+                                            <span class="text-gray-300">·</span>
+                                            <span class="text-gray-700">{{ $memberRole->member->name }}</span>
+                                        </td>
+                                        <td class="py-2 pr-4 text-gray-500">
+                                            <a href="mailto:{{ $memberRole->member->email }}" class="hover:underline">{{ $memberRole->member->email }}</a>
+                                        </td>
+                                        <td class="whitespace-nowrap py-2 text-gray-500">
+                                            <x-member-phone :member="$memberRole->member" />
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 @empty
                     <div class="rounded-lg bg-white p-6 text-center text-sm text-gray-500 shadow-sm">
