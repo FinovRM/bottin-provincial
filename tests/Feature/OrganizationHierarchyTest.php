@@ -171,6 +171,7 @@ class OrganizationHierarchyTest extends TestCase
         $page->assertSee('Mon parent');
         $page->assertSee('Mon organisation');
         $page->assertSee('mailto:autre@example.com', false);
+        $page->assertDontSee('name="provincial_id"', false);
 
         $mine = $this->actingAs($viewer, 'member')->get('/bottin/organisations?my_organization=1');
         $mine->assertSee('mailto:moi@example.com', false);

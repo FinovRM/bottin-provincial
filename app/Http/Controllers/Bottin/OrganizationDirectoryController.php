@@ -53,15 +53,14 @@ class OrganizationDirectoryController extends Controller
     }
 
     /**
-     * The visible organizations matching the search and the provincial /
-     * regional / local filters, along with those filters' state.
+     * The visible organizations matching the search and the regional / local
+     * filters, along with those filters' state.
      *
      * @return array<string, mixed>
      */
     private function filtered(Request $request): array
     {
         $query = $request->string('q')->trim()->toString();
-        $provincialId = $request->string('provincial_id')->trim()->toString();
         $regionalId = $request->string('regional_id')->trim()->toString();
         // Several local organizations can be picked; a single local_id is still understood.
         $localIds = collect(Arr::wrap($request->input('local_ids')))
@@ -100,12 +99,10 @@ class OrganizationDirectoryController extends Controller
                 ->sortBy('name');
         };
 
-        $provincials = $optionsFor(OrganizationLevel::Provincial, []);
-
-        $regionals = $optionsFor(OrganizationLevel::Regional, ['provincial' => $provincialId]);
+        $regionals = $optionsFor(OrganizationLevel::Regional, []);
         $regionalId = $regionals->contains('id', (int) $regionalId) ? $regionalId : '';
 
-        $locals = $optionsFor(OrganizationLevel::Local, ['provincial' => $provincialId, 'regional' => $regionalId]);
+        $locals = $optionsFor(OrganizationLevel::Local, ['regional' => $regionalId]);
         $localIds = $localIds->filter(fn ($id) => $locals->contains('id', (int) $id))->values();
         $localIdInts = $localIds->map(fn ($id) => (int) $id)->all();
 
@@ -115,8 +112,7 @@ class OrganizationDirectoryController extends Controller
                 ->when($myDirection, fn ($organizations) => $organizations->merge($directionOrganizations))
                 ->when($myOrganization && $ownOrganization, fn ($organizations) => $organizations->push($ownOrganization))
                 ->unique('id')
-            : $scopedOrganizations->filter(fn ($organization) => $matches($lineages[$organization->id], OrganizationLevel::Provincial, $provincialId)
-                && $matches($lineages[$organization->id], OrganizationLevel::Regional, $regionalId)
+            : $scopedOrganizations->filter(fn ($organization) => $matches($lineages[$organization->id], OrganizationLevel::Regional, $regionalId)
                 && ($localIdInts === [] || in_array($lineages[$organization->id][OrganizationLevel::Local->value] ?? null, $localIdInts, true)));
 
         $organizations = $organizations
@@ -134,7 +130,6 @@ class OrganizationDirectoryController extends Controller
             'showMyDirectionFilter' => $directionOrganizations->isNotEmpty(),
             'showMyOrganizationFilter' => $ownOrganization !== null,
             'levelFilters' => [
-                ['name' => 'provincial_id', 'label' => 'Provincial', 'options' => $provincials, 'value' => $provincialId],
                 ['name' => 'regional_id', 'label' => 'Régional', 'options' => $regionals, 'value' => $regionalId],
                 ['name' => 'local_ids', 'label' => 'Local', 'options' => $locals, 'value' => $localIds->all(), 'multiple' => true],
             ],
