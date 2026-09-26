@@ -6,6 +6,7 @@ use App\Enums\OrganizationLevel;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Support\ViewerScope;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\View\View;
@@ -68,8 +69,11 @@ class OrganizationDirectoryController extends Controller
             ->map(fn ($id) => trim((string) $id))
             ->filter(fn ($id) => $id !== '')
             ->unique();
+        $myDirection = $request->boolean('my_direction');
+        $myOrganization = $request->boolean('my_organization');
 
-        [$scopedOrganizations] = ViewerScope::resolve();
+        [$scopedOrganizations, $directionOrganizations] = ViewerScope::resolve();
+        $ownOrganization = ViewerScope::ownOrganization();
 
         $allOrganizations = Organization::all()->keyBy('id');
 
@@ -105,19 +109,30 @@ class OrganizationDirectoryController extends Controller
         $localIds = $localIds->filter(fn ($id) => $locals->contains('id', (int) $id))->values();
         $localIdInts = $localIds->map(fn ($id) => (int) $id)->all();
 
-        $organizations = $scopedOrganizations
+        // "Mon parent" and "Mon organisation" replace the usual scope and its level filters.
+        $organizations = ($myDirection || $myOrganization)
+            ? Collection::make()
+                ->when($myDirection, fn ($organizations) => $organizations->merge($directionOrganizations))
+                ->when($myOrganization && $ownOrganization, fn ($organizations) => $organizations->push($ownOrganization))
+                ->unique('id')
+            : $scopedOrganizations->filter(fn ($organization) => $matches($lineages[$organization->id], OrganizationLevel::Provincial, $provincialId)
+                && $matches($lineages[$organization->id], OrganizationLevel::Regional, $regionalId)
+                && ($localIdInts === [] || in_array($lineages[$organization->id][OrganizationLevel::Local->value] ?? null, $localIdInts, true)));
+
+        $organizations = $organizations
             ->when($query !== '', fn ($organizations) => $organizations->filter(
                 fn ($organization) => str_contains(mb_strtolower($organization->name), mb_strtolower($query))
             ))
-            ->filter(fn ($organization) => $matches($lineages[$organization->id], OrganizationLevel::Provincial, $provincialId)
-                && $matches($lineages[$organization->id], OrganizationLevel::Regional, $regionalId)
-                && ($localIdInts === [] || in_array($lineages[$organization->id][OrganizationLevel::Local->value] ?? null, $localIdInts, true)))
             ->sortBy('name')
             ->load('responsables');
 
         return [
             'organizations' => $organizations,
             'query' => $query,
+            'myDirection' => $myDirection,
+            'myOrganization' => $myOrganization,
+            'showMyDirectionFilter' => $directionOrganizations->isNotEmpty(),
+            'showMyOrganizationFilter' => $ownOrganization !== null,
             'levelFilters' => [
                 ['name' => 'provincial_id', 'label' => 'Provincial', 'options' => $provincials, 'value' => $provincialId],
                 ['name' => 'regional_id', 'label' => 'Régional', 'options' => $regionals, 'value' => $regionalId],

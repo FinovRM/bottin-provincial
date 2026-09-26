@@ -160,6 +160,34 @@ class OrganizationHierarchyTest extends TestCase
         $this->assertStringNotContainsString('Local écarté', $csv);
     }
 
+    public function test_the_organizations_directory_can_isolate_my_parent_and_my_organization(): void
+    {
+        $provincial = Organization::factory()->provincial()->create(['name' => 'Bureau provincial', 'responsable_email' => 'prov@example.com']);
+        $regional = Organization::factory()->regional($provincial)->create(['name' => 'Ma région', 'responsable_email' => 'moi@example.com']);
+        Organization::factory()->regional($provincial)->create(['name' => 'Autre région', 'responsable_email' => 'autre@example.com']);
+        $viewer = $this->viewerOf($regional);
+
+        $page = $this->actingAs($viewer, 'member')->get('/bottin/organisations');
+        $page->assertSee('Mon parent');
+        $page->assertSee('Mon organisation');
+        $page->assertSee('mailto:autre@example.com', false);
+
+        $mine = $this->actingAs($viewer, 'member')->get('/bottin/organisations?my_organization=1');
+        $mine->assertSee('mailto:moi@example.com', false);
+        $mine->assertDontSee('mailto:autre@example.com', false);
+        $mine->assertDontSee('mailto:prov@example.com', false);
+
+        $parent = $this->actingAs($viewer, 'member')->get('/bottin/organisations?my_direction=1');
+        $parent->assertSee('mailto:prov@example.com', false);
+        $parent->assertDontSee('mailto:moi@example.com', false);
+        $parent->assertDontSee('mailto:autre@example.com', false);
+
+        $csv = $this->actingAs($viewer, 'member')->get('/bottin/organisations/exporter?my_direction=1&my_organization=1')->streamedContent();
+        $this->assertStringContainsString('Bureau provincial', $csv);
+        $this->assertStringContainsString('Ma région', $csv);
+        $this->assertStringNotContainsString('Autre région', $csv);
+    }
+
     public function test_the_organizations_directory_can_be_exported_to_csv_with_its_filters(): void
     {
         $provincial = Organization::factory()->provincial()->create(['name' => 'Bureau provincial']);
