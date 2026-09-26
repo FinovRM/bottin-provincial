@@ -228,7 +228,7 @@ class OrganizationHierarchyTest extends TestCase
         $response = $this->actingAs($this->viewerOf($provincial), 'member')->get('/bottin/organisations');
 
         $response->assertOk();
-        $response->assertSee('1505 3e avenue, Acton Vale, Québec J0H1A0');
+        $response->assertSeeInOrder(['<span class="block">1505 3e avenue</span>', '<span class="block">Acton Vale, Québec J0H1A0</span>'], false);
     }
 
     public function test_an_organization_cannot_update_another_organizations_fiche(): void

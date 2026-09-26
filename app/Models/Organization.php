@@ -53,13 +53,26 @@ class Organization extends Authenticatable
      */
     public function fullPostalAddress(): ?string
     {
-        $line = collect([$this->address, $this->city, $this->province])->filter()->implode(', ');
-
-        if ($this->postal_code) {
-            $line = trim("{$line} {$this->postal_code}");
-        }
+        $line = collect($this->postalAddressLines())->implode(', ');
 
         return $line !== '' ? $line : null;
+    }
+
+    /**
+     * The mailing address as up to two lines: the street, then the city,
+     * province and postal code. Empty lines are left out.
+     *
+     * @return array<int, string>
+     */
+    public function postalAddressLines(): array
+    {
+        $locality = collect([$this->city, $this->province])->filter()->implode(', ');
+
+        if ($this->postal_code) {
+            $locality = trim("{$locality} {$this->postal_code}");
+        }
+
+        return array_values(array_filter([(string) $this->address, $locality], fn ($line) => $line !== ''));
     }
 
     /**

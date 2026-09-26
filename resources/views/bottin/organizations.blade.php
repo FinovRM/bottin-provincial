@@ -149,7 +149,13 @@
                         <dl class="mt-3 grid gap-x-6 gap-y-2 border-t border-gray-100 pt-3 text-sm sm:grid-cols-2">
                             <div>
                                 <dt class="text-xs uppercase tracking-wide text-gray-400">Adresse</dt>
-                                <dd class="text-gray-700">{{ $organization->fullPostalAddress() ?? '—' }}</dd>
+                                <dd class="text-gray-700">
+                                    @forelse ($organization->postalAddressLines() as $line)
+                                        <span class="block">{{ $line }}</span>
+                                    @empty
+                                        —
+                                    @endforelse
+                                </dd>
                             </div>
                             <div>
                                 <dt class="text-xs uppercase tracking-wide text-gray-400">Responsable(s)</dt>
