@@ -63,7 +63,7 @@
                 </noscript>
             </form>
 
-            @if ($query !== '' || $myDirection || $myOrganization || collect($levelFilters)->contains(fn ($filter) => filled($filter['value'])))
+            @if ($query !== '' || $myDirection || $regionalLevel || $myOrganization || collect($levelFilters)->contains(fn ($filter) => filled($filter['value'])))
                 <a href="{{ route('bottin.organizations') }}"
                     class="mt-4 block rounded-md bg-gray-800 px-3 py-2 text-center text-sm font-medium text-white hover:bg-gray-900">
                     ✕ Réinitialiser
@@ -75,6 +75,9 @@
             <form method="GET" action="{{ route('bottin.organizations') }}" class="mb-6 max-w-sm">
                 @if ($myDirection)
                     <input type="hidden" name="my_direction" value="1">
+                @endif
+                @if ($regionalLevel)
+                    <input type="hidden" name="regional_level" value="1">
                 @endif
                 @if ($myOrganization)
                     <input type="hidden" name="my_organization" value="1">

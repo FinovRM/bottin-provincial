@@ -70,6 +70,7 @@ class OrganizationDirectoryController extends Controller
             ->unique();
         $myDirection = $request->boolean('my_direction');
         $myOrganization = $request->boolean('my_organization');
+        $regionalLevel = $request->boolean('regional_level');
 
         [$scopedOrganizations, $directionOrganizations] = ViewerScope::resolve();
         $ownOrganization = ViewerScope::ownOrganization();
@@ -106,10 +107,13 @@ class OrganizationDirectoryController extends Controller
         $localIds = $localIds->filter(fn ($id) => $locals->contains('id', (int) $id))->values();
         $localIdInts = $localIds->map(fn ($id) => (int) $id)->all();
 
-        // "Mon parent" and "Mon organisation" replace the usual scope and its level filters.
-        $organizations = ($myDirection || $myOrganization)
+        $regionalOrganizations = $scopedOrganizations->where('level', OrganizationLevel::Regional);
+
+        // "Mon parent", "Niveau régional" and "Mon organisation" replace the usual scope and its level filters.
+        $organizations = ($myDirection || $regionalLevel || $myOrganization)
             ? Collection::make()
                 ->when($myDirection, fn ($organizations) => $organizations->merge($directionOrganizations))
+                ->when($regionalLevel, fn ($organizations) => $organizations->merge($regionalOrganizations))
                 ->when($myOrganization && $ownOrganization, fn ($organizations) => $organizations->push($ownOrganization))
                 ->unique('id')
             : $scopedOrganizations->filter(fn ($organization) => $matches($lineages[$organization->id], OrganizationLevel::Regional, $regionalId)
@@ -127,10 +131,12 @@ class OrganizationDirectoryController extends Controller
             'query' => $query,
             'myDirection' => $myDirection,
             'myOrganization' => $myOrganization,
+            'regionalLevel' => $regionalLevel,
             'showMyDirectionFilter' => $directionOrganizations->isNotEmpty(),
+            'showRegionalLevelFilter' => $regionalOrganizations->isNotEmpty(),
             'showMyOrganizationFilter' => $ownOrganization !== null,
             'levelFilters' => [
-                ['name' => 'regional_id', 'label' => 'Régional', 'options' => $regionals, 'value' => $regionalId],
+                ['name' => 'regional_id', 'label' => 'AHM régionales', 'options' => $regionals, 'value' => $regionalId],
                 ['name' => 'local_ids', 'label' => 'Local', 'options' => $locals, 'value' => $localIds->all(), 'multiple' => true],
             ],
         ];

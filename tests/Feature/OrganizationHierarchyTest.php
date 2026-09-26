@@ -189,6 +189,29 @@ class OrganizationHierarchyTest extends TestCase
         $this->assertStringNotContainsString('Autre région', $csv);
     }
 
+    public function test_the_organizations_directory_can_isolate_the_regional_level(): void
+    {
+        $provincial = Organization::factory()->provincial()->withResponsable(['email' => 'prov@example.com'])->create();
+        $regional = Organization::factory()->regional($provincial)->withResponsable(['email' => 'region1@example.com'])->create();
+        Organization::factory()->regional($provincial)->withResponsable(['email' => 'region2@example.com'])->create();
+        Organization::factory()->local($regional)->withResponsable(['email' => 'local@example.com'])->create();
+        $viewer = $this->viewerOf($provincial);
+
+        $page = $this->actingAs($viewer, 'member')->get('/bottin/organisations');
+        $page->assertSeeInOrder(['Niveau régional', 'Mon organisation']);
+
+        $regionals = $this->actingAs($viewer, 'member')->get('/bottin/organisations?regional_level=1');
+        $regionals->assertSee('mailto:region1@example.com', false);
+        $regionals->assertSee('mailto:region2@example.com', false);
+        $regionals->assertDontSee('mailto:local@example.com', false);
+        $regionals->assertDontSee('mailto:prov@example.com', false);
+
+        $withMine = $this->actingAs($viewer, 'member')->get('/bottin/organisations?regional_level=1&my_organization=1');
+        $withMine->assertSee('mailto:prov@example.com', false);
+        $withMine->assertSee('mailto:region2@example.com', false);
+        $withMine->assertDontSee('mailto:local@example.com', false);
+    }
+
     public function test_the_organizations_directory_can_be_exported_to_csv_with_its_filters(): void
     {
         $provincial = Organization::factory()->provincial()->create(['name' => 'Bureau provincial']);
