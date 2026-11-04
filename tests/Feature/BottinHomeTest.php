@@ -43,7 +43,7 @@ class BottinHomeTest extends TestCase
         $response->assertDontSee(route('bottin.organization-members', $provincial), false);
     }
 
-    public function test_the_members_dialog_lists_usable_roles_only(): void
+    public function test_the_members_dialog_lists_every_role_including_unpermitted_ones(): void
     {
         $provincial = Organization::factory()->provincial()->create();
         $regional = Organization::factory()->regional($provincial)->create();
@@ -58,7 +58,7 @@ class BottinHomeTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Marie Présidente');
-        $response->assertDontSee('Paul Ancien');
+        $response->assertSee('Paul Ancien');
     }
 
     public function test_the_members_dialog_is_refused_for_an_organization_out_of_reach(): void
