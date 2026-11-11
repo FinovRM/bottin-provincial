@@ -42,31 +42,16 @@ class ProfileController extends Controller
             ->unique('id')
             ->sortBy('name');
 
-        // Each role maps to the regions where it's held, in the region itself or one of its locals.
-        $organizationRegionIds = $scopedOrganizations->mapWithKeys(fn (Organization $organization) => [
-            $organization->id => match ($organization->level) {
-                OrganizationLevel::Regional => $organization->id,
-                OrganizationLevel::Local => $organization->parent_id,
-                default => null,
-            },
-        ]);
-
-        $roleRegionIds = MemberRole::whereIn('organization_id', $scopedOrganizations->pluck('id'))
+        $roles = MemberRole::whereIn('organization_id', $scopedOrganizations->pluck('id'))
+            ->distinct()
             ->orderBy('role')
-            ->get(['organization_id', 'role'])
-            ->groupBy('role')
-            ->map(fn ($memberRoles) => $memberRoles
-                ->map(fn (MemberRole $memberRole) => $organizationRegionIds->get($memberRole->organization_id))
-                ->filter()->unique()->values());
-
-        $roles = $roleRegionIds->keys();
+            ->pluck('role');
 
         return view('profile.index', [
             'coordinates' => $coordinates,
             'regions' => $regions,
             'locals' => $locals,
             'roles' => $roles,
-            'roleRegionIds' => $roleRegionIds,
             'personalFilters' => ViewerScope::principal()->personalFilters()->orderBy('name')->get(),
             'identity' => ViewerScope::identity(),
         ]);
@@ -77,14 +62,15 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
+            'region_ids' => ['array'],
+            'region_ids.*' => ['integer'],
             'local_ids' => ['array'],
             'local_ids.*' => ['integer'],
             'roles' => ['array'],
             'roles.*' => ['string'],
         ]);
 
-        // The region search only narrows the choices shown; it isn't saved.
-        ViewerScope::principal()->personalFilters()->create([...$validated, 'region_ids' => []]);
+        ViewerScope::principal()->personalFilters()->create($validated);
 
         return redirect()->route('profile')->with('status', 'Filtre ajouté.');
     }
@@ -99,6 +85,8 @@ class ProfileController extends Controller
         );
 
         $validated = $request->validate([
+            'region_ids' => ['array'],
+            'region_ids.*' => ['integer'],
             'local_ids' => ['array'],
             'local_ids.*' => ['integer'],
             'roles' => ['array'],
@@ -106,7 +94,7 @@ class ProfileController extends Controller
         ]);
 
         $personalFilter->update([
-            'region_ids' => [],
+            'region_ids' => $validated['region_ids'] ?? [],
             'local_ids' => $validated['local_ids'] ?? [],
             'roles' => $validated['roles'] ?? [],
         ]);

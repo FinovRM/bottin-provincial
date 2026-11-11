@@ -64,6 +64,7 @@
                                 <button type="button" data-edit-filter
                                     data-name="{{ $personalFilter->name }}"
                                     data-update-url="{{ route('profile.filters.update', $personalFilter) }}"
+                                    data-region-ids="{{ json_encode($personalFilter->region_ids ?? []) }}"
                                     data-local-ids="{{ json_encode($personalFilter->local_ids ?? []) }}"
                                     data-roles="{{ json_encode($personalFilter->roles ?? []) }}"
                                     class="text-sm text-gray-700 hover:underline">
@@ -113,9 +114,7 @@
                     </button>
                 </div>
 
-                <div class="mb-6">
-                    <p class="mb-3 text-sm font-semibold text-gray-900">Rechercher</p>
-                    <div class="grid gap-6 sm:grid-cols-3">
+                <div class="grid gap-6 sm:grid-cols-3">
                     <div>
                         <p class="mb-2 text-sm font-medium">Régional</p>
                         <div class="flex flex-col gap-1" data-column="region">
@@ -127,7 +126,7 @@
                             @endif
                             @forelse ($regions as $region)
                                 <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
-                                    <input type="checkbox" data-search-region value="{{ $region->id }}" class="hidden">
+                                    <input type="checkbox" name="region_ids[]" value="{{ $region->id }}" class="hidden">
                                     {{ $region->name }}
                                 </label>
                             @empty
@@ -135,12 +134,7 @@
                             @endforelse
                         </div>
                     </div>
-                    </div>
-                </div>
 
-                <div>
-                    <p class="mb-3 text-sm font-semibold text-gray-900">Choix du filtre personnalisé</p>
-                    <div class="grid gap-6 sm:grid-cols-3">
                     <div>
                         <p class="mb-2 text-sm font-medium">Local</p>
                         <div class="flex flex-col gap-1" data-column="local">
@@ -172,8 +166,7 @@
                                 </button>
                             @endif
                             @forelse ($roles as $roleOption)
-                                <label data-region-ids="{{ json_encode($roleRegionIds[$roleOption]) }}"
-                                    class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
+                                <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
                                     <input type="checkbox" name="roles[]" value="{{ $roleOption }}" class="hidden">
                                     {{ $roleOption }}
                                 </label>
@@ -182,7 +175,6 @@
                             @endforelse
                         </div>
                     </div>
-                </div>
                 </div>
             </form>
         </div>
@@ -217,23 +209,16 @@
         <script>
             (function () {
                 const form = document.getElementById('personal-filter-form');
-                const regionCheckboxes = form.querySelectorAll('[data-search-region]');
+                const regionCheckboxes = form.querySelectorAll('input[name="region_ids[]"]');
                 const localLabels = form.querySelectorAll('[data-region-id]');
-                const roleLabels = form.querySelectorAll('[data-region-ids]');
 
-                // The search only hides choices that don't match every criterion; selections are kept.
                 function applyRegionFilter() {
                     const checkedRegionIds = Array.from(regionCheckboxes)
                         .filter((checkbox) => checkbox.checked)
                         .map((checkbox) => checkbox.value);
-                    const matches = (regionIds) => checkedRegionIds.length === 0
-                        || regionIds.some((regionId) => checkedRegionIds.includes(regionId));
 
                     localLabels.forEach((label) => {
-                        label.hidden = ! matches([label.dataset.regionId]);
-                    });
-                    roleLabels.forEach((label) => {
-                        label.hidden = ! matches(JSON.parse(label.dataset.regionIds).map(String));
+                        label.hidden = checkedRegionIds.length > 0 && ! checkedRegionIds.includes(label.dataset.regionId);
                     });
                 }
 
@@ -260,7 +245,7 @@
 
                 function clearChoices() {
                     form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => checkbox.checked = false);
-                    applyRegionFilter();
+                    localLabels.forEach((label) => label.hidden = false);
                 }
 
                 function openEditor() {
@@ -289,6 +274,7 @@
                 // Existing filter: its choices are shown and can be changed.
                 document.querySelectorAll('[data-edit-filter]').forEach((button) => {
                     button.addEventListener('click', () => {
+                        const regionIds = JSON.parse(button.dataset.regionIds || '[]').map(String);
                         const localIds = JSON.parse(button.dataset.localIds || '[]').map(String);
                         const roles = JSON.parse(button.dataset.roles || '[]');
 
@@ -298,6 +284,11 @@
                         methodPut.disabled = false;
                         title.textContent = `Filtre « ${button.dataset.name} »`;
                         acceptButton.textContent = 'Accepter la modification';
+
+                        regionCheckboxes.forEach((checkbox) => {
+                            checkbox.checked = regionIds.includes(checkbox.value);
+                        });
+                        applyRegionFilter();
 
                         form.querySelectorAll('input[name="local_ids[]"]').forEach((checkbox) => {
                             checkbox.checked = localIds.includes(checkbox.value);

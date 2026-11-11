@@ -53,34 +53,6 @@ class PersonalFilterTest extends TestCase
         ]);
     }
 
-    public function test_the_region_search_is_not_saved_with_a_new_personal_filter(): void
-    {
-        $tree = $this->tree();
-
-        $this->actingAs($this->viewerOf($tree['provincial']), 'member')->post('/profil/filtres', [
-            'name' => 'Mon filtre',
-            'region_ids' => [$tree['region1']->id],
-            'local_ids' => [$tree['local1']->id],
-        ]);
-
-        $filter = $this->viewerOf($tree['provincial'])->personalFilters()->sole();
-        $this->assertSame([], $filter->region_ids);
-        $this->assertEquals([$tree['local1']->id], array_map('intval', $filter->local_ids));
-    }
-
-    public function test_the_profile_page_tags_each_role_with_the_regions_where_it_is_held(): void
-    {
-        $tree = $this->tree();
-        $this->addRole($tree['local1'], 'Trésorier Local 1', 't1@example.com', 'Trésorier');
-        $this->addRole($tree['region2'], 'Bénévole Région 2', 'b2@example.com', 'Bénévole');
-
-        $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->get('/profil');
-
-        $response->assertOk();
-        $response->assertSee('data-region-ids="['.$tree['region1']->id.']"', false);
-        $response->assertSee('data-region-ids="['.$tree['region2']->id.']"', false);
-    }
-
     public function test_a_responsable_can_delete_their_own_personal_filter(): void
     {
         $tree = $this->tree();
@@ -119,7 +91,7 @@ class PersonalFilterTest extends TestCase
         $response->assertRedirect(route('profile'));
         $filter->refresh();
         $this->assertSame('Mon filtre', $filter->name);
-        $this->assertSame([], $filter->region_ids, 'The region search only narrows the choices shown.');
+        $this->assertEquals([$tree['region2']->id], array_map('intval', $filter->region_ids));
         $this->assertEquals([$tree['local3']->id], array_map('intval', $filter->local_ids));
         $this->assertSame(['Trésorier'], $filter->roles);
     }
