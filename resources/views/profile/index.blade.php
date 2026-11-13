@@ -264,10 +264,6 @@
                     [label.querySelector('input').value, JSON.parse(label.dataset.roleOrgIds || '[]').map(String)]));
 
                 function applyRegionFilter() {
-                    const checkedRegionIds = Array.from(regionCheckboxes)
-                        .filter((checkbox) => checkbox.checked)
-                        .map((checkbox) => checkbox.value);
-
                     const region = assistantRegion.value;
                     const local = assistantLocal.value;
                     const role = assistantRole.value;
@@ -282,8 +278,7 @@
 
                     localLabels.forEach((label) => {
                         const id = label.querySelector('input').value;
-                        label.hidden = (checkedRegionIds.length > 0 && ! checkedRegionIds.includes(label.dataset.regionId))
-                            || (region && label.dataset.regionId !== region)
+                        label.hidden = (region && label.dataset.regionId !== region)
                             || (local && id !== local)
                             || (roleOrgs && ! roleOrgs.includes(id));
                     });
@@ -310,7 +305,6 @@
                 });
                 [assistantLocal, assistantRole].forEach((select) => select.addEventListener('change', applyRegionFilter));
 
-                regionCheckboxes.forEach((checkbox) => checkbox.addEventListener('change', applyRegionFilter));
 
                 form.querySelectorAll('[data-select-all]').forEach((button) => {
                     button.addEventListener('click', () => {
