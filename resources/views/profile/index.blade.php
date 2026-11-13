@@ -114,6 +114,41 @@
                     </button>
                 </div>
 
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">Assistant de sélection</h3>
+                    <p class="mb-3 text-sm text-gray-700">Affiche seulement les choix qui respectent tous les critères de recherche</p>
+                    <div class="grid gap-6 sm:grid-cols-3">
+                        <div>
+                            <label for="assistant-region" class="mb-2 block text-sm font-medium">Régional</label>
+                            <select id="assistant-region" data-assistant="region" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm">
+                                <option value="">Tous</option>
+                                @foreach ($regions as $region)
+                                    <option value="{{ $region->id }}">{{ $region->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="assistant-local" class="mb-2 block text-sm font-medium">Local</label>
+                            <select id="assistant-local" data-assistant="local" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm">
+                                <option value="">Tous</option>
+                                @foreach ($locals as $local)
+                                    <option value="{{ $local->id }}" data-parent-id="{{ $local->parent_id }}">{{ $local->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="assistant-role" class="mb-2 block text-sm font-medium">Rôle</label>
+                            <select id="assistant-role" data-assistant="role" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm">
+                                <option value="">Tous</option>
+                                @foreach ($roles as $roleOption)
+                                    <option value="{{ $roleOption }}">{{ $roleOption }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="mb-3 text-lg font-semibold text-gray-900">Contenu du filtre personnalisé</h3>
                 <div class="grid gap-6 sm:grid-cols-3">
                     <div>
                         <p class="mb-2 text-sm font-medium">Régional</p>
@@ -125,7 +160,8 @@
                                 </button>
                             @endif
                             @forelse ($regions as $region)
-                                <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
+                                <label data-region-option="{{ $region->id }}"
+                                    class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
                                     <input type="checkbox" name="region_ids[]" value="{{ $region->id }}" class="hidden">
                                     {{ $region->name }}
                                 </label>
@@ -166,7 +202,8 @@
                                 </button>
                             @endif
                             @forelse ($roles as $roleOption)
-                                <label class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
+                                <label data-role-org-ids="{{ json_encode($roleOrganizationIds[$roleOption] ?? []) }}"
+                                    class="cursor-pointer select-none rounded-md border border-gray-300 px-3 py-1 text-sm has-[:checked]:border-gray-900 has-[:checked]:bg-gray-900 has-[:checked]:text-white">
                                     <input type="checkbox" name="roles[]" value="{{ $roleOption }}" class="hidden">
                                     {{ $roleOption }}
                                 </label>
@@ -212,15 +249,66 @@
                 const regionCheckboxes = form.querySelectorAll('input[name="region_ids[]"]');
                 const localLabels = form.querySelectorAll('[data-region-id]');
 
+                const regionLabels = form.querySelectorAll('[data-region-option]');
+                const roleLabels = form.querySelectorAll('[data-role-org-ids]');
+                const assistantRegion = form.querySelector('[data-assistant="region"]');
+                const assistantLocal = form.querySelector('[data-assistant="local"]');
+                const assistantRole = form.querySelector('[data-assistant="role"]');
+
+                // Local id => region id; a regional organization is its own region.
+                const regionOfLocal = new Map(Array.from(localLabels).map((label) =>
+                    [label.querySelector('input').value, label.dataset.regionId]));
+                const regionOf = (orgId) => regionOfLocal.get(orgId) ?? orgId;
+
+                const roleOrgIds = new Map(Array.from(roleLabels).map((label) =>
+                    [label.querySelector('input').value, JSON.parse(label.dataset.roleOrgIds || '[]').map(String)]));
+
                 function applyRegionFilter() {
                     const checkedRegionIds = Array.from(regionCheckboxes)
                         .filter((checkbox) => checkbox.checked)
                         .map((checkbox) => checkbox.value);
 
+                    const region = assistantRegion.value;
+                    const local = assistantLocal.value;
+                    const role = assistantRole.value;
+                    const roleOrgs = role ? (roleOrgIds.get(role) ?? []) : null;
+
+                    regionLabels.forEach((label) => {
+                        const id = label.dataset.regionOption;
+                        label.hidden = (region && id !== region)
+                            || (local && regionOf(local) !== id)
+                            || (roleOrgs && ! roleOrgs.some((orgId) => regionOf(orgId) === id));
+                    });
+
                     localLabels.forEach((label) => {
-                        label.hidden = checkedRegionIds.length > 0 && ! checkedRegionIds.includes(label.dataset.regionId);
+                        const id = label.querySelector('input').value;
+                        label.hidden = (checkedRegionIds.length > 0 && ! checkedRegionIds.includes(label.dataset.regionId))
+                            || (region && label.dataset.regionId !== region)
+                            || (local && id !== local)
+                            || (roleOrgs && ! roleOrgs.includes(id));
+                    });
+
+                    roleLabels.forEach((label) => {
+                        const value = label.querySelector('input').value;
+                        const orgs = roleOrgIds.get(value) ?? [];
+                        label.hidden = (region && ! orgs.some((orgId) => regionOf(orgId) === region))
+                            || (local && ! orgs.includes(local))
+                            || (role && value !== role);
                     });
                 }
+
+                // The local dropdown only offers locals of the chosen region.
+                assistantRegion.addEventListener('change', () => {
+                    Array.from(assistantLocal.options).forEach((option) => {
+                        option.hidden = option.value !== '' && assistantRegion.value !== ''
+                            && option.dataset.parentId !== assistantRegion.value;
+                    });
+                    if (assistantLocal.selectedOptions[0]?.hidden) {
+                        assistantLocal.value = '';
+                    }
+                    applyRegionFilter();
+                });
+                [assistantLocal, assistantRole].forEach((select) => select.addEventListener('change', applyRegionFilter));
 
                 regionCheckboxes.forEach((checkbox) => checkbox.addEventListener('change', applyRegionFilter));
 
@@ -245,7 +333,9 @@
 
                 function clearChoices() {
                     form.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => checkbox.checked = false);
-                    localLabels.forEach((label) => label.hidden = false);
+                    form.querySelectorAll('[data-assistant]').forEach((select) => select.value = '');
+                    Array.from(assistantLocal.options).forEach((option) => option.hidden = false);
+                    applyRegionFilter();
                 }
 
                 function openEditor() {

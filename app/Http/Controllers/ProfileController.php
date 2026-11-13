@@ -47,11 +47,18 @@ class ProfileController extends Controller
             ->orderBy('role')
             ->pluck('role');
 
+        // Organizations where each role is held, for the selection assistant.
+        $roleOrganizationIds = MemberRole::whereIn('organization_id', $scopedOrganizations->pluck('id'))
+            ->get(['role', 'organization_id'])
+            ->groupBy('role')
+            ->map(fn ($memberRoles) => $memberRoles->pluck('organization_id')->unique()->values());
+
         return view('profile.index', [
             'coordinates' => $coordinates,
             'regions' => $regions,
             'locals' => $locals,
             'roles' => $roles,
+            'roleOrganizationIds' => $roleOrganizationIds,
             'personalFilters' => ViewerScope::principal()->personalFilters()->orderBy('name')->get(),
             'identity' => ViewerScope::identity(),
         ]);
