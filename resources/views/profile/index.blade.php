@@ -122,7 +122,7 @@
                             <label for="assistant-region" class="mb-2 block text-sm font-medium">Régional</label>
                             <select id="assistant-region" data-assistant="region" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm">
                                 <option value="">Tous</option>
-                                @foreach ($regions as $region)
+                                @foreach ($assistantRegions as $region)
                                     <option value="{{ $region->id }}">{{ $region->name }}</option>
                                 @endforeach
                             </select>

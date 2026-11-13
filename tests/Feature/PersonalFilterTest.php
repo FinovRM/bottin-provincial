@@ -36,6 +36,7 @@ class PersonalFilterTest extends TestCase
     public function test_a_responsable_can_create_a_personal_filter_from_the_profile_page(): void
     {
         $tree = $this->tree();
+        $this->addRole($tree['local1'], 'Bénévole Un', 'benevole1@example.com');
 
         $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->post('/profil/filtres', [
             'name' => 'Mon filtre',
@@ -81,6 +82,8 @@ class PersonalFilterTest extends TestCase
             'name' => 'Mon filtre',
             'region_ids' => [$tree['region1']->id],
         ]);
+
+        $this->addRole($tree['local3'], 'Trésorière', 'tresoriere@example.com', 'Trésorier');
 
         $response = $this->actingAs($this->viewerOf($tree['provincial']), 'member')->put("/profil/filtres/{$filter->id}", [
             'region_ids' => [$tree['region2']->id],
@@ -195,5 +198,34 @@ class PersonalFilterTest extends TestCase
         $response->assertOk();
         $response->assertSee('Membre Local 1');
         $response->assertSee('Membre Local 3');
+    }
+
+    public function test_a_local_visitor_cannot_choose_a_region_or_a_role_outside_their_scope(): void
+    {
+        $tree = $this->tree();
+        $this->addRole($tree['region1'], 'Directeur', 'directeur@example.com', 'Directeur régional');
+        $viewer = $this->viewerOf($tree['local1']);
+
+        $response = $this->actingAs($viewer, 'member')->post('/profil/filtres', [
+            'name' => 'Mon filtre',
+            'region_ids' => [$tree['region1']->id],
+            'roles' => ['Directeur régional'],
+        ]);
+
+        $response->assertSessionHasErrors(['region_ids.0', 'roles.0']);
+        $this->assertSame(0, $viewer->personalFilters()->count());
+    }
+
+    public function test_a_local_visitor_sees_regions_only_in_the_selection_assistant(): void
+    {
+        $tree = $this->tree();
+        $this->addRole($tree['region1'], 'Directeur', 'directeur@example.com', 'Directeur régional');
+
+        $response = $this->actingAs($this->viewerOf($tree['local1']), 'member')->get('/profil');
+
+        $response->assertOk();
+        $response->assertSee('<option value="'.$tree['region1']->id.'">Région 1</option>', false);
+        $response->assertDontSee('data-region-option="', false);
+        $response->assertDontSee('Directeur régional');
     }
 }
