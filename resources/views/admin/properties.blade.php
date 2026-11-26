@@ -126,6 +126,50 @@
         </section>
     </div>
 
+    {{-- Yearly validation of each organization's bottin by its responsables. --}}
+    @php
+        $months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    @endphp
+    <section class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Validation du bottin</h2>
+        <p class="mt-2 text-sm text-gray-600">
+            Chaque année, à la date de contrôle, le bottin de chaque organisation doit avoir été validé par un de ses responsables
+            ce jour-là ou pendant le délai acceptable qui précède. Le lendemain, les responsables en retard sont avisés par courriel,
+            puis chaque jour à partir du {{ \App\Support\BottinValidation::DAILY_REMINDERS_AFTER_DAYS }}e jour suivant la date de contrôle.
+        </p>
+
+        <form method="POST" action="{{ route('admin.properties.validation') }}" class="mt-4 flex flex-wrap items-end gap-4">
+            @csrf
+            @method('PUT')
+            <div>
+                <span class="block text-sm font-medium">Date de contrôle</span>
+                <div class="mt-1 flex gap-2">
+                    <select name="control_day" aria-label="Jour" required class="rounded-md border border-gray-300 px-3 py-2 text-sm">
+                        <option value="">Jour</option>
+                        @for ($day = 1; $day <= 31; $day++)
+                            <option value="{{ $day }}" @selected((int) old('control_day', $controlDay) === $day)>{{ $day === 1 ? '1er' : $day }}</option>
+                        @endfor
+                    </select>
+                    <select name="control_month" aria-label="Mois" required class="rounded-md border border-gray-300 px-3 py-2 text-sm">
+                        <option value="">Mois</option>
+                        @foreach ($months as $index => $month)
+                            <option value="{{ $index + 1 }}" @selected((int) old('control_month', $controlMonth) === $index + 1)>{{ $month }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label for="delay_days" class="block text-sm font-medium">Délai acceptable (jours)</label>
+                <input id="delay_days" type="number" name="delay_days" min="0" max="365" required value="{{ old('delay_days', $delayDays) }}"
+                    class="mt-1 w-28 rounded-md border border-gray-300 px-3 py-2 text-sm">
+            </div>
+            <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">Enregistrer</button>
+        </form>
+        @foreach (['control_day', 'control_month', 'delay_days'] as $field)
+            @error($field)<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        @endforeach
+    </section>
+
     <dialog id="add-admin-dialog" class="w-full max-w-md rounded-lg p-0 shadow-xl backdrop:bg-black/50"
         @if ($errors->hasAny(['new_admin_name', 'new_admin_email', 'new_admin_password'])) data-open-on-load @endif>
         <form method="POST" action="{{ route('admin.properties.admins.store') }}" class="space-y-4 p-6">

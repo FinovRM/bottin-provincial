@@ -43,6 +43,7 @@ class Organization extends Authenticatable
         return [
             'level' => OrganizationLevel::class,
             'group' => OrganizationGroup::class,
+            'validated_at' => 'datetime',
         ];
     }
 

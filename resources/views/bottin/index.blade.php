@@ -33,7 +33,7 @@
                                     {{ mb_substr($regional->name, 0, 1) }}
                                 </span>
                                 <div class="min-w-0">
-                                    <p class="truncate font-medium text-gray-900">@include('partials.organization-name', ['organization' => $regional])</p>
+                                    <p class="font-medium text-gray-900">@include('partials.organization-name', ['organization' => $regional])</p>
                                     <span class="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-blue-700">
                                         Régional
                                     </span>

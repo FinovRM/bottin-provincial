@@ -9,6 +9,34 @@
         'meta' => 'Mise à jour : '.$organization->updated_at->format('Y-m-d à H:i'),
     ])
 
+    {{-- The responsable confirms the bottin's data; editing it never does. --}}
+    <section class="mb-8 rounded-lg border {{ $isValid ? 'border-gray-200' : 'border-red-300' }} bg-white p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-lg font-semibold">Validation du bottin</h2>
+                <p class="text-sm {{ $isValid ? 'text-gray-600' : 'text-red-700' }}">
+                    @if ($organization->validated_at)
+                        Dernière validation : {{ $organization->validated_at->timezone(\App\Support\BottinValidation::TIMEZONE)->translatedFormat('j F Y') }}@if ($organization->validated_by), par {{ $organization->validated_by }}@endif.
+                    @else
+                        Ce bottin n'a jamais été validé.
+                    @endif
+                    @unless ($isValid)
+                        Une validation est requise.
+                    @endunless
+                </p>
+            </div>
+            <form method="POST" action="{{ route('dashboard.validate') }}" class="flex flex-wrap items-center gap-3">
+                @csrf
+                <label class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="confirmed" value="1" required class="h-4 w-4">
+                    <span>Je confirme que les données de mon bottin sont exactes.</span>
+                </label>
+                <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">Valider mon bottin</button>
+            </form>
+        </div>
+        @error('confirmed')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+    </section>
+
     <section class="mb-8 rounded-lg border border-gray-200 bg-white p-5">
         <div class="mb-4 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">

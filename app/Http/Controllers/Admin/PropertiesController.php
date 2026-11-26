@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\Setting;
+use App\Support\BottinValidation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +22,37 @@ class PropertiesController extends Controller
         return view('admin.properties', [
             'admin' => Auth::guard('admin')->user(),
             'admins' => Admin::orderBy('name')->get(),
+            'controlDay' => BottinValidation::controlDay(),
+            'controlMonth' => BottinValidation::controlMonth(),
+            'delayDays' => BottinValidation::delayDays(),
         ]);
+    }
+
+    /**
+     * The yearly control date (day and month) and the acceptable delay before it.
+     */
+    public function updateValidation(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'control_day' => ['required', 'integer', 'between:1,31'],
+            'control_month' => ['required', 'integer', 'between:1,12'],
+            'delay_days' => ['required', 'integer', 'between:0,365'],
+        ]);
+
+        // Must exist every year: no 29 February, no 31 April.
+        if (! checkdate((int) $validated['control_month'], (int) $validated['control_day'], 2025)) {
+            return back()->withInput()->withErrors(['control_day' => 'Cette date n\'existe pas chaque année.']);
+        }
+
+        Setting::put('validation_control_day', (int) $validated['control_day']);
+        Setting::put('validation_control_month', (int) $validated['control_month']);
+        Setting::put('validation_delay_days', (int) $validated['delay_days']);
+
+        if (! Setting::get('validation_configured_on')) {
+            Setting::put('validation_configured_on', BottinValidation::today()->toDateString());
+        }
+
+        return redirect()->route('admin.properties')->with('status', 'Validation du bottin mise à jour.');
     }
 
     public function updateName(Request $request): RedirectResponse

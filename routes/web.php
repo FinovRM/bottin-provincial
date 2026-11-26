@@ -89,6 +89,8 @@ Route::middleware(['auth:web', EnsureRoleChosen::class])->group(function () {
     Route::get('/proprietes', [PropertiesController::class, 'show'])->name('dashboard.properties');
     Route::permanentRedirect('/tableau-de-bord/proprietes', '/proprietes');
 
+    Route::post('/proprietes/validation', [PropertiesController::class, 'validateBottin'])->name('dashboard.validate');
+
     Route::get('/proprietes/responsable/modifier', [ResponsableController::class, 'edit'])->name('responsable.edit');
     Route::post('/proprietes/responsable/modifier', [ResponsableController::class, 'update'])->name('responsable.update');
 
@@ -130,6 +132,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/tableau-de-bord', AdminDashboardController::class)->name('dashboard');
 
         Route::get('/proprietes', [AdminPropertiesController::class, 'show'])->name('properties');
+        Route::put('/proprietes/validation', [AdminPropertiesController::class, 'updateValidation'])->name('properties.validation');
         Route::put('/proprietes/nom', [AdminPropertiesController::class, 'updateName'])->name('properties.name');
         Route::put('/proprietes/mot-de-passe', [AdminPropertiesController::class, 'updatePassword'])->name('properties.password');
         Route::post('/proprietes/administrateurs', [AdminPropertiesController::class, 'storeAdmin'])->name('properties.admins.store');

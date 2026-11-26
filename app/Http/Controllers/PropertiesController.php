@@ -7,7 +7,10 @@ use App\Models\AllowedRole;
 use App\Models\MemberRole;
 use App\Models\MinimumRole;
 use App\Models\Organization;
+use App\Support\BottinValidation;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -31,7 +34,31 @@ class PropertiesController extends Controller
             'missingRoles' => $missingRoles,
             'groups' => OrganizationGroup::cases(),
             'rolesByGroup' => $organization->canCreateChildren() ? $this->rolesByGroup($organization) : [],
+            'isValid' => BottinValidation::isValid($organization),
         ]);
+    }
+
+    /**
+     * The responsable confirms the data of their bottin is accurate. Changing
+     * the data never does this by itself.
+     */
+    public function validateBottin(Request $request): RedirectResponse
+    {
+        $request->validate(['confirmed' => ['accepted']], [
+            'confirmed.accepted' => 'Cochez la case pour confirmer que les données sont exactes.',
+        ]);
+
+        /** @var Organization $organization */
+        $organization = Auth::user();
+
+        // Not a change of data: "Mise à jour" keeps its date.
+        $organization->timestamps = false;
+        $organization->forceFill([
+            'validated_at' => now(),
+            'validated_by' => $organization->currentResponsable()?->name,
+        ])->saveQuietly();
+
+        return redirect()->route('dashboard.properties')->with('status', 'Merci! Les données de votre bottin sont validées.');
     }
 
     /**
