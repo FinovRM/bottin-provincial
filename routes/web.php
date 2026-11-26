@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PropertiesController as AdminPropertiesController
 use App\Http\Controllers\AllowedRoleController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\BottinLoginController;
+use App\Http\Controllers\Auth\BottinRequestController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginLinkController;
 use App\Http\Controllers\Bottin\DashboardController as BottinDashboardController;
@@ -35,7 +36,15 @@ Route::middleware('guest:web,member')->group(function () {
     Route::post('/connexion/bottin', [LoginLinkController::class, 'storeBottin'])->name('login.bottin.store');
 
     Route::view('/connexion/envoye', 'auth.link-sent')->name('login.sent');
+
+    // From the declaration page: change one's coordinates or leave the bottin.
+    Route::post('/connexion/demandes/modification', [BottinRequestController::class, 'modify'])->name('bottin-requests.modify');
+    Route::post('/connexion/demandes/retrait', [BottinRequestController::class, 'remove'])->name('bottin-requests.remove');
 });
+
+Route::get('/demandes/{bottinRequest}/confirmer', [BottinRequestController::class, 'confirm'])
+    ->middleware('signed')
+    ->name('bottin-requests.confirm');
 
 Route::get('/connexion/verifier', [BottinLoginController::class, 'show'])
     ->middleware(['signed', 'guest:web,member'])

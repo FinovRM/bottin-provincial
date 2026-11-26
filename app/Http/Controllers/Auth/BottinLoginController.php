@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\BottinRequester;
 use App\Support\VisitorIdentities;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,8 +13,14 @@ class BottinLoginController extends Controller
 {
     public function show(Request $request): View
     {
+        $email = $request->string('email')->toString();
+
+        // The signed link proves this courriel: requests made from this page act on it.
+        session(['declaration_email' => $email]);
+
         return view('auth.bottin-declaration', [
-            'email' => $request->string('email')->toString(),
+            'email' => $email,
+            'requester' => BottinRequester::forEmail($email),
         ]);
     }
 
