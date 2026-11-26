@@ -183,4 +183,19 @@ class BottinRequestTest extends TestCase
 
         $this->get($url)->assertOk()->assertDontSee('Retirez-moi du bottin');
     }
+
+    public function test_notification_emails_are_in_french(): void
+    {
+        $html = (string) (new BottinRemovalRequestNotification('Jean Tremblay', 'jean@example.com', [['organization' => 'AHM A', 'role' => 'Président']]))
+            ->toMail(new AnonymousNotifiable)
+            ->action('Ouvrir', 'https://example.com')
+            ->render();
+
+        $this->assertStringContainsString('Bonjour!', $html);
+        $this->assertStringContainsString('Salutations,', $html);
+        $this->assertStringContainsString('Si le bouton', $html);
+        $this->assertStringContainsString('Tous droits réservés.', $html);
+        $this->assertStringNotContainsString('Hello', $html);
+        $this->assertStringNotContainsString('Regards', $html);
+    }
 }
