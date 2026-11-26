@@ -7,9 +7,10 @@ use App\Models\Setting;
 use Illuminate\Support\Carbon;
 
 /**
- * The yearly check of each organization's bottin: on the control date (a day
- * and month), a validation made that day or during the acceptable delay (in
- * days) before it is on time. A later validation corrects the situation.
+ * The check of each organization's bottin, on one or more control dates a
+ * year (each a day and month): a validation made that day or during the
+ * acceptable delay (in days) before it is on time. A later validation
+ * corrects the situation.
  */
 class BottinValidation
 {
@@ -18,18 +19,36 @@ class BottinValidation
     /** First reminder the day after the control date, then daily from this many days after it. */
     public const DAILY_REMINDERS_AFTER_DAYS = 7;
 
-    public static function controlDay(): ?int
+    /**
+     * Every control date of the year, as [month, day], in calendar order.
+     *
+     * @return array<int, array{0: int, 1: int}>
+     */
+    public static function controlDates(): array
     {
-        $day = Setting::get('validation_control_day');
-
-        return $day === null ? null : (int) $day;
+        return collect(json_decode(Setting::get('validation_control_dates', '[]'), true))
+            ->map(fn (string $date) => array_map('intval', explode('-', $date)))
+            ->sort()
+            ->values()
+            ->all();
     }
 
-    public static function controlMonth(): ?int
+    /**
+     * @param  array<int, array{0: int, 1: int}>  $dates  [month, day] pairs
+     */
+    public static function saveControlDates(array $dates): void
     {
-        $month = Setting::get('validation_control_month');
+        $values = collect($dates)->map(fn (array $date) => sprintf('%02d-%02d', ...$date))->unique()->sort()->values()->all();
 
-        return $month === null ? null : (int) $month;
+        Setting::put('validation_control_dates', json_encode($values));
+    }
+
+    /**
+     * "1er juin", "15 novembre"…
+     */
+    public static function label(int $month, int $day): string
+    {
+        return ($day === 1 ? '1er' : $day).' '.Carbon::create(2025, $month, 1)->translatedFormat('F');
     }
 
     public static function delayDays(): int
@@ -39,7 +58,7 @@ class BottinValidation
 
     public static function isConfigured(): bool
     {
-        return static::controlDay() !== null && static::controlMonth() !== null;
+        return static::controlDates() !== [];
     }
 
     public static function today(): Carbon
@@ -59,11 +78,16 @@ class BottinValidation
         }
 
         $day = ($day ?? static::today())->copy()->startOfDay();
-        $date = Carbon::create($day->year, static::controlMonth(), static::controlDay(), 0, 0, 0, self::TIMEZONE);
 
-        if ($strictlyBefore ? $date->gte($day) : $date->gt($day)) {
-            $date->subYear();
-        }
+        $date = collect(static::controlDates())
+            ->map(function (array $controlDate) use ($day, $strictlyBefore) {
+                [$month, $dayOfMonth] = $controlDate;
+                $date = Carbon::create($day->year, $month, $dayOfMonth, 0, 0, 0, self::TIMEZONE);
+
+                return ($strictlyBefore ? $date->gte($day) : $date->gt($day)) ? $date->subYear() : $date;
+            })
+            ->sortByDesc(fn (Carbon $date) => $date->timestamp)
+            ->first();
 
         $configuredOn = Setting::get('validation_configured_on');
 

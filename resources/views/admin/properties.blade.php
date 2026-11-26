@@ -133,41 +133,62 @@
     <section class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Validation du bottin</h2>
         <p class="mt-2 text-sm text-gray-600">
-            Chaque année, à la date de contrôle, le bottin de chaque organisation doit avoir été validé par un de ses responsables
+            À chaque date de contrôle (une ou plusieurs par année), le bottin de chaque organisation doit avoir été validé par un de ses responsables
             ce jour-là ou pendant le délai acceptable qui précède. Le lendemain, les responsables en retard sont avisés par courriel,
             puis chaque jour à partir du {{ \App\Support\BottinValidation::DAILY_REMINDERS_AFTER_DAYS }}e jour suivant la date de contrôle.
         </p>
 
-        <form method="POST" action="{{ route('admin.properties.validation') }}" class="mt-4 flex flex-wrap items-end gap-4">
-            @csrf
-            @method('PUT')
+        <div class="mt-4 grid gap-6 md:grid-cols-2">
             <div>
-                <span class="block text-sm font-medium">Date de contrôle</span>
-                <div class="mt-1 flex gap-2">
+                <h3 class="text-sm font-medium">Dates de contrôle</h3>
+                <ul class="mt-2 divide-y divide-gray-100 rounded-md border border-gray-200">
+                    @forelse ($controlDates as [$month, $day])
+                        <li class="flex items-center justify-between px-3 py-2 text-sm">
+                            <span>{{ \App\Support\BottinValidation::label($month, $day) }}</span>
+                            <form method="POST" action="{{ route('admin.properties.validation.dates.destroy', [$month, $day]) }}">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline">Retirer</button>
+                            </form>
+                        </li>
+                    @empty
+                        <li class="px-3 py-2 text-sm text-gray-400">Aucune date de contrôle : la validation n'est pas exigée.</li>
+                    @endforelse
+                </ul>
+
+                <form method="POST" action="{{ route('admin.properties.validation.dates.store') }}" class="mt-3 flex flex-wrap items-center gap-2">
+                    @csrf
                     <select name="control_day" aria-label="Jour" required class="rounded-md border border-gray-300 px-3 py-2 text-sm">
                         <option value="">Jour</option>
                         @for ($day = 1; $day <= 31; $day++)
-                            <option value="{{ $day }}" @selected((int) old('control_day', $controlDay) === $day)>{{ $day === 1 ? '1er' : $day }}</option>
+                            <option value="{{ $day }}" @selected((int) old('control_day') === $day)>{{ $day === 1 ? '1er' : $day }}</option>
                         @endfor
                     </select>
                     <select name="control_month" aria-label="Mois" required class="rounded-md border border-gray-300 px-3 py-2 text-sm">
                         <option value="">Mois</option>
                         @foreach ($months as $index => $month)
-                            <option value="{{ $index + 1 }}" @selected((int) old('control_month', $controlMonth) === $index + 1)>{{ $month }}</option>
+                            <option value="{{ $index + 1 }}" @selected((int) old('control_month') === $index + 1)>{{ $month }}</option>
                         @endforeach
                     </select>
+                    <button type="submit" class="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black">+ Ajouter</button>
+                </form>
+                @foreach (['control_day', 'control_month'] as $field)
+                    @error($field)<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                @endforeach
+            </div>
+
+            <form method="POST" action="{{ route('admin.properties.validation') }}">
+                @csrf
+                @method('PUT')
+                <label for="delay_days" class="block text-sm font-medium">Délai acceptable (jours avant chaque date de contrôle)</label>
+                <div class="mt-2 flex items-center gap-2">
+                    <input id="delay_days" type="number" name="delay_days" min="0" max="365" required value="{{ old('delay_days', $delayDays) }}"
+                        class="w-28 rounded-md border border-gray-300 px-3 py-2 text-sm">
+                    <button type="submit" class="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black">Enregistrer</button>
                 </div>
-            </div>
-            <div>
-                <label for="delay_days" class="block text-sm font-medium">Délai acceptable (jours)</label>
-                <input id="delay_days" type="number" name="delay_days" min="0" max="365" required value="{{ old('delay_days', $delayDays) }}"
-                    class="mt-1 w-28 rounded-md border border-gray-300 px-3 py-2 text-sm">
-            </div>
-            <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black">Enregistrer</button>
-        </form>
-        @foreach (['control_day', 'control_month', 'delay_days'] as $field)
-            @error($field)<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-        @endforeach
+                @error('delay_days')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </form>
+        </div>
     </section>
 
     <dialog id="add-admin-dialog" class="w-full max-w-md rounded-lg p-0 shadow-xl backdrop:bg-black/50"

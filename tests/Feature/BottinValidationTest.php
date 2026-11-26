@@ -17,10 +17,12 @@ class BottinValidationTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function configure(int $day = 1, int $month = 6, int $delay = 10): void
+    /**
+     * @param  array<int, array{0: int, 1: int}>  $dates  [month, day]
+     */
+    private function configure(array $dates = [[6, 1]], int $delay = 10): void
     {
-        Setting::put('validation_control_day', $day);
-        Setting::put('validation_control_month', $month);
+        BottinValidation::saveControlDates($dates);
         Setting::put('validation_delay_days', $delay);
     }
 
@@ -29,27 +31,51 @@ class BottinValidationTest extends TestCase
         $this->travelTo(Carbon::parse("$date 12:00", BottinValidation::TIMEZONE));
     }
 
-    public function test_an_admin_sets_the_control_date_and_delay(): void
+    public function test_an_admin_adds_and_removes_control_dates_and_sets_the_delay(): void
     {
         $admin = Admin::factory()->create();
 
         $this->actingAs($admin, 'admin')->get('/admin/proprietes')->assertOk()->assertSee('Validation du bottin');
 
-        $this->actingAs($admin, 'admin')->put(route('admin.properties.validation'), [
-            'control_day' => 1, 'control_month' => 6, 'delay_days' => 10,
-        ])->assertRedirect(route('admin.properties'));
+        $this->actingAs($admin, 'admin')->post(route('admin.properties.validation.dates.store'), ['control_day' => 1, 'control_month' => 6])
+            ->assertRedirect(route('admin.properties'));
+        $this->actingAs($admin, 'admin')->post(route('admin.properties.validation.dates.store'), ['control_day' => 15, 'control_month' => 1]);
+        $this->actingAs($admin, 'admin')->post(route('admin.properties.validation.dates.store'), ['control_day' => 1, 'control_month' => 6]);
+        $this->actingAs($admin, 'admin')->put(route('admin.properties.validation'), ['delay_days' => 10]);
 
-        $this->assertSame(1, BottinValidation::controlDay());
-        $this->assertSame(6, BottinValidation::controlMonth());
+        $this->assertSame([[1, 15], [6, 1]], BottinValidation::controlDates());
         $this->assertSame(10, BottinValidation::delayDays());
+        $this->actingAs($admin, 'admin')->get('/admin/proprietes')->assertSee('15 janvier')->assertSee('1er juin');
+
+        $this->actingAs($admin, 'admin')->delete(route('admin.properties.validation.dates.destroy', [1, 15]));
+
+        $this->assertSame([[6, 1]], BottinValidation::controlDates());
+    }
+
+    public function test_with_several_control_dates_the_most_recent_one_applies(): void
+    {
+        $this->configure([[6, 1], [12, 1]]);
+        $organization = Organization::factory()->provincial()->create();
+        $organization->validated_at = Carbon::parse('2026-05-25', BottinValidation::TIMEZONE);
+
+        $this->travelToDay('2026-11-30');
+        $this->assertTrue(BottinValidation::isValid($organization));
+        $this->assertSame('2026-06-01', BottinValidation::latestControlDate()->toDateString());
+
+        $this->travelToDay('2026-12-01');
+        $this->assertFalse(BottinValidation::isValid($organization));
+
+        $this->travelToDay('2027-03-01');
+        $this->assertSame('2026-12-01', BottinValidation::latestControlDate()->toDateString());
+        $this->assertSame('2026-12-01', BottinValidation::reminderControlDate(Carbon::parse('2026-12-02', BottinValidation::TIMEZONE))?->toDateString());
     }
 
     public function test_a_control_date_must_exist_every_year(): void
     {
         $admin = Admin::factory()->create();
 
-        $this->actingAs($admin, 'admin')->put(route('admin.properties.validation'), [
-            'control_day' => 29, 'control_month' => 2, 'delay_days' => 10,
+        $this->actingAs($admin, 'admin')->post(route('admin.properties.validation.dates.store'), [
+            'control_day' => 29, 'control_month' => 2,
         ])->assertSessionHasErrors('control_day');
 
         $this->assertFalse(BottinValidation::isConfigured());
@@ -164,8 +190,8 @@ class BottinValidationTest extends TestCase
         $organization = Organization::factory()->provincial()->create();
         $this->travelToDay('2026-11-26');
 
-        $this->actingAs($admin, 'admin')->put(route('admin.properties.validation'), [
-            'control_day' => 1, 'control_month' => 6, 'delay_days' => 10,
+        $this->actingAs($admin, 'admin')->post(route('admin.properties.validation.dates.store'), [
+            'control_day' => 1, 'control_month' => 6,
         ]);
 
         $this->assertTrue(BottinValidation::isValid($organization));

@@ -133,6 +133,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/proprietes', [AdminPropertiesController::class, 'show'])->name('properties');
         Route::put('/proprietes/validation', [AdminPropertiesController::class, 'updateValidation'])->name('properties.validation');
+        Route::post('/proprietes/validation/dates', [AdminPropertiesController::class, 'storeControlDate'])->name('properties.validation.dates.store');
+        Route::delete('/proprietes/validation/dates/{month}/{day}', [AdminPropertiesController::class, 'destroyControlDate'])
+            ->whereNumber(['month', 'day'])
+            ->name('properties.validation.dates.destroy');
         Route::put('/proprietes/nom', [AdminPropertiesController::class, 'updateName'])->name('properties.name');
         Route::put('/proprietes/mot-de-passe', [AdminPropertiesController::class, 'updatePassword'])->name('properties.password');
         Route::post('/proprietes/administrateurs', [AdminPropertiesController::class, 'storeAdmin'])->name('properties.admins.store');
