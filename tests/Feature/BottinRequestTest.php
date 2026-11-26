@@ -198,4 +198,12 @@ class BottinRequestTest extends TestCase
         $this->assertStringNotContainsString('Hello', $html);
         $this->assertStringNotContainsString('Regards', $html);
     }
+
+    public function test_validation_messages_are_in_french(): void
+    {
+        $this->openDeclaration();
+
+        $this->post(route('bottin-requests.modify'), ['roles' => [$this->key('Président')], 'new_email' => 'nouveau@example.com', 'new_cell_phone' => '8195550000', 'new_extension' => str_repeat('1', 30)])
+            ->assertSessionHasErrorsIn('modification', ['new_extension' => 'Le champ poste ne doit pas dépasser 20 caractères.']);
+    }
 }
